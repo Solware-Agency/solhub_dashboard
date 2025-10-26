@@ -1,0 +1,625 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase/client';
+import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
+import type { Laboratory } from '@/lib/types/database';
+
+export default function EditLaboratoryPage() {
+  const router = useRouter();
+  const params = useParams();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [laboratory, setLaboratory] = useState<Laboratory | null>(null);
+
+  // Form data
+  const [formData, setFormData] = useState({
+    name: '',
+    slug: '',
+    status: 'active' as 'active' | 'inactive' | 'trial',
+    branding: {
+      logo: '' as string | null,
+      icon: '',
+      primaryColor: '#0066cc',
+      secondaryColor: '#00cc66',
+    },
+    config: {
+      branches: ['Principal'],
+      paymentMethods: ['Efectivo', 'Zelle'],
+      defaultExchangeRate: 36.5,
+      timezone: 'America/Caracas',
+      webhooks: {
+        generateDoc: '',
+        generatePdf: '',
+        sendEmail: '',
+      },
+    },
+  });
+
+  useEffect(() => {
+    loadLaboratory();
+  }, [params.id]);
+
+  const loadLaboratory = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('laboratories')
+      .select('*')
+      .eq('id', params.id)
+      .single();
+
+    if (!error && data) {
+      setLaboratory(data);
+      setFormData({
+        name: data.name,
+        slug: data.slug,
+        status: data.status,
+        branding: {
+          logo: data.branding?.logo || null,
+          icon: data.branding?.icon || 'solhub',
+          primaryColor: data.branding?.primaryColor || '#0066cc',
+          secondaryColor: data.branding?.secondaryColor || '#00cc66',
+        },
+        config: {
+          branches: data.config?.branches || ['Principal'],
+          paymentMethods: data.config?.paymentMethods || ['Efectivo', 'Zelle'],
+          defaultExchangeRate: data.config?.defaultExchangeRate || 36.5,
+          timezone: data.config?.timezone || 'America/Caracas',
+          webhooks: data.config?.webhooks || {
+            generateDoc: '',
+            generatePdf: '',
+            sendEmail: '',
+          },
+        },
+      });
+    } else {
+      alert('❌ Error al cargar laboratorio');
+      router.push('/laboratories');
+    }
+    setLoading(false);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+
+    try {
+      // Construir objeto de actualización
+      const updateData: any = {
+        name: formData.name,
+        status: formData.status,
+        branding: {
+          logo: formData.branding.logo || null,
+          icon: formData.branding.icon,
+          primaryColor: formData.branding.primaryColor,
+          secondaryColor: formData.branding.secondaryColor,
+        },
+        config: {
+          branches: formData.config.branches.filter((b) => b.trim() !== ''),
+          paymentMethods: formData.config.paymentMethods.filter(
+            (p) => p.trim() !== '',
+          ),
+          defaultExchangeRate: formData.config.defaultExchangeRate,
+          timezone: formData.config.timezone,
+        },
+      };
+
+      // Solo agregar webhooks si tienen valores
+      const webhooks = formData.config.webhooks;
+      if (webhooks.generateDoc || webhooks.generatePdf || webhooks.sendEmail) {
+        updateData.config.webhooks = {};
+        if (webhooks.generateDoc)
+          updateData.config.webhooks.generateDoc = webhooks.generateDoc;
+        if (webhooks.generatePdf)
+          updateData.config.webhooks.generatePdf = webhooks.generatePdf;
+        if (webhooks.sendEmail)
+          updateData.config.webhooks.sendEmail = webhooks.sendEmail;
+      }
+
+      const { error } = await supabase
+        .from('laboratories')
+        .update(updateData)
+        .eq('id', params.id);
+
+      if (error) throw error;
+
+      alert('✅ Laboratorio actualizado exitosamente');
+      router.push(`/laboratories/${params.id}`);
+      router.refresh();
+    } catch (error: any) {
+      alert('❌ Error: ' + error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Helper para agregar item a array
+  const addArrayItem = (
+    field: 'branches' | 'paymentMethods',
+    value: string,
+  ) => {
+    if (value.trim()) {
+      setFormData({
+        ...formData,
+        config: {
+          ...formData.config,
+          [field]: [...formData.config[field], value],
+        },
+      });
+    }
+  };
+
+  // Helper para eliminar item de array
+  const removeArrayItem = (
+    field: 'branches' | 'paymentMethods',
+    index: number,
+  ) => {
+    setFormData({
+      ...formData,
+      config: {
+        ...formData.config,
+        [field]: formData.config[field].filter((_, i) => i !== index),
+      },
+    });
+  };
+
+  if (loading) {
+    return <div className='text-gray-600'>Cargando...</div>;
+  }
+
+  if (!laboratory) {
+    return <div className='text-red-600'>Laboratorio no encontrado</div>;
+  }
+
+  return (
+    <div>
+      {/* Header */}
+      <div className='mb-8'>
+        <div className='flex items-center gap-2 text-sm text-gray-600 mb-2'>
+          <Link href='/laboratories' className='hover:text-blue-600'>
+            Laboratorios
+          </Link>
+          <span>/</span>
+          <Link
+            href={`/laboratories/${params.id}`}
+            className='hover:text-blue-600'
+          >
+            {laboratory.name}
+          </Link>
+          <span>/</span>
+          <span className='text-gray-900'>Editar</span>
+        </div>
+        <h1 className='text-3xl font-bold text-gray-900'>Editar Laboratorio</h1>
+        <p className='text-gray-600 mt-1'>
+          Actualiza la información del laboratorio {laboratory.name}
+        </p>
+      </div>
+
+      {/* Formulario */}
+      <form onSubmit={handleSubmit} className='space-y-6'>
+        {/* Información Básica */}
+        <div className='bg-white p-6 rounded-lg shadow'>
+          <h2 className='text-lg font-semibold text-gray-900 mb-4'>
+            📋 Información Básica
+          </h2>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
+                Nombre <span className='text-red-500'>*</span>
+              </label>
+              <input
+                type='text'
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                required
+                disabled={saving}
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
+                Slug <span className='text-gray-400'>(No editable)</span>
+              </label>
+              <input
+                type='text'
+                value={formData.slug}
+                className='w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 text-gray-600'
+                disabled
+              />
+              <p className='text-xs text-gray-500 mt-1'>
+                El slug no se puede modificar después de crear el laboratorio
+              </p>
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
+                Estado <span className='text-red-500'>*</span>
+              </label>
+              <select
+                value={formData.status}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value as any })
+                }
+                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                disabled={saving}
+              >
+                <option value='active'>Activo</option>
+                <option value='inactive'>Inactivo</option>
+                <option value='trial'>Prueba</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Branding */}
+        <div className='bg-white p-6 rounded-lg shadow'>
+          <h2 className='text-lg font-semibold text-gray-900 mb-4'>
+            🎨 Branding
+          </h2>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
+                Logo URL
+              </label>
+              <input
+                type='text'
+                value={formData.branding.logo || ''}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    branding: {
+                      ...formData.branding,
+                      logo: e.target.value || null,
+                    },
+                  })
+                }
+                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                placeholder='/logos/labname.png'
+                disabled={saving}
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
+                Ícono
+              </label>
+              <input
+                type='text'
+                value={formData.branding.icon}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    branding: { ...formData.branding, icon: e.target.value },
+                  })
+                }
+                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                placeholder='solhub'
+                disabled={saving}
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
+                Color Primario
+              </label>
+              <div className='flex gap-2'>
+                <input
+                  type='color'
+                  value={formData.branding.primaryColor}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      branding: {
+                        ...formData.branding,
+                        primaryColor: e.target.value,
+                      },
+                    })
+                  }
+                  className='w-16 h-10 border border-gray-300 rounded-lg'
+                  disabled={saving}
+                />
+                <input
+                  type='text'
+                  value={formData.branding.primaryColor}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      branding: {
+                        ...formData.branding,
+                        primaryColor: e.target.value,
+                      },
+                    })
+                  }
+                  className='flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-gray-600'
+                  disabled={saving}
+                />
+              </div>
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
+                Color Secundario
+              </label>
+              <div className='flex gap-2'>
+                <input
+                  type='color'
+                  value={formData.branding.secondaryColor}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      branding: {
+                        ...formData.branding,
+                        secondaryColor: e.target.value,
+                      },
+                    })
+                  }
+                  className='w-16 h-10 border border-gray-300 rounded-lg'
+                  disabled={saving}
+                />
+                <input
+                  type='text'
+                  value={formData.branding.secondaryColor}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      branding: {
+                        ...formData.branding,
+                        secondaryColor: e.target.value,
+                      },
+                    })
+                  }
+                  className='flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-gray-600'
+                  disabled={saving}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Configuración */}
+        <div className='bg-white p-6 rounded-lg shadow'>
+          <h2 className='text-lg font-semibold text-gray-900 mb-4'>
+            ⚙️ Configuración
+          </h2>
+          <div className='space-y-6'>
+            {/* Sucursales */}
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
+                Sucursales
+              </label>
+              <div className='flex flex-wrap gap-2 mb-2'>
+                {formData.config.branches.map((branch, index) => (
+                  <div
+                    key={index}
+                    className='flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded'
+                  >
+                    <span className='text-sm'>{branch}</span>
+                    <button
+                      type='button'
+                      onClick={() => removeArrayItem('branches', index)}
+                      className='text-blue-900 hover:text-blue-950'
+                      disabled={saving}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className='flex gap-2'>
+                <input
+                  type='text'
+                  id='newBranch'
+                  placeholder='Nueva sucursal'
+                  className='flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  disabled={saving}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const input = e.currentTarget;
+                      addArrayItem('branches', input.value);
+                      input.value = '';
+                    }
+                  }}
+                />
+                <button
+                  type='button'
+                  onClick={() => {
+                    const input = document.getElementById(
+                      'newBranch',
+                    ) as HTMLInputElement;
+                    addArrayItem('branches', input.value);
+                    input.value = '';
+                  }}
+                  className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700'
+                  disabled={saving}
+                >
+                  Agregar
+                </button>
+              </div>
+            </div>
+
+            {/* Métodos de Pago */}
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
+                Métodos de Pago
+              </label>
+              <div className='flex flex-wrap gap-2 mb-2'>
+                {formData.config.paymentMethods.map((method, index) => (
+                  <div
+                    key={index}
+                    className='flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 rounded'
+                  >
+                    <span className='text-sm'>{method}</span>
+                    <button
+                      type='button'
+                      onClick={() => removeArrayItem('paymentMethods', index)}
+                      className='text-green-900 hover:text-green-950'
+                      disabled={saving}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className='flex gap-2'>
+                <input
+                  type='text'
+                  id='newPayment'
+                  placeholder='Nuevo método de pago'
+                  className='flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  disabled={saving}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const input = e.currentTarget;
+                      addArrayItem('paymentMethods', input.value);
+                      input.value = '';
+                    }
+                  }}
+                />
+                <button
+                  type='button'
+                  onClick={() => {
+                    const input = document.getElementById(
+                      'newPayment',
+                    ) as HTMLInputElement;
+                    addArrayItem('paymentMethods', input.value);
+                    input.value = '';
+                  }}
+                  className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700'
+                  disabled={saving}
+                >
+                  Agregar
+                </button>
+              </div>
+            </div>
+
+            {/* Tasa de Cambio y Zona Horaria */}
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Tasa de Cambio (USD/VES)
+                </label>
+                <input
+                  type='number'
+                  step='0.01'
+                  value={formData.config.defaultExchangeRate}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      config: {
+                        ...formData.config,
+                        defaultExchangeRate: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  disabled={saving}
+                />
+              </div>
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Zona Horaria
+                </label>
+                <input
+                  type='text'
+                  value={formData.config.timezone}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      config: { ...formData.config, timezone: e.target.value },
+                    })
+                  }
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  disabled={saving}
+                />
+              </div>
+            </div>
+
+            {/* Webhooks */}
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
+                Webhooks (Opcional)
+              </label>
+              <div className='space-y-3'>
+                <input
+                  type='url'
+                  value={formData.config.webhooks.generateDoc}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      config: {
+                        ...formData.config,
+                        webhooks: {
+                          ...formData.config.webhooks,
+                          generateDoc: e.target.value,
+                        },
+                      },
+                    })
+                  }
+                  placeholder='Generate Doc Webhook'
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  disabled={saving}
+                />
+                <input
+                  type='url'
+                  value={formData.config.webhooks.generatePdf}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      config: {
+                        ...formData.config,
+                        webhooks: {
+                          ...formData.config.webhooks,
+                          generatePdf: e.target.value,
+                        },
+                      },
+                    })
+                  }
+                  placeholder='Generate PDF Webhook'
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  disabled={saving}
+                />
+                <input
+                  type='url'
+                  value={formData.config.webhooks.sendEmail}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      config: {
+                        ...formData.config,
+                        webhooks: {
+                          ...formData.config.webhooks,
+                          sendEmail: e.target.value,
+                        },
+                      },
+                    })
+                  }
+                  placeholder='Send Email Webhook'
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  disabled={saving}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Botones de Acción */}
+        <div className='flex gap-4'>
+          <button
+            type='submit'
+            disabled={saving}
+            className='px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium'
+          >
+            {saving ? 'Guardando...' : '💾 Guardar Cambios'}
+          </button>
+          <Link
+            href={`/laboratories/${params.id}`}
+            className='px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors inline-block'
+          >
+            Cancelar
+          </Link>
+        </div>
+      </form>
+    </div>
+  );
+}
