@@ -74,7 +74,7 @@ export default function EditLaboratoryPage() {
         },
       });
     } else {
-      alert('❌ Error al cargar laboratorio');
+      alert('❌ Error al cargar cliente');
       router.push('/laboratories');
     }
     setLoading(false);
@@ -124,7 +124,7 @@ export default function EditLaboratoryPage() {
 
       if (error) throw error;
 
-      alert('✅ Laboratorio actualizado exitosamente');
+      alert('✅ Cliente actualizado exitosamente');
       router.push(`/laboratories/${params.id}`);
       router.refresh();
     } catch (error: any) {
@@ -169,7 +169,7 @@ export default function EditLaboratoryPage() {
   }
 
   if (!laboratory) {
-    return <div className='text-red-600'>Laboratorio no encontrado</div>;
+    return <div className='text-red-600'>Cliente no encontrado</div>;
   }
 
   return (
@@ -178,7 +178,7 @@ export default function EditLaboratoryPage() {
       <div className='mb-8'>
         <div className='flex items-center gap-2 text-sm text-gray-600 mb-2'>
           <Link href='/laboratories' className='hover:text-blue-600'>
-            Laboratorios
+            Clientes
           </Link>
           <span>/</span>
           <Link
@@ -190,9 +190,9 @@ export default function EditLaboratoryPage() {
           <span>/</span>
           <span className='text-gray-900'>Editar</span>
         </div>
-        <h1 className='text-3xl font-bold text-gray-900'>Editar Laboratorio</h1>
+        <h1 className='text-3xl font-bold text-gray-900'>Editar Cliente</h1>
         <p className='text-gray-600 mt-1'>
-          Actualiza la información del laboratorio {laboratory.name}
+          Actualiza la información del cliente {laboratory.name}
         </p>
       </div>
 
@@ -230,7 +230,7 @@ export default function EditLaboratoryPage() {
                 disabled
               />
               <p className='text-xs text-gray-500 mt-1'>
-                El slug no se puede modificar después de crear el laboratorio
+                El slug no se puede modificar después de crear el cliente
               </p>
             </div>
             <div>

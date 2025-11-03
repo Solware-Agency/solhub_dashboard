@@ -29,7 +29,7 @@ export default function LaboratoryDetailsPage() {
     if (!error && data) {
       setLaboratory(data);
     } else {
-      alert('❌ Error al cargar laboratorio');
+      alert('❌ Error al cargar cliente');
       router.push('/laboratories');
     }
     setLoading(false);
@@ -46,7 +46,7 @@ export default function LaboratoryDetailsPage() {
 
       if (error) throw error;
 
-      alert('✅ Laboratorio eliminado exitosamente');
+      alert('✅ Cliente eliminado exitosamente');
       router.push('/laboratories');
       router.refresh();
     } catch (error: any) {
@@ -70,7 +70,7 @@ export default function LaboratoryDetailsPage() {
   }
 
   if (!laboratory) {
-    return <div className='text-red-600'>Laboratorio no encontrado</div>;
+    return <div className='text-red-600'>Cliente no encontrado</div>;
   }
 
   const featuresArray = Object.entries(laboratory.features || {});
@@ -82,7 +82,7 @@ export default function LaboratoryDetailsPage() {
       <div className='mb-8'>
         <div className='flex items-center gap-2 text-sm text-gray-600 mb-2'>
           <Link href='/laboratories' className='hover:text-blue-600'>
-            Laboratorios
+            Clientes
           </Link>
           <span>/</span>
           <span className='text-gray-900'>{laboratory.name}</span>
@@ -153,7 +153,9 @@ export default function LaboratoryDetailsPage() {
               <label className='text-sm font-medium text-gray-500'>
                 Estado
               </label>
-              <p className='text-sm mt-1 capitalize text-gray-600'>{laboratory.status}</p>
+              <p className='text-sm mt-1 capitalize text-gray-600'>
+                {laboratory.status}
+              </p>
             </div>
           </div>
         </div>
@@ -292,7 +294,9 @@ export default function LaboratoryDetailsPage() {
               <label className='text-sm font-medium text-gray-500'>
                 Zona Horaria
               </label>
-              <p className='text-sm mt-1 text-gray-600'>{laboratory.config?.timezone}</p>
+              <p className='text-sm mt-1 text-gray-600'>
+                {laboratory.config?.timezone}
+              </p>
             </div>
             {laboratory.config?.webhooks && (
               <div>
@@ -323,11 +327,11 @@ export default function LaboratoryDetailsPage() {
               ⚠️ Confirmar Eliminación
             </h3>
             <p className='text-gray-600 mb-4'>
-              ¿Estás seguro de eliminar el laboratorio{' '}
+              ¿Estás seguro de eliminar el cliente{' '}
               <strong>{laboratory.name}</strong>?
             </p>
             <p className='text-sm text-red-600 mb-6'>
-              Esta acción eliminará TODOS los datos asociados al laboratorio
+              Esta acción eliminará TODOS los datos asociados al cliente
               (usuarios, pacientes, casos, etc.) y no se puede deshacer.
             </p>
             <div className='flex gap-3'>

@@ -49,8 +49,6 @@ ${features.map((f) => `  ${f.key}: boolean`).join('\n')}
     generatePdf?: string
     sendEmail?: string
   }
-  // Cada laboratorio puede tener configuraciones únicas
-  [key: string]: any        // Permite propiedades adicionales
 }`;
 
       // Combinar todo

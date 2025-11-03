@@ -34,7 +34,7 @@ export default function NewLaboratoryPage() {
 
       if (error) throw error;
 
-      alert('✅ Laboratorio creado exitosamente');
+      alert('✅ Cliente creado exitosamente');
       router.push('/laboratories');
       router.refresh();
     } catch (error: any) {
@@ -56,10 +56,10 @@ export default function NewLaboratoryPage() {
   return (
     <div>
       <div className='mb-8'>
-        <h1 className='text-3xl font-bold text-gray-900'>Crear Laboratorio</h1>
+        <h1 className='text-3xl font-bold text-gray-900'>Crear Cliente</h1>
         <p className='text-gray-600 mt-1'>
-          El laboratorio se creará con valores por defecto para features,
-          branding y configuración
+          El cliente se creará con valores por defecto para features, branding y
+          configuración
         </p>
       </div>
 
@@ -70,7 +70,7 @@ export default function NewLaboratoryPage() {
               htmlFor='name'
               className='block text-sm font-medium text-gray-700 mb-2'
             >
-              Nombre del Laboratorio <span className='text-red-500'>*</span>
+              Nombre del Cliente <span className='text-red-500'>*</span>
             </label>
             <input
               id='name'
@@ -80,12 +80,12 @@ export default function NewLaboratoryPage() {
                 setFormData({ ...formData, name: e.target.value })
               }
               className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
-              placeholder='Ej: Laboratorio Vargas'
+              placeholder='Ej: Cliente Vargas'
               required
               disabled={loading}
             />
             <p className='text-sm text-gray-500 mt-1'>
-              Nombre completo del laboratorio
+              Nombre completo del cliente
             </p>
           </div>
 
@@ -109,7 +109,7 @@ export default function NewLaboratoryPage() {
             />
             <p className='text-sm text-gray-500 mt-1'>
               Solo letras minúsculas, números y guiones. Este será usado para
-              identificar al laboratorio en el sistema.
+              identificar al cliente en el sistema.
             </p>
           </div>
 
@@ -134,7 +134,7 @@ export default function NewLaboratoryPage() {
               <option value='trial'>Prueba</option>
             </select>
             <p className='text-sm text-gray-500 mt-1'>
-              Estado inicial del laboratorio
+              Estado inicial del cliente
             </p>
           </div>
 
@@ -154,7 +154,7 @@ export default function NewLaboratoryPage() {
               </li>
             </ul>
             <p className='text-xs text-blue-700 mt-2'>
-              Puedes editar estos valores después de crear el laboratorio
+              Puedes editar estos valores después de crear el cliente
             </p>
           </div>
 
@@ -164,7 +164,7 @@ export default function NewLaboratoryPage() {
               disabled={loading}
               className='px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
             >
-              {loading ? 'Creando...' : 'Crear Laboratorio'}
+              {loading ? 'Creando...' : 'Crear Cliente'}
             </button>
             <button
               type='button'

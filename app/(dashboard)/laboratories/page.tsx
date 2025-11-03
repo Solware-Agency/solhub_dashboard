@@ -45,23 +45,23 @@ export default function LaboratoriesPage() {
   };
 
   if (loading) {
-    return <div className='text-gray-600'>Cargando laboratorios...</div>;
+    return <div className='text-gray-600'>Cargando clientes...</div>;
   }
 
   return (
     <div>
       <div className='flex justify-between items-center mb-8'>
         <div>
-          <h1 className='text-3xl font-bold text-gray-900'>Laboratorios</h1>
+          <h1 className='text-3xl font-bold text-gray-900'>Clientes</h1>
           <p className='text-gray-600 mt-1'>
-            Gestiona todos los laboratorios del sistema
+            Gestiona todos los clientes del sistema
           </p>
         </div>
         <Link
           href='/laboratories/new'
           className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
         >
-          + Crear Laboratorio
+          + Crear Cliente
         </Link>
       </div>
 
@@ -84,7 +84,7 @@ export default function LaboratoriesPage() {
         ))}
       </div>
 
-      {/* Tabla de Laboratorios */}
+      {/* Tabla de Clientes */}
       <div className='bg-white rounded-lg shadow overflow-hidden'>
         <table className='w-full'>
           <thead className='bg-gray-50'>
@@ -110,8 +110,7 @@ export default function LaboratoriesPage() {
             {laboratories.length === 0 ? (
               <tr>
                 <td colSpan={5} className='px-6 py-8 text-center text-gray-500'>
-                  No hay laboratorios{' '}
-                  {filter !== 'all' && `con estado "${filter}"`}
+                  No hay clientes {filter !== 'all' && `con estado "${filter}"`}
                 </td>
               </tr>
             ) : (
@@ -160,7 +159,7 @@ export default function LaboratoriesPage() {
 
       <p className='mt-4 text-sm text-gray-600'>
         Total: <span className='font-semibold'>{laboratories.length}</span>{' '}
-        laboratorio
+        cliente
         {laboratories.length !== 1 && 's'}
       </p>
     </div>

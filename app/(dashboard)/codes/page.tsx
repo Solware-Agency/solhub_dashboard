@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import type { LaboratoryCode, Laboratory } from '@/lib/types/database'
-
+import { Copy } from 'lucide-react'
+ 
 type CodeWithLab = LaboratoryCode & { laboratory: Laboratory }
 
 export default function CodesPage() {
@@ -68,6 +69,15 @@ export default function CodesPage() {
     }
   }
 
+  const handleCopyToClipboard = async (value: string, label: string) => {
+		try {
+			await navigator.clipboard.writeText(value)
+			alert('📋 Copiado')
+		} catch {
+			alert('❌ No se pudo copiar')
+		}
+	}
+
   const generateRandomCode = () => {
     const lab = laboratories.find(l => l.id === formData.laboratory_id)
     if (!lab) return
@@ -98,14 +108,18 @@ export default function CodesPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
+      <div className='flex justify-between items-center mb-8'>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Códigos de Acceso</h1>
-          <p className="text-gray-600 mt-1">Gestiona códigos para que usuarios se registren en laboratorios</p>
+          <h1 className='text-3xl font-bold text-gray-900'>
+            Códigos de Acceso
+          </h1>
+          <p className='text-gray-600 mt-1'>
+            Gestiona códigos para que usuarios se registren en clientes
+          </p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
         >
           {showForm ? 'Cancelar' : '+ Crear Código'}
         </button>
@@ -113,22 +127,26 @@ export default function CodesPage() {
 
       {/* Formulario */}
       {showForm && (
-        <div className="bg-white p-6 rounded-lg shadow mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Crear Nuevo Código</h2>
+        <div className='bg-white p-6 rounded-lg shadow mb-6'>
+          <h2 className='text-lg font-semibold text-gray-900 mb-4'>
+            Crear Nuevo Código
+          </h2>
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Laboratorio <span className="text-red-500">*</span>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Cliente <span className='text-red-500'>*</span>
                 </label>
                 <select
                   value={formData.laboratory_id}
-                  onChange={e => setFormData({ ...formData, laboratory_id: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600"
+                  onChange={(e) =>
+                    setFormData({ ...formData, laboratory_id: e.target.value })
+                  }
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
                   required
                 >
-                  <option value="">Seleccionar laboratorio...</option>
-                  {laboratories.map(lab => (
+                  <option value=''>Seleccionar cliente...</option>
+                  {laboratories.map((lab) => (
                     <option key={lab.id} value={lab.id}>
                       {lab.name} ({lab.slug})
                     </option>
@@ -137,24 +155,29 @@ export default function CodesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Código <span className="text-red-500">*</span>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Código <span className='text-red-500'>*</span>
                 </label>
-                <div className="flex gap-2">
+                <div className='flex gap-2'>
                   <input
-                    type="text"
+                    type='text'
                     value={formData.code}
-                    onChange={e => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600"
-                    placeholder="CONSPAT-ABC123"
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        code: e.target.value.toUpperCase(),
+                      })
+                    }
+                    className='flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                    placeholder='CONSPAT-ABC123'
                     required
                   />
                   <button
-                    type="button"
+                    type='button'
                     onClick={generateRandomCode}
                     disabled={!formData.laboratory_id}
-                    className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed "
-                    title="Generar código aleatorio"
+                    className='px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed '
+                    title='Generar código aleatorio'
                   >
                     🎲
                   </button>
@@ -162,36 +185,40 @@ export default function CodesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
                   Usos Máximos (opcional)
                 </label>
                 <input
-                  type="number"
+                  type='number'
                   value={formData.max_uses}
-                  onChange={e => setFormData({ ...formData, max_uses: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600"
-                  placeholder="Dejar vacío = ilimitado"
-                  min="1"
+                  onChange={(e) =>
+                    setFormData({ ...formData, max_uses: e.target.value })
+                  }
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  placeholder='Dejar vacío = ilimitado'
+                  min='1'
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
                   Fecha de Expiración (opcional)
                 </label>
                 <input
-                  type="date"
+                  type='date'
                   value={formData.expires_at}
-                  onChange={e => setFormData({ ...formData, expires_at: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600"
+                  onChange={(e) =>
+                    setFormData({ ...formData, expires_at: e.target.value })
+                  }
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
                   min={new Date().toISOString().split('T')[0]}
                 />
               </div>
             </div>
 
             <button
-              type="submit"
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              type='submit'
+              className='px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors'
             >
               Crear Código
             </button>
@@ -200,74 +227,109 @@ export default function CodesPage() {
       )}
 
       {/* Tabla de Códigos */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
+      <div className='bg-white rounded-lg shadow overflow-hidden'>
+        <table className='w-full'>
+          <thead className='bg-gray-50'>
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Laboratorio</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usos</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expira</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                Código
+              </th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                Cliente
+              </th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                Usos
+              </th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                Expira
+              </th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                Estado
+              </th>
+              <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                Acciones
+              </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className='divide-y divide-gray-200'>
             {codes.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={6} className='px-6 py-8 text-center text-gray-500'>
                   No hay códigos creados
                 </td>
               </tr>
             ) : (
-              codes.map(code => {
-                const isExpired = code.expires_at && new Date(code.expires_at) < new Date()
-                const isMaxed = code.max_uses !== null && code.current_uses >= code.max_uses
+              codes.map((code) => {
+                const isExpired =
+                  code.expires_at && new Date(code.expires_at) < new Date();
+                const isMaxed =
+                  code.max_uses !== null && code.current_uses >= code.max_uses;
                 return (
-                  <tr key={code.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <span className="font-mono text-sm font-semibold">{code.code}</span>
+                  <tr key={code.id} className='hover:bg-gray-50'>
+                    <td className='px-6 py-4'>
+                      <span className='flex items-center gap-2 font-mono text-sm font-semibold text-gray-900'>
+                        {code.code}
+                        <button
+                          onClick={() => handleCopyToClipboard(code.code, 'Código')}
+                          className='ml-2 text-gray-500 hover:text-gray-700'
+                        >
+                          <Copy className='w-4 h-4 cursor-pointer hover:text-gray-700' />
+                        </button>
+                      </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{code.laboratory.name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                    <td className='px-6 py-4 text-sm text-gray-900'>
+                      {code.laboratory.name}
+                    </td>
+                    <td className='px-6 py-4 text-sm text-gray-600'>
                       {code.current_uses} / {code.max_uses || '∞'}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {code.expires_at ? new Date(code.expires_at).toLocaleDateString('es-ES') : 'Nunca'}
+                    <td className='px-6 py-4 text-sm text-gray-600'>
+                      {code.expires_at
+                        ? new Date(code.expires_at).toLocaleDateString('es-ES')
+                        : 'Nunca'}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className='px-6 py-4'>
                       <span
                         className={`px-2 py-1 rounded text-xs font-semibold ${
                           !code.is_active
                             ? 'bg-gray-100 text-gray-800'
                             : isExpired || isMaxed
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-green-100 text-green-800'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-green-100 text-green-800'
                         }`}
                       >
-                        {!code.is_active ? 'Inactivo' : isExpired ? 'Expirado' : isMaxed ? 'Agotado' : 'Activo'}
+                        {!code.is_active
+                          ? 'Inactivo'
+                          : isExpired
+                          ? 'Expirado'
+                          : isMaxed
+                          ? 'Agotado'
+                          : 'Activo'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className='px-6 py-4 text-right'>
                       <button
-                        onClick={() => toggleCodeStatus(code.id, code.is_active)}
-                        className="text-blue-600 hover:text-blue-900 text-sm"
+                        onClick={() =>
+                          toggleCodeStatus(code.id, code.is_active)
+                        }
+                        className='text-blue-600 hover:text-blue-900 text-sm'
                       >
                         {code.is_active ? 'Desactivar' : 'Activar'}
                       </button>
                     </td>
                   </tr>
-                )
+                );
               })
             )}
           </tbody>
         </table>
       </div>
 
-      <p className="mt-4 text-sm text-gray-600">
-        Total: <span className="font-semibold">{codes.length}</span> código{codes.length !== 1 && 's'}
+      <p className='mt-4 text-sm text-gray-600'>
+        Total: <span className='font-semibold'>{codes.length}</span> código
+        {codes.length !== 1 && 's'}
       </p>
     </div>
-  )
+  );
 }
 

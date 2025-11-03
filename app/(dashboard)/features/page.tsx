@@ -68,32 +68,59 @@ export default function FeaturesPage() {
         [featureKey]: !currentValue,
       };
 
-      const { error } = await supabase
+      console.log('🔄 Actualizando feature:', {
+        labId: selectedLab.id,
+        labName: selectedLab.name,
+        featureKey,
+        oldValue: currentValue,
+        newValue: !currentValue,
+        updatedFeatures,
+      });
+
+      const { data, error } = await supabase
         .from('laboratories')
         .update({ features: updatedFeatures })
-        .eq('id', selectedLab.id);
+        .eq('id', selectedLab.id)
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error al actualizar:', error);
+        throw error;
+      }
 
-      // Actualizar estado local
-      setSelectedLab({ ...selectedLab, features: updatedFeatures });
+      if (!data) {
+        throw new Error('No se recibió respuesta del servidor');
+      }
+
+      console.log('✅ Feature actualizada correctamente:', data);
+
+      // Recargar datos para asegurar sincronización
+      await loadData();
+
+      // Actualizar estado local con los datos frescos
+      const freshLab = data;
+      setSelectedLab(freshLab);
       setLaboratories((labs) =>
-        labs.map((lab) =>
-          lab.id === selectedLab.id
-            ? { ...lab, features: updatedFeatures }
-            : lab,
-        ),
+        labs.map((lab) => (lab.id === freshLab.id ? freshLab : lab)),
       );
 
       // Mostrar notificación breve
       const notification = document.createElement('div');
       notification.className =
-        'fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg';
-      notification.textContent = '✓ Feature actualizada';
+        'fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+      notification.textContent = `✓ Feature "${featureKey}" ${
+        !currentValue ? 'habilitada' : 'deshabilitada'
+      }`;
       document.body.appendChild(notification);
-      setTimeout(() => notification.remove(), 2000);
-    } catch (error: any) {
-      alert('❌ Error: ' + error.message);
+      setTimeout(() => notification.remove(), 3000);
+    } catch (error: unknown) {
+      console.error('❌ Error completo:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Error desconocido';
+      alert(
+        `❌ Error al actualizar feature: ${errorMessage}\n\nPor favor, revisa la consola para más detalles.`,
+      );
     } finally {
       setSaving(false);
     }
@@ -138,12 +165,14 @@ export default function FeaturesPage() {
       if (error) throw error;
 
       alert(
-        '✅ Feature creada exitosamente. Trigger sincronizará con todos los laboratorios.',
+        '✅ Feature creada exitosamente. Trigger sincronizará con todos los clientes.',
       );
       setShowCreateModal(false);
       loadData(); // Recargar datos
-    } catch (error: any) {
-      alert('❌ Error: ' + error.message);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Error desconocido';
+      alert('❌ Error: ' + errorMessage);
     } finally {
       setSaving(false);
     }
@@ -171,8 +200,10 @@ export default function FeaturesPage() {
       setShowEditModal(false);
       setEditingFeature(null);
       loadData();
-    } catch (error: any) {
-      alert('❌ Error: ' + error.message);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Error desconocido';
+      alert('❌ Error: ' + errorMessage);
     } finally {
       setSaving(false);
     }
@@ -182,7 +213,7 @@ export default function FeaturesPage() {
     if (!deletingFeature) return;
     setSaving(true);
     try {
-      // Primero eliminar la feature de TODOS los laboratorios
+      // Primero eliminar la feature de TODOS los clientes
       const { data: labs } = await supabase
         .from('laboratories')
         .select('id, features');
@@ -209,12 +240,14 @@ export default function FeaturesPage() {
 
       if (error) throw error;
 
-      alert('✅ Feature eliminada de todos los laboratorios');
+      alert('✅ Feature eliminada de todos los clientes');
       setShowDeleteModal(false);
       setDeletingFeature(null);
       loadData();
-    } catch (error: any) {
-      alert('❌ Error: ' + error.message);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Error desconocido';
+      alert('❌ Error: ' + errorMessage);
     } finally {
       setSaving(false);
     }
@@ -231,7 +264,7 @@ export default function FeaturesPage() {
           Gestión de Features
         </h1>
         <p className='text-gray-600 mt-1'>
-          Administra el catálogo de features y asígnalas a laboratorios
+          Administra el catálogo de features y asígnalas a clientes
         </p>
       </div>
 
@@ -256,7 +289,7 @@ export default function FeaturesPage() {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            🏥 Asignar a Laboratorio
+            🏥 Asignar a Cliente
           </button>
         </div>
       </div>
@@ -379,21 +412,19 @@ export default function FeaturesPage() {
         </div>
       )}
 
-      {/* Tab: Asignar a Laboratorio */}
+      {/* Tab: Asignar a Cliente */}
       {activeTab === 'assign' && (
         <>
           {laboratories.length === 0 ? (
             <div className='bg-white rounded-lg shadow p-12 text-center'>
               <span className='text-6xl mb-4 block'>🏥</span>
-              <p className='text-gray-600'>No hay laboratorios en el sistema</p>
+              <p className='text-gray-600'>No hay clientes en el sistema</p>
             </div>
           ) : (
             <div className='grid grid-cols-12 gap-6'>
-              {/* Selector de Laboratorio */}
+              {/* Selector de Cliente */}
               <div className='col-span-3 bg-white rounded-lg shadow p-4'>
-                <h2 className='font-semibold text-gray-900 mb-4'>
-                  Laboratorios
-                </h2>
+                <h2 className='font-semibold text-gray-900 mb-4'>Clientes</h2>
                 <div className='space-y-2'>
                   {laboratories.map((lab) => (
                     <button
@@ -405,7 +436,9 @@ export default function FeaturesPage() {
                           : 'hover:bg-gray-50 border-2 border-transparent'
                       }`}
                     >
-                      <div className='font-medium text-gray-900'>{lab.name}</div>
+                      <div className='font-medium text-gray-900'>
+                        {lab.name}
+                      </div>
                       <div className='text-xs text-gray-500 mt-1'>
                         {lab.slug}
                       </div>
@@ -526,7 +559,7 @@ export default function FeaturesPage() {
                   <div className='bg-white rounded-lg shadow p-12 text-center'>
                     <span className='text-6xl mb-4 block'>🚩</span>
                     <p className='text-gray-600'>
-                      Selecciona un laboratorio para gestionar sus features
+                      Selecciona un cliente para gestionar sus features
                     </p>
                   </div>
                 )}
@@ -572,7 +605,7 @@ export default function FeaturesPage() {
               <strong>{deletingFeature.name}</strong>?
             </p>
             <p className='text-sm text-red-600 mb-6'>
-              Esta acción eliminará la feature de TODOS los laboratorios y no se
+              Esta acción eliminará la feature de TODOS los clientes y no se
               puede deshacer.
             </p>
             <div className='flex gap-3'>
@@ -686,7 +719,7 @@ function FeatureFormModal({
               Descripción
             </label>
             <textarea
-              value={formData.description}
+              value={formData.description || ''}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
@@ -705,7 +738,10 @@ function FeatureFormModal({
             <select
               value={formData.category}
               onChange={(e) =>
-                setFormData({ ...formData, category: e.target.value as any })
+                setFormData({
+                  ...formData,
+                  category: e.target.value as 'core' | 'premium' | 'addon',
+                })
               }
               className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
               disabled={saving}
@@ -726,7 +762,11 @@ function FeatureFormModal({
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  required_plan: e.target.value as any,
+                  required_plan: e.target.value as
+                    | 'free'
+                    | 'basic'
+                    | 'pro'
+                    | 'enterprise',
                 })
               }
               className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
@@ -746,7 +786,7 @@ function FeatureFormModal({
             </label>
             <input
               type='text'
-              value={formData.icon}
+              value={formData.icon || ''}
               onChange={(e) =>
                 setFormData({ ...formData, icon: e.target.value })
               }
@@ -780,7 +820,7 @@ function FeatureFormModal({
             <div className='bg-blue-50 border border-blue-200 rounded-lg p-3'>
               <p className='text-sm text-blue-800'>
                 <strong>ℹ️ Nota:</strong> Al crear la feature, se sincronizará
-                automáticamente con TODOS los laboratorios (con valor FALSE por
+                automáticamente con TODOS los clientes (con valor FALSE por
                 defecto).
               </p>
             </div>

@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 
 const menuItems = [
   { href: '/', label: 'Dashboard', icon: '📊' },
-  { href: '/laboratories', label: 'Laboratorios', icon: '🏥' },
+  { href: '/laboratories', label: 'Clientes', icon: '🏥' },
   { href: '/features', label: 'Features', icon: '🚩' },
   { href: '/types-generator', label: 'Generador de Tipos', icon: '📝' },
   { href: '/codes', label: 'Códigos de Acceso', icon: '🔑' },

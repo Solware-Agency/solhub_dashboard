@@ -67,17 +67,17 @@ export default function DashboardPage() {
 
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
         <StatCard
-          title='Total Laboratorios'
+          title='Total Clientes'
           value={stats.totalLabs}
           icon='🏥'
-          description='Laboratorios registrados'
+          description='Clientes registrados'
           color='blue'
         />
         <StatCard
           title='Labs Activos'
           value={stats.activeLabs}
           icon='✅'
-          description='Laboratorios en operación'
+          description='Clientes en operación'
           color='green'
         />
         <StatCard
@@ -102,8 +102,8 @@ export default function DashboardPage() {
         </h2>
         <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
           <QuickActionCard
-            title='Crear Laboratorio'
-            description='Agregar un nuevo laboratorio al sistema'
+            title='Crear Cliente'
+            description='Agregar un nuevo cliente al sistema'
             icon='➕'
             href='/laboratories/new'
           />
@@ -115,7 +115,7 @@ export default function DashboardPage() {
           />
           <QuickActionCard
             title='Gestionar Features'
-            description='Habilitar/deshabilitar features por laboratorio'
+            description='Habilitar/deshabilitar features por cliente'
             icon='🚩'
             href='/features'
           />
