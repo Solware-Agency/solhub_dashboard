@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
 import type { Laboratory } from '@/lib/types/database';
@@ -11,30 +11,115 @@ export default function LaboratoriesPage() {
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'trial'>(
     'all',
   );
-
+  
+  // Ref para mantener el filtro actual en el callback de realtime
+  const filterRef = useRef(filter);
+  
+  // Actualizar el ref cuando cambia el filtro
   useEffect(() => {
+    filterRef.current = filter;
+  }, [filter]);
+
+  // Efecto para cargar datos cuando cambia el filtro
+  useEffect(() => {
+    const loadLaboratories = async () => {
+      setLoading(true);
+      let query = supabase
+        .from('laboratories')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (filter !== 'all') {
+        query = query.eq('status', filter);
+      }
+
+      const { data, error } = await query;
+
+      if (!error && data) {
+        setLaboratories(data);
+      }
+      setLoading(false);
+    };
+
     loadLaboratories();
   }, [filter]);
 
-  const loadLaboratories = async () => {
-    setLoading(true);
-    let query = supabase
-      .from('laboratories')
-      .select('*')
-      .order('created_at', { ascending: false });
+  // Efecto separado para la suscripción de realtime (solo se ejecuta una vez)
+  useEffect(() => {
+    // Suscripción a cambios en tiempo real
+    const channel = supabase
+      .channel('laboratories-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Escucha INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'laboratories',
+        },
+        (payload) => {
+          console.log('🔔 Cambio detectado:', payload.eventType, payload);
+          
+          const currentFilter = filterRef.current;
+          
+          if (payload.eventType === 'INSERT') {
+            // Agregar nuevo laboratorio si cumple con el filtro
+            const newLab = payload.new as Laboratory;
+            if (currentFilter === 'all' || newLab.status === currentFilter) {
+              setLaboratories((prev) => {
+                // Evitar duplicados
+                if (prev.some((lab) => lab.id === newLab.id)) {
+                  return prev;
+                }
+                // Agregar al inicio y ordenar por fecha
+                return [newLab, ...prev].sort(
+                  (a, b) => 
+                    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                );
+              });
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            // Actualizar laboratorio existente
+            const updatedLab = payload.new as Laboratory;
+            setLaboratories((prev) => {
+              const index = prev.findIndex((lab) => lab.id === updatedLab.id);
+              
+              // Si existe y cumple con el filtro, actualizar
+              if (index !== -1 && (currentFilter === 'all' || updatedLab.status === currentFilter)) {
+                const updated = [...prev];
+                updated[index] = updatedLab;
+                return updated;
+              }
+              
+              // Si existe pero ya no cumple el filtro, remover
+              if (index !== -1 && currentFilter !== 'all' && updatedLab.status !== currentFilter) {
+                return prev.filter((lab) => lab.id !== updatedLab.id);
+              }
+              
+              // Si no existe pero cumple el filtro, agregar
+              if (index === -1 && (currentFilter === 'all' || updatedLab.status === currentFilter)) {
+                return [updatedLab, ...prev].sort(
+                  (a, b) => 
+                    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                );
+              }
+              
+              return prev;
+            });
+          } else if (payload.eventType === 'DELETE') {
+            // Eliminar laboratorio
+            const deletedLab = payload.old as Laboratory;
+            setLaboratories((prev) => prev.filter((lab) => lab.id !== deletedLab.id));
+          }
+        },
+      )
+      .subscribe();
 
-    if (filter !== 'all') {
-      query = query.eq('status', filter);
-    }
-
-    const { data, error } = await query;
-
-    if (!error && data) {
-      setLaboratories(data);
-    }
-    setLoading(false);
-  };
-
+    // Limpiar suscripción al desmontar el componente
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []); // Solo se ejecuta una vez al montar el componente
+  
   const getStatusBadge = (status: string) => {
     const styles = {
       active: 'bg-green-100 text-green-800',
@@ -47,7 +132,7 @@ export default function LaboratoriesPage() {
   if (loading) {
     return <div className='text-gray-600'>Cargando clientes...</div>;
   }
-
+  
   return (
     <div>
       <div className='flex justify-between items-center mb-8'>

@@ -172,6 +172,8 @@ export default function EditLaboratoryPage() {
     return <div className='text-red-600'>Cliente no encontrado</div>;
   }
 
+  const timeZones = Intl.supportedValuesOf('timeZone');
+
   return (
     <div>
       {/* Header */}
@@ -520,8 +522,10 @@ export default function EditLaboratoryPage() {
                 <label className='block text-sm font-medium text-gray-700 mb-2'>
                   Zona Horaria
                 </label>
-                <input
-                  type='text'
+                <select
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  name='timezone'
+                  id='timezone'
                   value={formData.config.timezone}
                   onChange={(e) =>
                     setFormData({
@@ -529,9 +533,14 @@ export default function EditLaboratoryPage() {
                       config: { ...formData.config, timezone: e.target.value },
                     })
                   }
-                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
                   disabled={saving}
-                />
+                >
+                  {timeZones.map((timezone) => (
+                    <option key={timezone} value={timezone}>
+                      {timezone}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

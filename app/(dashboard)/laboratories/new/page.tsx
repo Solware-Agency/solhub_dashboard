@@ -19,17 +19,21 @@ export default function NewLaboratoryPage() {
 
     try {
       // Validar slug (solo minúsculas, números y guiones)
-      const slugRegex = /^[a-z0-9-]+$/;
-      if (!slugRegex.test(formData.slug)) {
-        throw new Error(
-          'El slug solo puede contener letras minúsculas, números y guiones',
-        );
+      let slug = formData.name;
+
+      const wordsName = slug.split(/\s+/);
+
+      if (wordsName.length >= 2) {
+        const firstLetter = wordsName.map((word) => word.charAt(0));
+        slug = firstLetter.join('').toLowerCase();
+      } else {
+        slug = formData.name.toLowerCase();
       }
 
       const { error } = await supabase.from('laboratories').insert({
         name: formData.name,
-        slug: formData.slug,
-        status: formData.status,
+        slug: slug,
+        status: 'trial',
       });
 
       if (error) throw error;
@@ -42,15 +46,6 @@ export default function NewLaboratoryPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSlugChange = (value: string) => {
-    // Convertir a lowercase y reemplazar espacios por guiones
-    const slug = value
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
-    setFormData({ ...formData, slug });
   };
 
   return (
@@ -79,62 +74,13 @@ export default function NewLaboratoryPage() {
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
               placeholder='Ej: Cliente Vargas'
               required
               disabled={loading}
             />
             <p className='text-sm text-gray-500 mt-1'>
               Nombre completo del cliente
-            </p>
-          </div>
-
-          <div>
-            <label
-              htmlFor='slug'
-              className='block text-sm font-medium text-gray-700 mb-2'
-            >
-              Slug (identificador único) <span className='text-red-500'>*</span>
-            </label>
-            <input
-              id='slug'
-              type='text'
-              value={formData.slug}
-              onChange={(e) => handleSlugChange(e.target.value)}
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
-              placeholder='Ej: labvargas'
-              pattern='[a-z0-9-]+'
-              required
-              disabled={loading}
-            />
-            <p className='text-sm text-gray-500 mt-1'>
-              Solo letras minúsculas, números y guiones. Este será usado para
-              identificar al cliente en el sistema.
-            </p>
-          </div>
-
-          <div>
-            <label
-              htmlFor='status'
-              className='block text-sm font-medium text-gray-700 mb-2'
-            >
-              Estado <span className='text-red-500'>*</span>
-            </label>
-            <select
-              id='status'
-              value={formData.status}
-              onChange={(e) =>
-                setFormData({ ...formData, status: e.target.value as any })
-              }
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
-              disabled={loading}
-            >
-              <option value='active'>Activo</option>
-              <option value='inactive'>Inactivo</option>
-              <option value='trial'>Prueba</option>
-            </select>
-            <p className='text-sm text-gray-500 mt-1'>
-              Estado inicial del cliente
             </p>
           </div>
 
