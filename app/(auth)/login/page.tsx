@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function LoginPage() {
+function LoginForm() {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -61,6 +61,50 @@ export default function LoginPage() {
   };
 
   return (
+    <form onSubmit={handleLogin} className='space-y-6'>
+      <div>
+        <label
+          htmlFor='code'
+          className='block text-sm font-medium text-gray-700 mb-2'
+        >
+          Código de Acceso
+        </label>
+        <input
+          id='code'
+          type='text'
+          value={code}
+          onChange={(e) => setCode(e.target.value.toUpperCase())}
+          className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-lg font-mono tracking-wider text-black'
+          placeholder='INGRESA EL CÓDIGO'
+          required
+          disabled={loading}
+          autoFocus
+          autoComplete='off'
+        />
+        <p className='mt-2 text-xs text-gray-500'>
+          Ingresa el código de acceso para continuar
+        </p>
+      </div>
+
+      {error && (
+        <div className='p-3 bg-red-50 border border-red-200 rounded-md'>
+          <p className='text-sm text-red-600'>{error}</p>
+        </div>
+      )}
+
+      <button
+        type='submit'
+        disabled={loading || !code.trim()}
+        className='w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+      >
+        {loading ? 'Verificando...' : 'Acceder al Dashboard'}
+      </button>
+    </form>
+  );
+}
+
+export default function LoginPage() {
+  return (
     <div className='min-h-screen flex items-center justify-center bg-gray-50'>
       <div className='max-w-md w-full p-8 bg-white rounded-lg shadow-md'>
         <div className='text-center mb-8'>
@@ -68,45 +112,15 @@ export default function LoginPage() {
           <p className='text-gray-600 mt-2'>Dashboard Administrativo</p>
         </div>
 
-        <form onSubmit={handleLogin} className='space-y-6'>
-          <div>
-            <label
-              htmlFor='code'
-              className='block text-sm font-medium text-gray-700 mb-2'
-            >
-              Código de Acceso
-            </label>
-            <input
-              id='code'
-              type='text'
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-lg font-mono tracking-wider text-black'
-              placeholder='INGRESA EL CÓDIGO'
-              required
-              disabled={loading}
-              autoFocus
-              autoComplete='off'
-            />
-            <p className='mt-2 text-xs text-gray-500'>
-              Ingresa el código de acceso para continuar
-            </p>
-          </div>
-
-          {error && (
-            <div className='p-3 bg-red-50 border border-red-200 rounded-md'>
-              <p className='text-sm text-red-600'>{error}</p>
+        <Suspense
+          fallback={
+            <div className='text-center text-gray-600 py-8'>
+              Cargando formulario...
             </div>
-          )}
-
-          <button
-            type='submit'
-            disabled={loading || !code.trim()}
-            className='w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
-          >
-            {loading ? 'Verificando...' : 'Acceder al Dashboard'}
-          </button>
-        </form>
+          }
+        >
+          <LoginForm />
+        </Suspense>
 
         <p className='mt-6 text-center text-sm text-gray-500'>
           Panel exclusivo para administradores de Solhub
