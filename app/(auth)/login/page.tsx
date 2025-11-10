@@ -1,15 +1,27 @@
 'use client';
 
-import { useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    // Verificar si ya está autenticado
+    const isAuthenticated = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('admin_authenticated='))
+      ?.split('=')[1] === 'true';
+
+    if (isAuthenticated) {
+      const redirect = searchParams.get('redirect') || '/';
+      router.push(redirect);
+    }
+  }, [router, searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,54 +29,32 @@ export default function LoginPage() {
     setError('');
 
     try {
-      console.log('[Login] Intentando login con:', email);
-
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Llamar a API route para verificar el código
+      const response = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code }),
       });
 
-      if (signInError) {
-        console.error('[Login] Error en signIn:', signInError);
-        throw signInError;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Código inválido');
       }
 
-      console.log('[Login] SignIn exitoso, verificando usuario...');
-
-      // Verificar que el usuario sea super admin
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      console.log('[Login] Usuario obtenido:', user?.id);
-
-      if (user) {
-        const { data: adminUser, error: adminError } = await supabase
-          .from('admin_users')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        console.log('[Login] AdminUser query:', { adminUser, adminError });
-
-        if (!adminUser || !adminUser.is_active) {
-          console.error('[Login] Usuario no es admin o no está activo');
-          await supabase.auth.signOut();
-          throw new Error(
-            'No tienes permisos para acceder al dashboard administrativo',
-          );
-        }
-
-        console.log('[Login] Usuario autorizado, redirigiendo...');
+      if (data.success) {
+        // Redirigir a la ruta original o al dashboard
+        const redirect = searchParams.get('redirect') || '/';
+        router.push(redirect);
+        router.refresh();
+      } else {
+        throw new Error('Código inválido');
       }
-
-      console.log('[Login] Ejecutando router.push("/")');
-      router.push('/');
-      router.refresh();
-      console.log('[Login] Redirección completada');
     } catch (error: any) {
-      console.error('[Login] Error en handleLogin:', error);
-      setError(error.message || 'Error al iniciar sesión');
+      console.error('[Login] Error:', error);
+      setError(error.message || 'Error al verificar el código');
     } finally {
       setLoading(false);
     }
@@ -81,40 +71,26 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className='space-y-6'>
           <div>
             <label
-              htmlFor='email'
+              htmlFor='code'
               className='block text-sm font-medium text-gray-700 mb-2'
             >
-              Email
+              Código de Acceso
             </label>
             <input
-              id='email'
-              type='email'
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
-              placeholder='admin@solhub.app'
+              id='code'
+              type='text'
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-lg font-mono tracking-wider text-black'
+              placeholder='INGRESA EL CÓDIGO'
               required
               disabled={loading}
+              autoFocus
+              autoComplete='off'
             />
-          </div>
-
-          <div>
-            <label
-              htmlFor='password'
-              className='block text-sm font-medium text-gray-700 mb-2'
-            >
-              Contraseña
-            </label>
-            <input
-              id='password'
-              type='password'
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
-              placeholder='••••••••'
-              required
-              disabled={loading}
-            />
+            <p className='mt-2 text-xs text-gray-500'>
+              Ingresa el código de acceso para continuar
+            </p>
           </div>
 
           {error && (
@@ -125,10 +101,10 @@ export default function LoginPage() {
 
           <button
             type='submit'
-            disabled={loading}
+            disabled={loading || !code.trim()}
             className='w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
           >
-            {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+            {loading ? 'Verificando...' : 'Acceder al Dashboard'}
           </button>
         </form>
 

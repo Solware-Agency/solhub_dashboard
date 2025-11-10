@@ -4,7 +4,7 @@ Panel de control centralizado para gestionar el SaaS multi-tenant de laboratorio
 
 ## 🎯 Características
 
-- ✅ **Dashboard sin autenticación** (acceso directo)
+- ✅ **Autenticación por código de acceso** (protección de rutas)
 - ✅ Dashboard con métricas globales
 - ✅ CRUD completo de laboratorios
 - ✅ Gestión de features por laboratorio
@@ -25,9 +25,18 @@ pnpm install
 Crear archivo `.env.local` en la raíz del proyecto:
 
 ```env
+# Código de acceso para el dashboard (OBLIGATORIO)
+ADMIN_ACCESS_CODE=TU_CODIGO_SECRETO_AQUI
+
+# Variables de Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://sbqepjsxnqtldyvlntqk.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNicWVwanN4bnF0bGR5dmxudHFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxMjU3OTUsImV4cCI6MjA2NTcwMTc5NX0.Pq0Fu-Lv-MrrkrrAQM60TYGgyTIuOwu33tzU31rbDvY
 ```
+
+**⚠️ IMPORTANTE:** 
+- El código `ADMIN_ACCESS_CODE` es **obligatorio** para acceder al dashboard
+- Elige un código seguro y guárdalo en un lugar seguro
+- El código es case-insensitive (mayúsculas/minúsculas no importan)
 
 ### 3. Iniciar servidor de desarrollo
 
@@ -38,8 +47,9 @@ pnpm dev
 ### 4. Acceder al dashboard
 
 - **URL:** http://localhost:3000
-- ✅ **Sin autenticación** - Dashboard accesible directamente
-- El sistema está configurado para acceso libre (ideal para desarrollo/testing)
+- 🔐 **Autenticación requerida** - Se solicitará el código de acceso
+- Ingresa el código configurado en `ADMIN_ACCESS_CODE`
+- La sesión es persistente (dura indefinidamente hasta cerrar sesión o pestaña)
 
 ## 📚 Estructura del Proyecto
 
@@ -134,10 +144,12 @@ El dashboard utiliza las siguientes tablas en Supabase:
 
 ## 🔐 Seguridad
 
-- Solo super admins pueden acceder al dashboard
-- proxy valida sesión y rol en cada request
-- RLS policies activas en todas las tablas
-- Autenticación con Supabase Auth
+- **Autenticación por código de acceso** configurado en `.env.local`
+- Middleware protege todas las rutas del dashboard
+- Cookie httpOnly y secure en producción
+- Sesión persistente (dura indefinidamente hasta cerrar sesión o pestaña)
+- RLS policies activas en todas las tablas de Supabase
+- Redirección automática a login si no está autenticado
 
 ## 📖 Guía de Uso
 
@@ -228,24 +240,33 @@ Cuando agregas una nueva feature al catálogo:
 
 ## 🆘 Troubleshooting
 
-### Error 500: "No tienes permisos para acceder al dashboard administrativo"
+### Error: "Código inválido" o no puedo acceder al dashboard
 
-**Síntoma:**
-```
-GET .../admin_users?select=*&id=eq.... 500 (Internal Server Error)
-```
+**Causas posibles:**
+1. El código en `.env.local` no coincide con el ingresado
+2. El archivo `.env.local` no existe o no está en la raíz del proyecto
+3. El servidor no se reinició después de crear/modificar `.env.local`
 
-**Causa:** Este error ocurría por recursión infinita en las RLS policies de `admin_users` (ya solucionado en migración `fix_admin_users_rls_recursion`).
-
-**Si el problema persiste:**
-1. Verificar que el usuario existe en `admin_users`:
-   ```sql
-   SELECT * FROM admin_users WHERE email = 'georgevargas868@gmail.com';
+**Solución:**
+1. Verificar que el archivo `.env.local` existe en la raíz del proyecto
+2. Verificar que `ADMIN_ACCESS_CODE` está configurado correctamente
+3. **Reiniciar el servidor** después de modificar `.env.local`:
+   ```bash
+   # Detener el servidor (Ctrl+C)
+   # Iniciar nuevamente
+   pnpm dev
    ```
-2. Verificar que `is_active = true` y `role = 'superadmin'`
-3. Hacer logout completo (botón "Cerrar Sesión")
-4. Limpiar cookies del navegador (Ctrl+Shift+Del)
-5. Intentar login nuevamente
+4. El código es case-insensitive, pero verifica que no haya espacios extra
+5. Limpiar cookies del navegador si el problema persiste
+
+### Error: "Error de configuración del servidor"
+
+**Causa:** La variable `ADMIN_ACCESS_CODE` no está configurada en `.env.local`
+
+**Solución:**
+1. Crear archivo `.env.local` en la raíz del proyecto
+2. Agregar: `ADMIN_ACCESS_CODE=tu_codigo_aqui`
+3. Reiniciar el servidor
 
 ### Error: "Cannot read properties of undefined"
 
@@ -263,6 +284,6 @@ Para dudas o problemas con el dashboard administrativo, revisar el archivo `.cur
 
 ---
 
-**Última actualización:** 2025-01-25  
-**Versión:** 1.0.0 (FASE 1 + FASE 2 Completadas)  
-**Estado:** ✅ **DASHBOARD FUNCIONAL Y LISTO PARA USO**
+**Última actualización:** 2025-01-26  
+**Versión:** 1.1.0 (Autenticación por código implementada)  
+**Estado:** ✅ **DASHBOARD PROTEGIDO Y LISTO PARA USO**

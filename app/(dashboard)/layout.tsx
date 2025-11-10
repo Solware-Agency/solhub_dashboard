@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 const menuItems = [
   { href: '/', label: 'Dashboard', icon: '📊' },
@@ -18,6 +19,26 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        router.push('/login');
+        router.refresh();
+      }
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <div className='flex h-screen bg-gray-100'>
@@ -49,7 +70,14 @@ export default function DashboardLayout({
         </nav>
 
         <div className='p-4 border-t'>
-          <div className='px-4 py-2 text-center text-xs text-gray-500'>
+          <button
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className='w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+          >
+            {isLoggingOut ? 'Cerrando sesión...' : '🚪 Cerrar Sesión'}
+          </button>
+          <div className='px-4 py-2 text-center text-xs text-gray-500 mt-2'>
             Solhub Admin Dashboard
           </div>
         </div>
