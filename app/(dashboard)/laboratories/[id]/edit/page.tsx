@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import type { Laboratory } from '@/lib/types/database';
+import { ClipboardList, Save } from 'lucide-react';
 
 export default function EditLaboratoryPage() {
   const router = useRouter();
@@ -202,8 +203,9 @@ export default function EditLaboratoryPage() {
       <form onSubmit={handleSubmit} className='space-y-6'>
         {/* Información Básica */}
         <div className='bg-white p-6 rounded-lg shadow'>
-          <h2 className='text-lg font-semibold text-gray-900 mb-4'>
-            📋 Información Básica
+          <h2 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
+            <ClipboardList className='w-5 h-5' />
+            Información Básica
           </h2>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
             <div>
@@ -619,7 +621,14 @@ export default function EditLaboratoryPage() {
             disabled={saving}
             className='px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium'
           >
-            {saving ? 'Guardando...' : '💾 Guardar Cambios'}
+            {saving ? (
+              'Guardando...'
+            ) : (
+              <>
+                <Save className='w-4 h-4 mr-2 inline-block' />
+                Guardar Cambios
+              </>
+            )}
           </button>
           <Link
             href={`/laboratories/${params.id}`}
