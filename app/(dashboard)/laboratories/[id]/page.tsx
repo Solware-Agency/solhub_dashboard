@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import type { Laboratory } from '@/lib/types/database';
+import { Edit, ClipboardList, Flag, Trash2 } from 'lucide-react';
 
 export default function LaboratoryDetailsPage() {
   const router = useRouter();
@@ -109,16 +110,17 @@ export default function LaboratoryDetailsPage() {
           <div className='flex gap-3'>
             <Link
               href={`/laboratories/${laboratory.id}/edit`}
-              className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
+              className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1'
             >
-              <Edit className='w-4 h-4 mr-1' />
+              <Edit className='w-4 h-4' />
               Editar
             </Link>
             <button
               onClick={() => setShowDeleteModal(true)}
-              className='px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors'
+              className='px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-1'
             >
-              🗑️ Eliminar
+              <Trash2 className='w-4 h-4' />
+              Eliminar
             </button>
           </div>
         </div>
