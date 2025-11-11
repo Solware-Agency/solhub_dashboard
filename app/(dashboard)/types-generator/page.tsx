@@ -26,7 +26,7 @@ export default function TypesGeneratorPage() {
         .from('feature_catalog')
         .select('key')
         .eq('is_active', true)
-        .order('order');
+        .order('name');
 
       if (error) throw error;
       if (!features || features.length === 0) {

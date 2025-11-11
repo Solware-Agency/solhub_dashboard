@@ -38,7 +38,7 @@ export default function FeaturesPage() {
           .from('feature_catalog')
           .select('*')
           .eq('is_active', true)
-          .order('order'),
+          .order('name'),
       ]);
 
       if (labsRes.data) {
@@ -78,23 +78,56 @@ export default function FeaturesPage() {
         updatedFeatures,
       });
 
-      const { data, error } = await supabase
+      // Actualizar con select para verificar que se aplicó
+      const { data: updateData, error: updateError } = await supabase
         .from('laboratories')
         .update({ features: updatedFeatures })
         .eq('id', selectedLab.id)
-        .select()
+        .select('*')
         .single();
 
-      if (error) {
-        console.error('❌ Error al actualizar:', error);
-        throw error;
+      if (updateError) {
+        console.error('❌ Error al actualizar:', updateError);
+        console.error('❌ Detalles del error:', {
+          code: updateError.code,
+          message: updateError.message,
+          details: updateError.details,
+          hint: updateError.hint,
+        });
+        
+        // Mensaje más claro para el usuario
+        if (updateError.code === 'PGRST301' || updateError.message?.includes('RLS')) {
+          alert(
+            '❌ Error: No tienes permisos para actualizar.\n\n' +
+            'Verifica que tengas configurado NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY en tu .env.local'
+          );
+        }
+        
+        throw updateError;
       }
 
-      if (!data) {
-        throw new Error('No se recibió respuesta del servidor');
+      if (!updateData) {
+        console.error('❌ UPDATE no retornó datos - probablemente bloqueado por RLS');
+        alert(
+          '❌ No se pudo actualizar el registro.\n\n' +
+          'El UPDATE no retornó datos. Esto puede deberse a:\n' +
+          '1. RLS está bloqueando la actualización\n' +
+          '2. No tienes service_role_key configurado\n' +
+          '3. El registro no existe'
+        );
+        throw new Error('No se pudo actualizar el registro. Verifica que tengas permisos o que RLS permita la actualización.');
       }
 
-      console.log('✅ Feature actualizada correctamente:', data);
+      console.log('✅ UPDATE exitoso, datos actualizados:', updateData);
+      console.log('✅ Valor de hasCaseGenerator después del UPDATE:', updateData.features?.hasCaseGenerator);
+      
+      // Verificar que el valor realmente cambió
+      if (updateData.features?.[featureKey as keyof typeof updateData.features] !== !currentValue) {
+        console.warn('⚠️ ADVERTENCIA: El valor no cambió después del UPDATE. Puede ser un problema de sincronización.');
+      }
+
+      // Usar los datos del UPDATE directamente
+      const data = updateData;
 
       // Recargar datos para asegurar sincronización
       await loadData();
@@ -160,7 +193,6 @@ export default function FeaturesPage() {
         is_active: true,
         default_value: false,
         component_path: formData.component_path || null,
-        order: formData.order || 0,
       });
 
       if (error) throw error;
@@ -191,7 +223,6 @@ export default function FeaturesPage() {
           category: formData.category,
           required_plan: formData.required_plan,
           icon: formData.icon,
-          order: formData.order,
         })
         .eq('id', editingFeature.id);
 
@@ -333,9 +364,6 @@ export default function FeaturesPage() {
                   <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
                     Plan
                   </th>
-                  <th className='px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase'>
-                    Orden
-                  </th>
                   <th className='px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
                     Acciones
                   </th>
@@ -380,11 +408,6 @@ export default function FeaturesPage() {
                         )}`}
                       >
                         {feature.required_plan}
-                      </span>
-                    </td>
-                    <td className='px-4 py-4 text-center'>
-                      <span className='text-sm text-gray-600'>
-                        {feature.order}
                       </span>
                     </td>
                     <td className='px-4 py-4 text-right space-x-2'>
@@ -658,7 +681,6 @@ function FeatureFormModal({
     category: feature?.category || 'core',
     required_plan: feature?.required_plan || 'free',
     icon: feature?.icon || '',
-    order: feature?.order || 0,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -805,26 +827,6 @@ function FeatureFormModal({
               }
               className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
               placeholder='Ej: 💰'
-              disabled={saving}
-            />
-          </div>
-
-          {/* Order */}
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
-              Orden
-            </label>
-            <input
-              type='number'
-              value={formData.order}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  order: parseInt(e.target.value) || 0,
-                })
-              }
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
-              placeholder='0'
               disabled={saving}
             />
           </div>

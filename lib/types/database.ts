@@ -64,7 +64,6 @@ export interface FeatureCatalog {
   is_active: boolean;
   default_value: boolean;
   component_path: string | null;
-  order: number;
   created_at: string;
   updated_at: string;
 }
