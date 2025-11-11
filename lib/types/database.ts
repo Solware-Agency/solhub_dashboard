@@ -11,6 +11,39 @@ export interface AdminUser {
   updated_at: string;
 }
 
+export interface LaboratoryFeatures {
+  hasChatAI: boolean;
+  hasStats: boolean;
+  hasForm: boolean;
+  hasCaseGenerator: boolean;
+  hasCases: boolean;
+  hasPatients: boolean;
+  hasPayment: boolean;
+  hasUsers: boolean;
+  hasChangeHistory: boolean;
+  hasReports: boolean;
+}
+
+export interface LaboratoryBranding {
+  logo?: string | null; // URL del logo o null
+  icon?: string; // Nombre del ícono (por defecto: "solhub")
+  primaryColor: string; // Color primario (por defecto: "#0066cc")
+  secondaryColor: string; // Color secundario (por defecto: "#00cc66")
+}
+
+export interface LaboratoryConfig {
+  branches: string[];
+  paymentMethods: string[];
+  defaultExchangeRate: number;
+  timezone: string;
+  webhooks?: {
+    // OPCIONAL - No todos los labs lo tienen
+    generateDoc?: string;
+    generatePdf?: string;
+    sendEmail?: string;
+  };
+}
+
 export interface Laboratory {
   id: string;
   slug: string;
@@ -21,36 +54,6 @@ export interface Laboratory {
   config: LaboratoryConfig;
   created_at: string;
   updated_at: string;
-}
-
-export interface LaboratoryFeatures {
-  hasInmunoRequests: boolean;
-  hasChangelogModule: boolean;
-  hasChatAI: boolean;
-  hasMultipleBranches: boolean;
-  hasCitologyStatus: boolean;
-  hasPatientOriginFilter: boolean;
-  hasRobotTracking: boolean;
-}
-
-export interface LaboratoryBranding {
-  logo?: string | null;
-  icon?: string;
-  primaryColor: string;
-  secondaryColor: string;
-}
-
-export interface LaboratoryConfig {
-  branches: string[];
-  paymentMethods: string[];
-  defaultExchangeRate: number;
-  timezone: string;
-  webhooks?: {
-    generateDoc?: string;
-    generatePdf?: string;
-    sendEmail?: string;
-  };
-  [key: string]: any;
 }
 
 export interface FeatureCatalog {
