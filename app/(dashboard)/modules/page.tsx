@@ -1,0 +1,523 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase/client';
+import type { ModuleCatalog, FeatureCatalog } from '@/lib/types/database';
+
+export default function ModulesPage() {
+  const [modules, setModules] = useState<ModuleCatalog[]>([]);
+  const [features, setFeatures] = useState<FeatureCatalog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingModule, setEditingModule] = useState<ModuleCatalog | null>(null);
+  const [formData, setFormData] = useState({
+    feature_key: '',
+    module_name: '',
+    structure: {
+      fields: {} as Record<string, { label: string; defaultEnabled: boolean; defaultRequired: boolean }>,
+      actions: {} as Record<string, { label: string; defaultEnabled: boolean }>,
+      settings: {} as Record<string, any>,
+    },
+  });
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [modulesRes, featuresRes] = await Promise.all([
+        supabase.from('module_catalog').select('*').order('created_at', { ascending: false }),
+        supabase.from('feature_catalog').select('*').eq('is_active', true).order('name'),
+      ]);
+
+      if (modulesRes.error) throw modulesRes.error;
+      if (featuresRes.error) throw featuresRes.error;
+
+      setModules(modulesRes.data || []);
+      setFeatures(featuresRes.data || []);
+    } catch (error: any) {
+      console.error('Error loading data:', error);
+      alert('Error al cargar datos: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const structure = {
+        fields: formData.structure.fields,
+        actions: formData.structure.actions,
+        settings: formData.structure.settings,
+      };
+
+      if (editingModule) {
+        // Actualizar módulo existente usando API Route
+        const response = await fetch(`/api/modules/${editingModule.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            feature_key: formData.feature_key,
+            module_name: formData.module_name,
+            structure,
+            updated_at: new Date().toISOString(),
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Error al actualizar módulo');
+        }
+
+        alert('✅ Módulo actualizado exitosamente');
+      } else {
+        // Crear nuevo módulo usando API Route
+        const response = await fetch('/api/modules', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            feature_key: formData.feature_key,
+            module_name: formData.module_name,
+            structure,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Error al crear módulo');
+        }
+
+        alert('✅ Módulo creado exitosamente');
+      }
+
+      setShowForm(false);
+      setEditingModule(null);
+      resetForm();
+      loadData();
+    } catch (error: any) {
+      console.error('Error saving module:', error);
+      alert('❌ Error: ' + error.message);
+    }
+  };
+
+  const handleEdit = (module: ModuleCatalog) => {
+    setEditingModule(module);
+    setFormData({
+      feature_key: module.feature_key,
+      module_name: module.module_name,
+        structure: {
+          fields: (module.structure.fields || {}) as Record<string, { label: string; defaultEnabled: boolean; defaultRequired: boolean }>,
+          actions: (module.structure.actions || {}) as Record<string, { label: string; defaultEnabled: boolean }>,
+          settings: module.structure.settings || {},
+        },
+    });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('¿Estás seguro de eliminar este módulo? Esto también eliminará la configuración del módulo en todos los laboratorios.')) return;
+
+    try {
+      const response = await fetch(`/api/modules/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al eliminar módulo');
+      }
+
+      alert('✅ Módulo eliminado exitosamente');
+      loadData();
+    } catch (error: any) {
+      console.error('Error deleting module:', error);
+      alert('❌ Error: ' + error.message);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      feature_key: '',
+      module_name: '',
+      structure: {
+        fields: {} as Record<string, { label: string; defaultEnabled: boolean; defaultRequired: boolean }>,
+        actions: {} as Record<string, { label: string; defaultEnabled: boolean }>,
+        settings: {} as Record<string, any>,
+      },
+    });
+  };
+
+  const addField = () => {
+    const fieldName = prompt('Nombre del campo (ej: cedula, email):');
+    if (!fieldName) return;
+
+    setFormData({
+      ...formData,
+      structure: {
+        ...formData.structure,
+        fields: {
+          ...formData.structure.fields,
+          [fieldName]: {
+            label: fieldName.charAt(0).toUpperCase() + fieldName.slice(1),
+            defaultEnabled: true,
+            defaultRequired: false,
+          },
+        },
+      },
+    });
+  };
+
+  const removeField = (fieldName: string) => {
+    const newFields = { ...formData.structure.fields };
+    delete newFields[fieldName];
+    setFormData({
+      ...formData,
+      structure: {
+        ...formData.structure,
+        fields: newFields,
+      },
+    });
+  };
+
+  const addAction = () => {
+    const actionName = prompt('Nombre de la acción (ej: generatePdf):');
+    if (!actionName) return;
+
+    setFormData({
+      ...formData,
+      structure: {
+        ...formData.structure,
+        actions: {
+          ...formData.structure.actions,
+          [actionName]: {
+            label: actionName,
+            defaultEnabled: true,
+          },
+        },
+      },
+    });
+  };
+
+  const removeAction = (actionName: string) => {
+    const newActions = { ...formData.structure.actions };
+    delete newActions[actionName];
+    setFormData({
+      ...formData,
+      structure: {
+        ...formData.structure,
+        actions: newActions,
+      },
+    });
+  };
+
+  if (loading) {
+    return <div className="p-6">Cargando...</div>;
+  }
+
+  return (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-700">📦 Catálogo de Módulos</h1>
+        <button
+          onClick={() => {
+            resetForm();
+            setEditingModule(null);
+            setShowForm(true);
+          }}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          ➕ Crear Nuevo Módulo
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="bg-white border rounded-lg p-6 mb-6">
+          <h2 className="text-xl font-bold mb-4 text-gray-700">
+            {editingModule ? '✏️ Editar Módulo' : '➕ Crear Nuevo Módulo'}
+          </h2>
+
+          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded mb-4">
+            <p className="text-sm text-gray-700">
+              ⚠️ <strong>Importante:</strong> Primero debes crear la feature en "Features" antes de crear el módulo.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block mb-2 font-semibold text-gray-700">Feature Key:</label>
+              <select
+                value={formData.feature_key}
+                onChange={(e) => setFormData({ ...formData, feature_key: e.target.value })}
+                className="w-full border rounded px-3 py-2 text-gray-700"
+                required
+              >
+                <option value="">Seleccionar feature...</option>
+                {features.map((f) => (
+                  <option key={f.id} value={f.key}>
+                    {f.name} ({f.key})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block mb-2 font-semibold text-gray-700">Nombre del Módulo:</label>
+              <input
+                type="text"
+                value={formData.module_name}
+                onChange={(e) => setFormData({ ...formData, module_name: e.target.value })}
+                className="w-full border rounded px-3 py-2 text-gray-700"
+                placeholder="ej: registrationForm"
+                required
+              />
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="font-semibold text-gray-700">Campos del Formulario:</label>
+                <button
+                  type="button"
+                  onClick={addField}
+                  className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                >
+                  ➕ Agregar Campo
+                </button>
+              </div>
+              {Object.entries(formData.structure.fields).map(([fieldName, fieldConfig]) => (
+                <div key={fieldName} className="border rounded p-3 mb-2">
+                  <div className="flex justify-between items-start mb-2 text-gray-700">
+                    <strong>Campo: {fieldName}</strong>
+                    <button
+                      type="button"
+                      onClick={() => removeField(fieldName)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      🗑️ Eliminar
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2">
+                    <div>
+                      <label className="text-sm text-gray-700">Label:</label>
+                      <input
+                        type="text"
+                        value={fieldConfig.label}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            structure: {
+                              ...formData.structure,
+                              fields: {
+                                ...formData.structure.fields,
+                                [fieldName]: { ...fieldConfig, label: e.target.value },
+                              },
+                            },
+                          })
+                        }
+                        className="w-full border rounded px-2 py-1 text-sm text-gray-700"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={fieldConfig.defaultEnabled}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              structure: {
+                                ...formData.structure,
+                                fields: {
+                                  ...formData.structure.fields,
+                                  [fieldName]: { ...fieldConfig, defaultEnabled: e.target.checked },
+                                },
+                              },
+                            })
+                          }
+                          className="mr-1"
+                        />
+                        Habilitado por defecto
+                      </label>
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={fieldConfig.defaultRequired}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              structure: {
+                                ...formData.structure,
+                                fields: {
+                                  ...formData.structure.fields,
+                                  [fieldName]: { ...fieldConfig, defaultRequired: e.target.checked },
+                                },
+                              },
+                            })
+                          }
+                          className="mr-1"
+                        />
+                        Requerido por defecto
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="font-semibold text-gray-700">Acciones:</label>
+                <button
+                  type="button"
+                  onClick={addAction}
+                  className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                >
+                  ➕ Agregar Acción
+                </button>
+              </div>
+              {Object.entries(formData.structure.actions).map(([actionName, actionConfig]) => (
+                <div key={actionName} className="border rounded p-3 mb-2">
+                  <div className="flex justify-between items-start mb-2 text-gray-700">
+                    <strong>Acción: {actionName}</strong>
+                    <button
+                      type="button"
+                      onClick={() => removeAction(actionName)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      🗑️ Eliminar
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-sm text-gray-700">Label:</label>
+                      <input
+                        type="text"
+                        value={actionConfig.label}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            structure: {
+                              ...formData.structure,
+                              actions: {
+                                ...formData.structure.actions,
+                                [actionName]: { ...actionConfig, label: e.target.value },
+                              },
+                            },
+                          })
+                        }
+                        className="w-full border rounded px-2 py-1 text-sm text-gray-700"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={actionConfig.defaultEnabled}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              structure: {
+                                ...formData.structure,
+                                actions: {
+                                  ...formData.structure.actions,
+                                  [actionName]: { ...actionConfig, defaultEnabled: e.target.checked },
+                                },
+                              },
+                            })
+                          }
+                          className="mr-1"
+                        />
+                        Habilitado por defecto
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                💾 Guardar Módulo
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingModule(null);
+                  resetForm();
+                }}
+                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-3 text-left text-gray-700">Módulo</th>
+              <th className="px-4 py-3 text-left text-gray-700">Feature Key</th>
+              <th className="px-4 py-3 text-left text-gray-700">Estado</th>
+              <th className="px-4 py-3 text-left text-gray-700">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {modules.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="px-4 py-8 text-center text-gray-700">
+                  No hay módulos creados aún
+                </td>
+              </tr>
+            ) : (
+              modules.map((module) => (
+                <tr key={module.id} className="border-t">
+                  <td className="px-4 py-3 font-semibold text-gray-700">{module.module_name}</td>
+                  <td className="px-4 py-3 text-gray-700">{module.feature_key}</td>
+                  <td className="px-4 py-3">
+                    {module.is_active ? (
+                      <span className="text-green-600">✓ Activo</span>
+                    ) : (
+                      <span className="text-gray-400">Inactivo</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEdit(module)}
+                        className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                      >
+                        ✏️ Editar
+                      </button>
+                      <button
+                        onClick={() => handleDelete(module.id)}
+                        className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
+                      >
+                        🗑️ Eliminar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+

@@ -4,8 +4,12 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import type { Laboratory } from '@/lib/types/database';
-import { ClipboardList, Save } from 'lucide-react';
+import type {
+  Laboratory,
+  ModuleCatalog,
+  ModuleConfig,
+} from '@/lib/types/database';
+import { ClipboardList, Save, Settings } from 'lucide-react';
 
 export default function EditLaboratoryPage() {
   const router = useRouter();
@@ -13,6 +17,7 @@ export default function EditLaboratoryPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [laboratory, setLaboratory] = useState<Laboratory | null>(null);
+  const [modules, setModules] = useState<ModuleCatalog[]>([]);
 
   // Form data
   const [formData, setFormData] = useState({
@@ -35,12 +40,29 @@ export default function EditLaboratoryPage() {
         generatePdf: '',
         sendEmail: '',
       },
+      modules: {} as Record<string, ModuleConfig>,
     },
   });
 
   useEffect(() => {
     loadLaboratory();
+    loadModules();
   }, [params.id]);
+
+  const loadModules = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('module_catalog')
+        .select('*')
+        .eq('is_active', true);
+
+      if (!error && data) {
+        setModules(data);
+      }
+    } catch (error) {
+      console.error('Error loading modules:', error);
+    }
+  };
 
   const loadLaboratory = async () => {
     setLoading(true);
@@ -72,6 +94,7 @@ export default function EditLaboratoryPage() {
             generatePdf: '',
             sendEmail: '',
           },
+          modules: data.config?.modules || {},
         },
       });
     } else {
@@ -236,7 +259,7 @@ export default function EditLaboratoryPage() {
               <input
                 type='text'
                 value={formData.slug}
-                className='w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 text-gray-600'
+                className='w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500'
                 disabled
               />
               <p className='text-xs text-gray-500 mt-1'>
@@ -619,6 +642,273 @@ export default function EditLaboratoryPage() {
             </div>
           </div>
         </div>
+
+        {/* Configuración de Módulos */}
+        {laboratory && (
+          <div className='bg-white p-6 rounded-lg shadow'>
+            <h2 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
+              <Settings className='w-5 h-5' />
+              ⚙️ Configuración de Módulos
+            </h2>
+            <p className='text-sm text-gray-600 mb-4'>
+              Configura campos, acciones y settings de cada módulo. Solo
+              aparecen módulos de features habilitadas.
+            </p>
+
+            {modules
+              .filter(
+                (module) =>
+                  laboratory.features?.[
+                    module.feature_key as keyof typeof laboratory.features
+                  ],
+              )
+              .map((module) => {
+                const moduleConfig = formData.config.modules?.[
+                  module.module_name
+                ] || {
+                  fields: {},
+                  actions: {},
+                  settings: {},
+                };
+
+                return (
+                  <div key={module.id} className='mb-6 border rounded-lg p-4'>
+                    <h3 className='font-semibold text-gray-800 mb-3'>
+                      📦 {module.module_name} ({module.feature_key})
+                    </h3>
+
+                    {/* Campos */}
+                    {module.structure.fields &&
+                      Object.keys(module.structure.fields).length > 0 && (
+                        <div className='mb-4'>
+                          <h4 className='text-sm font-medium text-gray-700 mb-2'>
+                            Campos:
+                          </h4>
+                          <div className='space-y-2'>
+                            {Object.entries(module.structure.fields).map(
+                              ([fieldName, fieldDef]) => {
+                                // Estructura con enabled y required
+                                const fieldConfig = typeof moduleConfig.fields?.[fieldName] === 'object' && moduleConfig.fields?.[fieldName] !== null
+                                  ? moduleConfig.fields[fieldName]
+                                  : {
+                                      enabled: typeof moduleConfig.fields?.[fieldName] === 'boolean'
+                                        ? moduleConfig.fields[fieldName] // Compatibilidad con estructura antigua (solo boolean)
+                                        : fieldDef.defaultEnabled,
+                                      required: fieldDef.defaultRequired,
+                                    };
+
+                                return (
+                                  <div
+                                    key={fieldName}
+                                    className='flex items-center gap-4 p-2 bg-gray-50 rounded'
+                                  >
+                                    <span className='flex-1 font-medium text-gray-700'>
+                                      {fieldDef.label}
+                                    </span>
+                                    <label className='flex items-center gap-2 text-gray-700'>
+                                      <input
+                                        type='checkbox'
+                                        checked={fieldConfig.enabled}
+                                        onChange={(e) => {
+                                          const newModules = {
+                                            ...formData.config.modules,
+                                          };
+                                          if (!newModules[module.module_name]) {
+                                            newModules[module.module_name] = {
+                                              fields: {},
+                                              actions: {},
+                                              settings: {},
+                                            };
+                                          }
+                                          if (
+                                            !newModules[module.module_name]
+                                              .fields
+                                          ) {
+                                            newModules[
+                                              module.module_name
+                                            ].fields = {};
+                                          }
+                                          newModules[
+                                            module.module_name
+                                          ].fields![fieldName] = {
+                                            enabled: e.target.checked,
+                                            required: fieldConfig.required,
+                                          };
+                                          setFormData({
+                                            ...formData,
+                                            config: {
+                                              ...formData.config,
+                                              modules: newModules,
+                                            },
+                                          });
+                                        }}
+                                        className='rounded'
+                                      />
+                                      <span className='text-sm'>
+                                        Habilitado
+                                      </span>
+                                    </label>
+                                    <label className='flex items-center gap-2 text-gray-700'>
+                                      <input
+                                        type='checkbox'
+                                        checked={fieldConfig.required}
+                                        onChange={(e) => {
+                                          const newModules = {
+                                            ...formData.config.modules,
+                                          };
+                                          if (!newModules[module.module_name]) {
+                                            newModules[module.module_name] = {
+                                              fields: {},
+                                              actions: {},
+                                              settings: {},
+                                            };
+                                          }
+                                          if (
+                                            !newModules[module.module_name]
+                                              .fields
+                                          ) {
+                                            newModules[
+                                              module.module_name
+                                            ].fields = {};
+                                          }
+                                          newModules[
+                                            module.module_name
+                                          ].fields![fieldName] = {
+                                            enabled: fieldConfig.enabled,
+                                            required: e.target.checked,
+                                          };
+                                          setFormData({
+                                            ...formData,
+                                            config: {
+                                              ...formData.config,
+                                              modules: newModules,
+                                            },
+                                          });
+                                        }}
+                                        disabled={!fieldConfig.enabled}
+                                        className='rounded'
+                                      />
+                                      <span className='text-sm'>Requerido</span>
+                                    </label>
+                                  </div>
+                                );
+                              },
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Acciones */}
+                    {module.structure.actions &&
+                      Object.keys(module.structure.actions).length > 0 && (
+                        <div className='mb-4'>
+                          <h4 className='text-sm font-medium text-gray-700 mb-2'>
+                            Acciones:
+                          </h4>
+                          <div className='space-y-2'>
+                            {Object.entries(module.structure.actions).map(
+                              ([actionName, actionDef]) => {
+                                const actionEnabled =
+                                  moduleConfig.actions?.[actionName] ??
+                                  actionDef.defaultEnabled;
+
+                                return (
+                                  <div
+                                    key={actionName}
+                                    className='flex items-center gap-4 p-2 bg-gray-50 rounded'
+                                  >
+                                    <span className='flex-1 font-medium text-gray-700'>
+                                      {actionDef.label}
+                                    </span>
+                                    <label className='flex items-center gap-2 text-gray-700'>
+                                      <input
+                                        type='checkbox'
+                                        checked={actionEnabled}
+                                        onChange={(e) => {
+                                          const newModules = {
+                                            ...formData.config.modules,
+                                          };
+                                          if (!newModules[module.module_name]) {
+                                            newModules[module.module_name] = {
+                                              fields: {},
+                                              actions: {},
+                                              settings: {},
+                                            };
+                                          }
+                                          if (
+                                            !newModules[module.module_name]
+                                              .actions
+                                          ) {
+                                            newModules[
+                                              module.module_name
+                                            ].actions = {};
+                                          }
+                                          newModules[
+                                            module.module_name
+                                          ].actions![actionName] =
+                                            e.target.checked;
+                                          setFormData({
+                                            ...formData,
+                                            config: {
+                                              ...formData.config,
+                                              modules: newModules,
+                                            },
+                                          });
+                                        }}
+                                        className='rounded'
+                                      />
+                                      <span className='text-sm'>
+                                        Habilitado
+                                      </span>
+                                    </label>
+                                  </div>
+                                );
+                              },
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Settings (solo lectura por ahora) */}
+                    {module.structure.settings &&
+                      Object.keys(module.structure.settings).length > 0 && (
+                        <div>
+                          <h4 className='text-sm font-medium mb-2 text-gray-700'>
+                            Settings:
+                          </h4>
+                          <div className='text-sm text-gray-600 bg-gray-50 p-3 rounded'>
+                            <pre className='whitespace-pre-wrap'>
+                              {JSON.stringify(
+                                module.structure.settings,
+                                null,
+                                2,
+                              )}
+                            </pre>
+                            <p className='text-xs text-gray-500 mt-2'>
+                              ⚠️ Los settings se configuran desde el catálogo de
+                              módulos
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                );
+              })}
+
+            {modules.filter(
+              (module) =>
+                laboratory.features?.[
+                  module.feature_key as keyof typeof laboratory.features
+                ],
+            ).length === 0 && (
+              <p className='text-gray-500 text-sm'>
+                No hay módulos configurados para las features habilitadas de
+                este laboratorio. Crea módulos en &quot;Módulos&quot; para las
+                features que este laboratorio tiene habilitadas.
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Botones de Acción */}
         <div className='flex gap-4'>

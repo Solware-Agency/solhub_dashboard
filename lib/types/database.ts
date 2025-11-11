@@ -84,6 +84,52 @@ export interface LaboratoryCode {
   updated_at: string;
 }
 
+// Sistema de Configuración Granular de Módulos
+export interface ModuleCatalog {
+  id: string;
+  feature_key: string; // 'hasForm' (relación con feature_catalog)
+  module_name: string; // 'registrationForm' (nombre del módulo en config)
+  structure: ModuleStructure; // Estructura completa del módulo
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ModuleStructure {
+  fields?: {
+    [fieldName: string]: {
+      label: string;
+      defaultEnabled: boolean; // true = habilitado por defecto
+      defaultRequired: boolean; // true = requerido por defecto
+    };
+  };
+  actions?: {
+    [actionName: string]: {
+      label: string;
+      defaultEnabled: boolean; // true = habilitado por defecto
+    };
+  };
+  settings?: {
+    [settingName: string]: any; // Valores por defecto (ej: model, maxTokens, etc.)
+  };
+}
+
+// Configuración de módulo en laboratories.config.modules
+export interface ModuleConfig {
+  fields?: {
+    [fieldName: string]: {
+      enabled: boolean; // true = habilitado, false = deshabilitado
+      required: boolean; // true = requerido, false = opcional
+    };
+  };
+  actions?: {
+    [actionName: string]: boolean; // true = habilitado, false = deshabilitado
+  };
+  settings?: {
+    [settingName: string]: any;
+  };
+}
+
 export interface UserProfile {
   id: string;
   email: string;

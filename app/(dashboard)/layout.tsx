@@ -11,12 +11,14 @@ import {
   Key,
   Users,
   LogOut,
+  Package,
 } from 'lucide-react';
 
 const menuItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/laboratories', label: 'Clientes', icon: Building2 },
   { href: '/features', label: 'Features', icon: Flag },
+  { href: '/modules', label: 'Módulos', icon: Package },
   { href: '/types-generator', label: 'Generador de Tipos', icon: FileCode },
   { href: '/codes', label: 'Códigos de Acceso', icon: Key },
   { href: '/users', label: 'Usuarios Global', icon: Users },
@@ -53,7 +55,7 @@ export default function DashboardLayout({
     <div className='flex h-screen bg-gray-100 overflow-hidden'>
       {/* Sidebar */}
       <aside className='w-64 bg-white shadow-md flex flex-col overflow-hidden'>
-        <div className='p-6 border-b flex-shrink-0'>
+        <div className='p-6 border-b shrink-0'>
           <img
             src='https://lafysstpyiejevhrlmzc.supabase.co/storage/v1/object/public/imagenes/Logos/SolHub/SolHub_ORIG%20-%20SIN%20ESLOGAN.svg'
             alt='Solhub Admin'
@@ -82,7 +84,7 @@ export default function DashboardLayout({
           })}
         </nav>
 
-        <div className='p-4 border-t flex-shrink-0'>
+        <div className='p-4 border-t shrink-0'>
           <button
             onClick={handleLogout}
             disabled={isLoggingOut}
