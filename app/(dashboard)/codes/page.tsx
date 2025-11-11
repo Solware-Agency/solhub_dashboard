@@ -56,9 +56,18 @@ export default function CodesPage() {
         expires_at: formData.expires_at ? new Date(formData.expires_at).toISOString() : null,
       }
 
-      const { error } = await supabase.from('laboratory_codes').insert(insertData)
+      const response = await fetch('/api/codes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(insertData),
+      });
 
-      if (error) throw error
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al crear código');
+      }
 
       alert('✅ Código creado exitosamente')
       setShowForm(false)
@@ -89,12 +98,18 @@ export default function CodesPage() {
 
   const toggleCodeStatus = async (codeId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('laboratory_codes')
-        .update({ is_active: !currentStatus })
-        .eq('id', codeId)
+      const response = await fetch(`/api/codes/${codeId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ is_active: !currentStatus }),
+      });
 
-      if (error) throw error
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al actualizar código');
+      }
 
       loadData()
     } catch (error: any) {

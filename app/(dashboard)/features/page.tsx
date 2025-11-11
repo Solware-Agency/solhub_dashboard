@@ -78,56 +78,30 @@ export default function FeaturesPage() {
         updatedFeatures,
       });
 
-      // Actualizar con select para verificar que se aplicó
-      const { data: updateData, error: updateError } = await supabase
-        .from('laboratories')
-        .update({ features: updatedFeatures })
-        .eq('id', selectedLab.id)
-        .select('*')
-        .single();
+      // Llamar a API Route en lugar de Supabase directo
+      const response = await fetch(`/api/laboratories/${selectedLab.id}/features`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ features: updatedFeatures }),
+      });
 
-      if (updateError) {
-        console.error('❌ Error al actualizar:', updateError);
-        console.error('❌ Detalles del error:', {
-          code: updateError.code,
-          message: updateError.message,
-          details: updateError.details,
-          hint: updateError.hint,
-        });
-        
-        // Mensaje más claro para el usuario
-        if (updateError.code === 'PGRST301' || updateError.message?.includes('RLS')) {
-          alert(
-            '❌ Error: No tienes permisos para actualizar.\n\n' +
-            'Verifica que tengas configurado NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY en tu .env.local'
-          );
-        }
-        
-        throw updateError;
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ Error al actualizar:', errorData);
+        throw new Error(errorData.error || 'Error al actualizar features');
       }
 
-      if (!updateData) {
-        console.error('❌ UPDATE no retornó datos - probablemente bloqueado por RLS');
-        alert(
-          '❌ No se pudo actualizar el registro.\n\n' +
-          'El UPDATE no retornó datos. Esto puede deberse a:\n' +
-          '1. RLS está bloqueando la actualización\n' +
-          '2. No tienes service_role_key configurado\n' +
-          '3. El registro no existe'
-        );
-        throw new Error('No se pudo actualizar el registro. Verifica que tengas permisos o que RLS permita la actualización.');
-      }
+      const { data } = await response.json();
 
-      console.log('✅ UPDATE exitoso, datos actualizados:', updateData);
-      console.log('✅ Valor de hasCaseGenerator después del UPDATE:', updateData.features?.hasCaseGenerator);
+      console.log('✅ Feature actualizada correctamente:', data);
+      console.log('✅ Valor de hasCaseGenerator después del UPDATE:', data.features?.hasCaseGenerator);
       
       // Verificar que el valor realmente cambió
-      if (updateData.features?.[featureKey as keyof typeof updateData.features] !== !currentValue) {
+      if (data.features?.[featureKey as keyof typeof data.features] !== !currentValue) {
         console.warn('⚠️ ADVERTENCIA: El valor no cambió después del UPDATE. Puede ser un problema de sincronización.');
       }
-
-      // Usar los datos del UPDATE directamente
-      const data = updateData;
 
       // Recargar datos para asegurar sincronización
       await loadData();
@@ -183,19 +157,26 @@ export default function FeaturesPage() {
   const handleCreateFeature = async (formData: Partial<FeatureCatalog>) => {
     setSaving(true);
     try {
-      const { error } = await supabase.from('feature_catalog').insert({
-        key: formData.key!,
-        name: formData.name!,
-        description: formData.description || null,
-        category: formData.category || 'core',
-        required_plan: formData.required_plan || 'free',
-        icon: formData.icon || null,
-        is_active: true,
-        default_value: false,
-        component_path: formData.component_path || null,
+      const response = await fetch('/api/features', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          key: formData.key!,
+          name: formData.name!,
+          description: formData.description || null,
+          category: formData.category || 'core',
+          required_plan: formData.required_plan || 'free',
+          icon: formData.icon || null,
+          component_path: formData.component_path || null,
+        }),
       });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al crear feature');
+      }
 
       alert(
         '✅ Feature creada exitosamente. Trigger sincronizará con todos los clientes.',
@@ -215,18 +196,24 @@ export default function FeaturesPage() {
     if (!editingFeature) return;
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('feature_catalog')
-        .update({
+      const response = await fetch(`/api/features/${editingFeature.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           name: formData.name,
           description: formData.description,
           category: formData.category,
           required_plan: formData.required_plan,
           icon: formData.icon,
-        })
-        .eq('id', editingFeature.id);
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al actualizar feature');
+      }
 
       alert('✅ Feature actualizada');
       setShowEditModal(false);
@@ -245,32 +232,14 @@ export default function FeaturesPage() {
     if (!deletingFeature) return;
     setSaving(true);
     try {
-      // Primero eliminar la feature de TODOS los clientes
-      const { data: labs } = await supabase
-        .from('laboratories')
-        .select('id, features');
+      const response = await fetch(`/api/features/${deletingFeature.id}`, {
+        method: 'DELETE',
+      });
 
-      if (labs) {
-        for (const lab of labs) {
-          const updatedFeatures = { ...lab.features };
-          delete updatedFeatures[
-            deletingFeature.key as keyof typeof updatedFeatures
-          ];
-
-          await supabase
-            .from('laboratories')
-            .update({ features: updatedFeatures })
-            .eq('id', lab.id);
-        }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al eliminar feature');
       }
-
-      // Luego eliminar de feature_catalog
-      const { error } = await supabase
-        .from('feature_catalog')
-        .delete()
-        .eq('id', deletingFeature.id);
-
-      if (error) throw error;
 
       alert('✅ Feature eliminada de todos los clientes');
       setShowDeleteModal(false);

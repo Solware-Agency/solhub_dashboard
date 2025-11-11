@@ -118,12 +118,18 @@ export default function EditLaboratoryPage() {
           updateData.config.webhooks.sendEmail = webhooks.sendEmail;
       }
 
-      const { error } = await supabase
-        .from('laboratories')
-        .update(updateData)
-        .eq('id', params.id);
+      const response = await fetch(`/api/laboratories/${params.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al actualizar laboratorio');
+      }
 
       alert('✅ Cliente actualizado exitosamente');
       router.push(`/laboratories/${params.id}`);

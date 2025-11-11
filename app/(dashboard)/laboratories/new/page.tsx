@@ -30,13 +30,22 @@ export default function NewLaboratoryPage() {
         slug = formData.name.toLowerCase();
       }
 
-      const { error } = await supabase.from('laboratories').insert({
-        name: formData.name,
-        slug: slug,
-        status: 'trial',
+      const response = await fetch('/api/laboratories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          slug: slug,
+          status: 'trial',
+        }),
       });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al crear laboratorio');
+      }
 
       alert('✅ Cliente creado exitosamente');
       router.push('/laboratories');

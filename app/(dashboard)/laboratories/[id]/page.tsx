@@ -40,12 +40,14 @@ export default function LaboratoryDetailsPage() {
     if (!laboratory) return;
     setDeleting(true);
     try {
-      const { error } = await supabase
-        .from('laboratories')
-        .delete()
-        .eq('id', laboratory.id);
+      const response = await fetch(`/api/laboratories/${laboratory.id}`, {
+        method: 'DELETE',
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al eliminar laboratorio');
+      }
 
       alert('✅ Cliente eliminado exitosamente');
       router.push('/laboratories');
