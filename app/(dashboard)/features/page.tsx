@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import type { Laboratory, FeatureCatalog } from '@/lib/types/database';
+import { BookOpen, Building2, Flag, Plus, Edit, Trash2 } from 'lucide-react';
 
 type Tab = 'catalog' | 'assign';
 
@@ -273,23 +274,25 @@ export default function FeaturesPage() {
         <div className='flex gap-8'>
           <button
             onClick={() => setActiveTab('catalog')}
-            className={`pb-4 px-2 font-medium transition-colors ${
+            className={`pb-4 px-2 font-medium transition-colors flex items-center gap-2 ${
               activeTab === 'catalog'
                 ? 'border-b-2 border-blue-600 text-blue-600'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            📚 Catálogo de Features
+            <BookOpen className='w-4 h-4' />
+            Catálogo de Features
           </button>
           <button
             onClick={() => setActiveTab('assign')}
-            className={`pb-4 px-2 font-medium transition-colors ${
+            className={`pb-4 px-2 font-medium transition-colors flex items-center gap-2 ${
               activeTab === 'assign'
                 ? 'border-b-2 border-blue-600 text-blue-600'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            🏥 Asignar a Cliente
+            <Building2 className='w-4 h-4' />
+            Asignar a Cliente
           </button>
         </div>
       </div>
@@ -417,7 +420,7 @@ export default function FeaturesPage() {
         <>
           {laboratories.length === 0 ? (
             <div className='bg-white rounded-lg shadow p-12 text-center'>
-              <span className='text-6xl mb-4 block'>🏥</span>
+              <Building2 className='w-16 h-16 mx-auto mb-4 text-gray-400' />
               <p className='text-gray-600'>No hay clientes en el sistema</p>
             </div>
           ) : (
@@ -557,7 +560,7 @@ export default function FeaturesPage() {
                   </div>
                 ) : (
                   <div className='bg-white rounded-lg shadow p-12 text-center'>
-                    <span className='text-6xl mb-4 block'>🚩</span>
+                    <Flag className='w-16 h-16 mx-auto mb-4 text-gray-400' />
                     <p className='text-gray-600'>
                       Selecciona un cliente para gestionar sus features
                     </p>
@@ -666,8 +669,18 @@ function FeatureFormModal({
   return (
     <div className='fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4'>
       <div className='bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto'>
-        <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-          {mode === 'create' ? '➕ Crear Nueva Feature' : '✏️ Editar Feature'}
+        <h3 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
+          {mode === 'create' ? (
+            <>
+              <Plus className='w-5 h-5' />
+              Crear Nueva Feature
+            </>
+          ) : (
+            <>
+              <Edit className='w-5 h-5' />
+              Editar Feature
+            </>
+          )}
         </h3>
 
         <form onSubmit={handleSubmit} className='space-y-4'>

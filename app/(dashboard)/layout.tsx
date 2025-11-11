@@ -3,14 +3,23 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
+import {
+  LayoutDashboard,
+  Building2,
+  Flag,
+  FileCode,
+  Key,
+  Users,
+  LogOut,
+} from 'lucide-react';
 
 const menuItems = [
-  { href: '/', label: 'Dashboard', icon: '📊' },
-  { href: '/laboratories', label: 'Clientes', icon: '🏥' },
-  { href: '/features', label: 'Features', icon: '🚩' },
-  { href: '/types-generator', label: 'Generador de Tipos', icon: '📝' },
-  { href: '/codes', label: 'Códigos de Acceso', icon: '🔑' },
-  { href: '/users', label: 'Usuarios Global', icon: '👥' },
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/laboratories', label: 'Clientes', icon: Building2 },
+  { href: '/features', label: 'Features', icon: Flag },
+  { href: '/types-generator', label: 'Generador de Tipos', icon: FileCode },
+  { href: '/codes', label: 'Códigos de Acceso', icon: Key },
+  { href: '/users', label: 'Usuarios Global', icon: Users },
 ];
 
 export default function DashboardLayout({
@@ -41,17 +50,21 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className='flex h-screen bg-gray-100'>
+    <div className='flex h-screen bg-gray-100 overflow-hidden'>
       {/* Sidebar */}
-      <aside className='w-64 bg-white shadow-md flex flex-col'>
-        <div className='p-6 border-b'>
-          <h1 className='text-2xl font-bold text-gray-900'>Solhub Admin</h1>
-          <p className='text-sm text-gray-500 mt-1'>Dashboard Administrativo</p>
+      <aside className='w-64 bg-white shadow-md flex flex-col overflow-hidden'>
+        <div className='p-6 border-b flex-shrink-0'>
+          <img
+            src='https://lafysstpyiejevhrlmzc.supabase.co/storage/v1/object/public/imagenes/Logos/SolHub/SolHub_ORIG%20-%20SIN%20ESLOGAN.svg'
+            alt='Solhub Admin'
+            className='w-full h-auto max-h-16 object-contain'
+          />
         </div>
 
-        <nav className='flex-1 p-4 space-y-1'>
+        <nav className='flex-1 p-4 space-y-1 overflow-y-auto'>
           {menuItems.map((item) => {
             const isActive = pathname === item.href;
+            const IconComponent = item.icon;
             return (
               <Link
                 key={item.href}
@@ -62,30 +75,30 @@ export default function DashboardLayout({
                     : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <span className='text-xl'>{item.icon}</span>
+                <IconComponent className='w-5 h-5' />
                 <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className='p-4 border-t'>
+        <div className='p-4 border-t flex-shrink-0'>
           <button
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className='w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+            className='w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
           >
-            {isLoggingOut ? 'Cerrando sesión...' : '🚪 Cerrar Sesión'}
+            <LogOut className='w-4 h-4' />
+            {isLoggingOut ? 'Cerrando sesión...' : 'Cerrar Sesión'}
           </button>
-          <div className='px-4 py-2 text-center text-xs text-gray-500 mt-2'>
-            Solhub Admin Dashboard
-          </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className='flex-1 overflow-auto'>
-        <div className='p-8'>{children}</div>
+      <main className='flex-1 overflow-hidden flex flex-col'>
+        <div className='flex-1 overflow-y-auto'>
+          <div className='p-8'>{children}</div>
+        </div>
       </main>
     </div>
   );

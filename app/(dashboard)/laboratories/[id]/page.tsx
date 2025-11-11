@@ -111,7 +111,8 @@ export default function LaboratoryDetailsPage() {
               href={`/laboratories/${laboratory.id}/edit`}
               className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
             >
-              ✏️ Editar
+              <Edit className='w-4 h-4 mr-1' />
+              Editar
             </Link>
             <button
               onClick={() => setShowDeleteModal(true)}
@@ -128,7 +129,8 @@ export default function LaboratoryDetailsPage() {
         {/* Información Básica */}
         <div className='bg-white rounded-lg shadow p-6'>
           <h2 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
-            📋 Información Básica
+            <ClipboardList className='w-5 h-5' />
+            Información Básica
           </h2>
           <div className='space-y-3'>
             <div>
@@ -216,7 +218,8 @@ export default function LaboratoryDetailsPage() {
         {/* Features */}
         <div className='bg-white rounded-lg shadow p-6'>
           <h2 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
-            🚩 Features Habilitadas
+            <Flag className='w-5 h-5' />
+            Features Habilitadas
             <span className='text-sm font-normal text-gray-500'>
               ({enabledFeatures.length} de {featuresArray.length})
             </span>

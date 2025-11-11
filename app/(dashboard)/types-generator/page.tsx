@@ -2,6 +2,14 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
+import {
+  RefreshCw,
+  Copy,
+  Download,
+  FileCode,
+  Check,
+  Loader2,
+} from 'lucide-react';
 
 export default function TypesGeneratorPage() {
   const [types, setTypes] = useState('');
@@ -157,12 +165,12 @@ export interface Laboratory {
         >
           {loading ? (
             <>
-              <span className='inline-block animate-spin mr-2'>⟳</span>
+              <Loader2 className='w-4 h-4 mr-2 animate-spin inline-block' />
               Generando...
             </>
           ) : (
             <>
-              <span className='mr-2'>🔄</span>
+              <RefreshCw className='w-4 h-4 mr-2 inline-block' />
               Generar Tipos
             </>
           )}
@@ -176,21 +184,21 @@ export interface Laboratory {
             >
               {copied ? (
                 <>
-                  <span className='mr-2'>✓</span>
+                  <Check className='w-4 h-4 mr-2 inline-block' />
                   Copiado!
                 </>
               ) : (
                 <>
-                  <span className='mr-2'>📋</span>
+                  <Copy className='w-4 h-4 mr-2 inline-block' />
                   Copiar al Portapapeles
                 </>
               )}
             </button>
             <button
               onClick={downloadFile}
-              className='px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors font-medium'
+              className='px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors font-medium flex items-center'
             >
-              <span className='mr-2'>💾</span>
+              <Download className='w-4 h-4 mr-2' />
               Descargar types.ts
             </button>
           </>
@@ -216,7 +224,7 @@ export interface Laboratory {
 
       {!types && (
         <div className='bg-white rounded-lg shadow p-12 text-center'>
-          <span className='text-6xl mb-4 block'>📝</span>
+          <FileCode className='w-16 h-16 mx-auto mb-4 text-gray-400' />
           <p className='text-gray-600'>
             Haz clic en "Generar Tipos" para crear el código TypeScript
             actualizado
