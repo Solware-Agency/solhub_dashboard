@@ -11,6 +11,7 @@ import {
   FileCode,
   Flag,
 } from 'lucide-react';
+import SOLWY from '../components/SOLWY';
 
 interface Stats {
   totalLabs: number;
@@ -66,12 +67,37 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className='h-full flex flex-col overflow-hidden'>
-      <div className='mb-6 flex-shrink-0'>
-        <h1 className='text-3xl font-bold text-gray-900'>Dashboard</h1>
-        <p className='text-gray-600 mt-2'>
-          Bienvenido al panel administrativo de Solhub
-        </p>
+    <div className='h-full flex flex-col overflow-visible'>
+      <div className='mb-6 flex-shrink-0 relative overflow-visible'>
+        <div className='flex items-center justify-between'>
+          <div>
+            <h1 className='text-3xl font-bold text-gray-900'>Dashboard</h1>
+            <p className='text-gray-600 mt-2'>
+              Bienvenido al panel administrativo de Solhub
+            </p>
+          </div>
+          <div 
+            className='relative flex items-center justify-center'
+            style={{ 
+              width: '150px', 
+              height: '150px',
+              marginRight: '-1rem',
+              marginTop: '-3rem',
+              marginBottom: '-3rem'
+            }}
+          >
+            <div 
+              className='absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-2xl opacity-30 animate-pulse'
+              style={{ 
+                width: '100%', 
+                height: '100%'
+              }}
+            ></div>
+            <div className='relative z-10'>
+              <SOLWY className='w-24 h-24' />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className='flex-1 flex flex-col gap-6 min-h-0'>

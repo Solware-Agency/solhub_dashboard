@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
 import type { Laboratory } from '@/lib/types/database';
+import { Building2, Plus, Eye, Edit } from 'lucide-react';
 
 export default function LaboratoriesPage() {
   const [laboratories, setLaboratories] = useState<Laboratory[]>([]);
@@ -137,16 +138,20 @@ export default function LaboratoriesPage() {
     <div>
       <div className='flex justify-between items-center mb-8'>
         <div>
-          <h1 className='text-3xl font-bold text-gray-900'>Clientes</h1>
+          <div className='flex items-center gap-3 mb-2'>
+            <Building2 className='w-8 h-8 text-gray-700' />
+            <h1 className='text-3xl font-bold text-gray-900'>Clientes</h1>
+          </div>
           <p className='text-gray-600 mt-1'>
             Gestiona todos los clientes del sistema
           </p>
         </div>
         <Link
           href='/laboratories/new'
-          className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
+          className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2'
         >
-          + Crear Cliente
+          <Plus className='w-4 h-4' />
+          Crear Cliente
         </Link>
       </div>
 
@@ -222,18 +227,22 @@ export default function LaboratoriesPage() {
                     {new Date(lab.created_at).toLocaleDateString('es-ES')}
                   </td>
                   <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
-                    <Link
-                      href={`/laboratories/${lab.id}`}
-                      className='text-blue-600 hover:text-blue-900 mr-4'
-                    >
-                      Ver
-                    </Link>
-                    <Link
-                      href={`/laboratories/${lab.id}/edit`}
-                      className='text-blue-600 hover:text-blue-900'
-                    >
-                      Editar
-                    </Link>
+                    <div className='flex items-center justify-end gap-2'>
+                      <Link
+                        href={`/laboratories/${lab.id}`}
+                        className='bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1'
+                      >
+                        <Eye className='w-3 h-3' />
+                        Ver
+                      </Link>
+                      <Link
+                        href={`/laboratories/${lab.id}/edit`}
+                        className='bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1'
+                      >
+                        <Edit className='w-3 h-3' />
+                        Editar
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))

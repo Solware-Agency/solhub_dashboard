@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import type { Laboratory, FeatureCatalog } from '@/lib/types/database';
-import { BookOpen, Building2, Flag, Plus, Edit, Trash2 } from 'lucide-react';
+import { BookOpen, Building2, Flag, Plus, Edit, Trash2, Save, X, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 type Tab = 'catalog' | 'assign';
 
@@ -261,9 +261,12 @@ export default function FeaturesPage() {
   return (
     <div>
       <div className='mb-8'>
-        <h1 className='text-3xl font-bold text-gray-900'>
-          Gestión de Features
-        </h1>
+        <div className='flex items-center gap-3 mb-2'>
+          <Flag className='w-8 h-8 text-gray-700' />
+          <h1 className='text-3xl font-bold text-gray-900'>
+            Gestión de Features
+          </h1>
+        </div>
         <p className='text-gray-600 mt-1'>
           Administra el catálogo de features y asígnalas a clientes
         </p>
@@ -311,9 +314,10 @@ export default function FeaturesPage() {
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium'
+              className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2'
             >
-              + Nueva Feature
+              <Plus className='w-4 h-4' />
+              Nueva Feature
             </button>
           </div>
 
@@ -379,25 +383,29 @@ export default function FeaturesPage() {
                         {feature.required_plan}
                       </span>
                     </td>
-                    <td className='px-4 py-4 text-right space-x-2'>
-                      <button
-                        onClick={() => {
-                          setEditingFeature(feature);
-                          setShowEditModal(true);
-                        }}
-                        className='text-blue-600 hover:text-blue-900 text-sm font-medium'
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => {
-                          setDeletingFeature(feature);
-                          setShowDeleteModal(true);
-                        }}
-                        className='text-red-600 hover:text-red-900 text-sm font-medium'
-                      >
-                        Eliminar
-                      </button>
+                    <td className='px-4 py-4 text-right'>
+                      <div className='flex items-center justify-end gap-2'>
+                        <button
+                          onClick={() => {
+                            setEditingFeature(feature);
+                            setShowEditModal(true);
+                          }}
+                          className='bg-blue-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-700 transition-colors flex items-center gap-1'
+                        >
+                          <Edit className='w-3 h-3' />
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => {
+                            setDeletingFeature(feature);
+                            setShowDeleteModal(true);
+                          }}
+                          className='bg-red-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-700 transition-colors flex items-center gap-1'
+                        >
+                          <Trash2 className='w-3 h-3' />
+                          Eliminar
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -532,15 +540,23 @@ export default function FeaturesPage() {
                                       toggleFeature(feature.key, isEnabled)
                                     }
                                     disabled={saving}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 justify-center ${
                                       isEnabled
                                         ? 'bg-green-100 text-green-800 hover:bg-green-200'
                                         : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                                     }`}
                                   >
-                                    {isEnabled
-                                      ? '✓ Habilitado'
-                                      : '○ Deshabilitado'}
+                                    {isEnabled ? (
+                                      <>
+                                        <CheckCircle2 className='w-4 h-4' />
+                                        Habilitado
+                                      </>
+                                    ) : (
+                                      <>
+                                        <X className='w-4 h-4' />
+                                        Deshabilitado
+                                      </>
+                                    )}
                                   </button>
                                 </td>
                               </tr>
@@ -592,9 +608,12 @@ export default function FeaturesPage() {
       {showDeleteModal && deletingFeature && (
         <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
           <div className='bg-white rounded-lg p-6 max-w-md w-full mx-4'>
-            <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-              ⚠️ Confirmar Eliminación
-            </h3>
+            <div className='flex items-center gap-2 mb-4'>
+              <AlertTriangle className='w-5 h-5 text-red-600' />
+              <h3 className='text-lg font-semibold text-gray-900'>
+                Confirmar Eliminación
+              </h3>
+            </div>
             <p className='text-gray-600 mb-4'>
               ¿Estás seguro de eliminar la feature{' '}
               <strong>{deletingFeature.name}</strong>?
@@ -607,9 +626,16 @@ export default function FeaturesPage() {
               <button
                 onClick={handleDeleteFeature}
                 disabled={saving}
-                className='flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                className='flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
               >
-                {saving ? 'Eliminando...' : 'Sí, Eliminar'}
+                {saving ? (
+                  'Eliminando...'
+                ) : (
+                  <>
+                    <Trash2 className='w-4 h-4' />
+                    Sí, Eliminar
+                  </>
+                )}
               </button>
               <button
                 onClick={() => {
@@ -617,8 +643,9 @@ export default function FeaturesPage() {
                   setDeletingFeature(null);
                 }}
                 disabled={saving}
-                className='flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50'
+                className='flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2'
               >
+                <X className='w-4 h-4' />
                 Cancelar
               </button>
             </div>
@@ -815,20 +842,24 @@ function FeatureFormModal({
             <button
               type='submit'
               disabled={saving}
-              className='flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+              className='flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
             >
-              {saving
-                ? 'Guardando...'
-                : mode === 'create'
-                ? 'Crear Feature'
-                : 'Guardar Cambios'}
+              {saving ? (
+                'Guardando...'
+              ) : (
+                <>
+                  <Save className='w-4 h-4' />
+                  {mode === 'create' ? 'Crear Feature' : 'Guardar Cambios'}
+                </>
+              )}
             </button>
             <button
               type='button'
               onClick={onClose}
               disabled={saving}
-              className='flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50'
+              className='flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2'
             >
+              <X className='w-4 h-4' />
               Cancelar
             </button>
           </div>
