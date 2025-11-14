@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { Users, Search } from 'lucide-react'
 
 interface UserWithLab {
   id: string
@@ -113,7 +114,10 @@ export default function UsersPage() {
   return (
     <div>
       <div className='mb-8'>
-        <h1 className='text-3xl font-bold text-gray-900'>Usuarios Global</h1>
+        <div className='flex items-center gap-3 mb-2'>
+          <Users className='w-8 h-8 text-gray-700' />
+          <h1 className='text-3xl font-bold text-gray-900'>Usuarios Global</h1>
+        </div>
         <p className='text-gray-600 mt-1'>
           Vista global de todos los usuarios del sistema
         </p>
@@ -126,13 +130,16 @@ export default function UsersPage() {
             <label className='block text-sm font-medium text-gray-700 mb-2'>
               Buscar
             </label>
-            <input
-              type='text'
-              value={filter.search}
-              onChange={(e) => setFilter({ ...filter, search: e.target.value })}
-              placeholder='Email, nombre...'
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
-            />
+            <div className='relative'>
+              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
+              <input
+                type='text'
+                value={filter.search}
+                onChange={(e) => setFilter({ ...filter, search: e.target.value })}
+                placeholder='Email, nombre...'
+                className='w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+              />
+            </div>
           </div>
 
           <div>
@@ -192,23 +199,23 @@ export default function UsersPage() {
 
       {/* Estadísticas Rápidas */}
       <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
-        <div className='bg-white p-4 rounded-lg shadow'>
+        <div className='bg-white p-4 rounded-lg shadow border border-gray-200 hover:border-purple-500 hover:shadow-md transition-all duration-200 cursor-pointer'>
           <p className='text-sm text-gray-600'>Total Usuarios</p>
           <p className='text-2xl font-bold text-gray-900'>{users.length}</p>
         </div>
-        <div className='bg-white p-4 rounded-lg shadow'>
+        <div className='bg-white p-4 rounded-lg shadow border border-gray-200 hover:border-green-500 hover:shadow-md transition-all duration-200 cursor-pointer'>
           <p className='text-sm text-gray-600'>Aprobados</p>
           <p className='text-2xl font-bold text-green-600'>
             {users.filter((u) => u.estado === 'aprobado').length}
           </p>
         </div>
-        <div className='bg-white p-4 rounded-lg shadow'>
+        <div className='bg-white p-4 rounded-lg shadow border border-gray-200 hover:border-orange-500 hover:shadow-md transition-all duration-200 cursor-pointer'>
           <p className='text-sm text-gray-600'>Pendientes</p>
           <p className='text-2xl font-bold text-yellow-600'>
             {users.filter((u) => u.estado === 'pendiente').length}
           </p>
         </div>
-        <div className='bg-white p-4 rounded-lg shadow'>
+        <div className='bg-white p-4 rounded-lg shadow border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200 cursor-pointer'>
           <p className='text-sm text-gray-600'>Clientes</p>
           <p className='text-2xl font-bold text-blue-600'>
             {uniqueLabs.length}

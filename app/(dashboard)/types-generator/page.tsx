@@ -9,6 +9,7 @@ import {
   FileCode,
   Check,
   Loader2,
+  AlertTriangle,
 } from 'lucide-react';
 
 export default function TypesGeneratorPage() {
@@ -118,9 +119,12 @@ export interface Laboratory {
   return (
     <div>
       <div className='mb-8'>
-        <h1 className='text-3xl font-bold text-gray-900'>
-          Generador de Tipos TypeScript
-        </h1>
+        <div className='flex items-center gap-3 mb-2'>
+          <FileCode className='w-8 h-8 text-gray-700' />
+          <h1 className='text-3xl font-bold text-gray-900'>
+            Generador de Tipos TypeScript
+          </h1>
+        </div>
         <p className='text-gray-600 mt-1'>
           Mantén sincronizados los tipos TypeScript del proyecto principal
         </p>
@@ -129,7 +133,7 @@ export interface Laboratory {
       <div className='bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6'>
         <div className='flex'>
           <div className='flex-shrink-0'>
-            <span className='text-2xl'>⚠️</span>
+            <AlertTriangle className='w-6 h-6 text-yellow-600' />
           </div>
           <div className='ml-3'>
             <h3 className='text-sm font-semibold text-yellow-800'>
@@ -161,16 +165,16 @@ export interface Laboratory {
         <button
           onClick={generateTypes}
           disabled={loading}
-          className='px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium'
+          className='px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2'
         >
           {loading ? (
             <>
-              <Loader2 className='w-4 h-4 mr-2 animate-spin inline-block' />
+              <Loader2 className='w-4 h-4 animate-spin' />
               Generando...
             </>
           ) : (
             <>
-              <RefreshCw className='w-4 h-4 mr-2 inline-block' />
+              <RefreshCw className='w-4 h-4' />
               Generar Tipos
             </>
           )}
@@ -180,25 +184,25 @@ export interface Laboratory {
           <>
             <button
               onClick={copyToClipboard}
-              className='px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium'
+              className='px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center gap-2'
             >
               {copied ? (
                 <>
-                  <Check className='w-4 h-4 mr-2 inline-block' />
+                  <Check className='w-4 h-4' />
                   Copiado!
                 </>
               ) : (
                 <>
-                  <Copy className='w-4 h-4 mr-2 inline-block' />
+                  <Copy className='w-4 h-4' />
                   Copiar al Portapapeles
                 </>
               )}
             </button>
             <button
               onClick={downloadFile}
-              className='px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors font-medium flex items-center'
+              className='px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors font-medium flex items-center gap-2'
             >
-              <Download className='w-4 h-4 mr-2' />
+              <Download className='w-4 h-4' />
               Descargar types.ts
             </button>
           </>

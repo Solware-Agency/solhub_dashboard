@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import type { ModuleCatalog, FeatureCatalog } from '@/lib/types/database';
+import { Package, Plus, Edit, Trash2, Save, X, CheckCircle2 } from 'lucide-react';
 
 export default function ModulesPage() {
   const [modules, setModules] = useState<ModuleCatalog[]>([]);
@@ -224,28 +225,43 @@ export default function ModulesPage() {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-700">📦 Catálogo de Módulos</h1>
+        <div className="flex items-center gap-3">
+          <Package className="w-8 h-8 text-gray-700" />
+          <h1 className="text-3xl font-bold text-gray-700">Catálogo de Módulos</h1>
+        </div>
         <button
           onClick={() => {
             resetForm();
             setEditingModule(null);
             setShowForm(true);
           }}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
-          ➕ Crear Nuevo Módulo
+          <Plus className="w-4 h-4" />
+          Crear Nuevo Módulo
         </button>
       </div>
 
       {showForm && (
         <div className="bg-white border rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-bold mb-4 text-gray-700">
-            {editingModule ? '✏️ Editar Módulo' : '➕ Crear Nuevo Módulo'}
-          </h2>
+          <div className="flex items-center gap-2 mb-4">
+            {editingModule ? (
+              <>
+                <Edit className="w-5 h-5 text-gray-700" />
+                <h2 className="text-xl font-bold text-gray-700">Editar Módulo</h2>
+              </>
+            ) : (
+              <>
+                <Plus className="w-5 h-5 text-gray-700" />
+                <h2 className="text-xl font-bold text-gray-700">Crear Nuevo Módulo</h2>
+              </>
+            )}
+          </div>
 
           <div className="bg-yellow-50 border border-yellow-200 p-4 rounded mb-4">
-            <p className="text-sm text-gray-700">
-              ⚠️ <strong>Importante:</strong> Primero debes crear la feature en "Features" antes de crear el módulo.
+            <p className="text-sm text-gray-700 flex items-start gap-2">
+              <span className="text-yellow-600 font-bold">⚠️</span>
+              <span><strong>Importante:</strong> Primero debes crear la feature en "Features" antes de crear el módulo.</span>
             </p>
           </div>
 
@@ -285,9 +301,10 @@ export default function ModulesPage() {
                 <button
                   type="button"
                   onClick={addField}
-                  className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                  className="bg-green-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-700 transition-colors flex items-center gap-1"
                 >
-                  ➕ Agregar Campo
+                  <Plus className="w-3 h-3" />
+                  Agregar Campo
                 </button>
               </div>
               {Object.entries(formData.structure.fields).map(([fieldName, fieldConfig]) => (
@@ -297,9 +314,10 @@ export default function ModulesPage() {
                     <button
                       type="button"
                       onClick={() => removeField(fieldName)}
-                      className="text-red-600 hover:text-red-800"
+                      className="text-red-600 hover:text-red-800 transition-colors flex items-center gap-1"
                     >
-                      🗑️ Eliminar
+                      <Trash2 className="w-4 h-4" />
+                      Eliminar
                     </button>
                   </div>
                   <div className="grid grid-cols-1 gap-2">
@@ -378,9 +396,10 @@ export default function ModulesPage() {
                 <button
                   type="button"
                   onClick={addAction}
-                  className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                  className="bg-green-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-700 transition-colors flex items-center gap-1"
                 >
-                  ➕ Agregar Acción
+                  <Plus className="w-3 h-3" />
+                  Agregar Acción
                 </button>
               </div>
               {Object.entries(formData.structure.actions).map(([actionName, actionConfig]) => (
@@ -390,9 +409,10 @@ export default function ModulesPage() {
                     <button
                       type="button"
                       onClick={() => removeAction(actionName)}
-                      className="text-red-600 hover:text-red-800"
+                      className="text-red-600 hover:text-red-800 transition-colors flex items-center gap-1"
                     >
-                      🗑️ Eliminar
+                      <Trash2 className="w-4 h-4" />
+                      Eliminar
                     </button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -446,9 +466,10 @@ export default function ModulesPage() {
             <div className="flex gap-4">
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
               >
-                💾 Guardar Módulo
+                <Save className="w-4 h-4" />
+                Guardar Módulo
               </button>
               <button
                 type="button"
@@ -457,8 +478,9 @@ export default function ModulesPage() {
                   setEditingModule(null);
                   resetForm();
                 }}
-                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                className="bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition-colors flex items-center gap-2"
               >
+                <X className="w-4 h-4" />
                 Cancelar
               </button>
             </div>
@@ -490,7 +512,10 @@ export default function ModulesPage() {
                   <td className="px-4 py-3 text-gray-700">{module.feature_key}</td>
                   <td className="px-4 py-3">
                     {module.is_active ? (
-                      <span className="text-green-600">✓ Activo</span>
+                      <span className="text-green-600 flex items-center gap-1">
+                        <CheckCircle2 className="w-4 h-4" />
+                        Activo
+                      </span>
                     ) : (
                       <span className="text-gray-400">Inactivo</span>
                     )}
@@ -499,15 +524,17 @@ export default function ModulesPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEdit(module)}
-                        className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                        className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-700 transition-colors flex items-center gap-1"
                       >
-                        ✏️ Editar
+                        <Edit className="w-3 h-3" />
+                        Editar
                       </button>
                       <button
                         onClick={() => handleDelete(module.id)}
-                        className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
+                        className="bg-red-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-700 transition-colors flex items-center gap-1"
                       >
-                        🗑️ Eliminar
+                        <Trash2 className="w-3 h-3" />
+                        Eliminar
                       </button>
                     </div>
                   </td>

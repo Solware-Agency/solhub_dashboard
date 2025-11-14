@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { WavyBackground } from '@/app/components/WavyBackground';
 
 function LoginForm() {
   const [code, setCode] = useState('');
@@ -65,7 +66,7 @@ function LoginForm() {
       <div>
         <label
           htmlFor='code'
-          className='block text-sm font-medium text-gray-700 mb-2'
+          className='block text-sm font-medium text-gray-300 mb-2'
         >
           Código de Acceso
         </label>
@@ -74,28 +75,25 @@ function LoginForm() {
           type='text'
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
-          className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-lg font-mono tracking-wider text-black'
+          className='w-full px-3 py-2 bg-gray-800/50 backdrop-blur-sm border border-gray-600/30 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 focus:border-[#4c87ff]/50 text-center text-lg font-mono tracking-wider text-white placeholder-gray-400'
           placeholder='INGRESA EL CÓDIGO'
           required
           disabled={loading}
           autoFocus
           autoComplete='off'
         />
-        <p className='mt-2 text-xs text-gray-500'>
-          Ingresa el código de acceso para continuar
-        </p>
       </div>
 
       {error && (
-        <div className='p-3 bg-red-50 border border-red-200 rounded-md'>
-          <p className='text-sm text-red-600'>{error}</p>
+        <div className='p-3 bg-red-900/30 backdrop-blur-sm border border-red-500/30 rounded-md'>
+          <p className='text-sm text-red-300'>{error}</p>
         </div>
       )}
 
       <button
         type='submit'
         disabled={loading || !code.trim()}
-        className='w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+        className='w-full bg-[#4c87ff] text-white py-2 px-4 rounded-md hover:bg-[#3d6fe6] focus:outline-none focus:ring-2 focus:ring-[#4c87ff] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg'
       >
         {loading ? 'Verificando...' : 'Acceder al Dashboard'}
       </button>
@@ -105,16 +103,37 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className='min-h-screen flex items-center justify-center bg-gray-50'>
-      <div className='max-w-md w-full p-8 bg-white rounded-lg shadow-md'>
-        <div className='text-center mb-8'>
-          <h1 className='text-3xl font-bold text-gray-900'>Solhub Admin</h1>
-          <p className='text-gray-600 mt-2'>Dashboard Administrativo</p>
+    <WavyBackground
+      colors={['#41e2b8', '#4c87ff', '#29536b', '#07004d']}
+      waveOpacity={0.5}
+      blur={10}
+      speed="fast"
+    >
+      <div className='max-w-md w-full p-8 bg-black/30 backdrop-blur-md rounded-lg shadow-lg border border-white/10'>
+        <div className='text-center mb-8 relative'>
+          <div className='relative flex items-center justify-center mb-4'>
+            <div
+              className='absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-2xl opacity-30 animate-pulse'
+              style={{
+                width: '120px',
+                height: '120px',
+                margin: '0 auto',
+              }}
+            ></div>
+            <div className='relative z-10'>
+              <img
+                src='https://lafysstpyiejevhrlmzc.supabase.co/storage/v1/object/public/imagenes/Logos/SolHub/ISOTIPO/SolHub_ISOTIPO_ORIG.svg'
+                alt='Solhub Logo'
+                className='h-24 w-auto mx-auto'
+              />
+            </div>
+          </div>
+          <p className='text-white mt-4 text-lg font-semibold'>Panel Administrativo de Solhub</p>
         </div>
 
         <Suspense
           fallback={
-            <div className='text-center text-gray-600 py-8'>
+            <div className='text-center text-gray-300 py-8'>
               Cargando formulario...
             </div>
           }
@@ -122,10 +141,10 @@ export default function LoginPage() {
           <LoginForm />
         </Suspense>
 
-        <p className='mt-6 text-center text-sm text-gray-500'>
+        <p className='mt-6 text-center text-sm text-gray-400'>
           Panel exclusivo para administradores de Solhub
         </p>
       </div>
-    </div>
+    </WavyBackground>
   );
 }

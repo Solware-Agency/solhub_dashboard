@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import type { LaboratoryCode, Laboratory } from '@/lib/types/database'
-import { Copy } from 'lucide-react'
+import { Key, Plus, X, Save, RefreshCw, CheckCircle2, XCircle, AlertCircle, Copy } from 'lucide-react'
  
 type CodeWithLab = LaboratoryCode & { laboratory: Laboratory }
 
@@ -125,27 +125,43 @@ export default function CodesPage() {
     <div>
       <div className='flex justify-between items-center mb-8'>
         <div>
-          <h1 className='text-3xl font-bold text-gray-900'>
-            Códigos de Acceso
-          </h1>
+          <div className='flex items-center gap-3 mb-2'>
+            <Key className='w-8 h-8 text-gray-700' />
+            <h1 className='text-3xl font-bold text-gray-900'>
+              Códigos de Acceso
+            </h1>
+          </div>
           <p className='text-gray-600 mt-1'>
             Gestiona códigos para que usuarios se registren en clientes
           </p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
+          className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2'
         >
-          {showForm ? 'Cancelar' : '+ Crear Código'}
+          {showForm ? (
+            <>
+              <X className='w-4 h-4' />
+              Cancelar
+            </>
+          ) : (
+            <>
+              <Plus className='w-4 h-4' />
+              Crear Código
+            </>
+          )}
         </button>
       </div>
 
       {/* Formulario */}
       {showForm && (
         <div className='bg-white p-6 rounded-lg shadow mb-6'>
-          <h2 className='text-lg font-semibold text-gray-900 mb-4'>
-            Crear Nuevo Código
-          </h2>
+          <div className='flex items-center gap-2 mb-4'>
+            <Plus className='w-5 h-5 text-gray-700' />
+            <h2 className='text-lg font-semibold text-gray-900'>
+              Crear Nuevo Código
+            </h2>
+          </div>
           <form onSubmit={handleSubmit}>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
               <div>
@@ -191,10 +207,10 @@ export default function CodesPage() {
                     type='button'
                     onClick={generateRandomCode}
                     disabled={!formData.laboratory_id}
-                    className='px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed '
+                    className='px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
                     title='Generar código aleatorio'
                   >
-                    🎲
+                    <RefreshCw className='w-4 h-4' />
                   </button>
                 </div>
               </div>
@@ -233,8 +249,9 @@ export default function CodesPage() {
 
             <button
               type='submit'
-              className='px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors'
+              className='px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2'
             >
+              <Save className='w-4 h-4' />
               Crear Código
             </button>
           </form>
@@ -305,7 +322,7 @@ export default function CodesPage() {
                     </td>
                     <td className='px-6 py-4'>
                       <span
-                        className={`px-2 py-1 rounded text-xs font-semibold ${
+                        className={`px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 w-fit ${
                           !code.is_active
                             ? 'bg-gray-100 text-gray-800'
                             : isExpired || isMaxed
@@ -313,13 +330,27 @@ export default function CodesPage() {
                             : 'bg-green-100 text-green-800'
                         }`}
                       >
-                        {!code.is_active
-                          ? 'Inactivo'
-                          : isExpired
-                          ? 'Expirado'
-                          : isMaxed
-                          ? 'Agotado'
-                          : 'Activo'}
+                        {!code.is_active ? (
+                          <>
+                            <XCircle className='w-3 h-3' />
+                            Inactivo
+                          </>
+                        ) : isExpired ? (
+                          <>
+                            <AlertCircle className='w-3 h-3' />
+                            Expirado
+                          </>
+                        ) : isMaxed ? (
+                          <>
+                            <AlertCircle className='w-3 h-3' />
+                            Agotado
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className='w-3 h-3' />
+                            Activo
+                          </>
+                        )}
                       </span>
                     </td>
                     <td className='px-6 py-4 text-right'>
@@ -327,9 +358,19 @@ export default function CodesPage() {
                         onClick={() =>
                           toggleCodeStatus(code.id, code.is_active)
                         }
-                        className='text-blue-600 hover:text-blue-900 text-sm'
+                        className='bg-blue-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-700 transition-colors flex items-center gap-1'
                       >
-                        {code.is_active ? 'Desactivar' : 'Activar'}
+                        {code.is_active ? (
+                          <>
+                            <XCircle className='w-3 h-3' />
+                            Desactivar
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className='w-3 h-3' />
+                            Activar
+                          </>
+                        )}
                       </button>
                     </td>
                   </tr>
