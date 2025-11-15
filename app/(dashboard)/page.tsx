@@ -71,8 +71,8 @@ export default function DashboardPage() {
       <div className='mb-6 flex-shrink-0 relative overflow-visible'>
         <div className='flex items-center justify-between'>
           <div>
-            <h1 className='text-3xl font-bold text-gray-900'>Dashboard</h1>
-            <p className='text-gray-600 mt-2'>
+            <h1 className='text-3xl font-bold text-white drop-shadow-lg'>Dashboard</h1>
+            <p className='text-gray-200 mt-2 drop-shadow-md'>
               Bienvenido al panel administrativo de Solhub
             </p>
           </div>
@@ -87,7 +87,7 @@ export default function DashboardPage() {
             }}
           >
             <div 
-              className='absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-2xl opacity-30 animate-pulse'
+              className='absolute inset-0 bg-gradient-to-r from-[#4c87ff] to-[#41e2b8] rounded-full blur-2xl opacity-40 animate-pulse'
               style={{ 
                 width: '100%', 
                 height: '100%'
@@ -128,8 +128,8 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className='bg-white rounded-lg shadow p-6 flex-shrink-0'>
-          <h2 className='text-xl font-semibold text-gray-900 mb-4'>
+        <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-6 flex-shrink-0 border border-white/10'>
+          <h2 className='text-xl font-semibold text-white mb-4'>
             Acciones Rápidas
           </h2>
           <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
@@ -170,14 +170,14 @@ function StatCard({
   color: 'blue' | 'green' | 'purple' | 'orange';
 }) {
   const colorClasses = {
-    blue: 'bg-blue-50 text-blue-700',
-    green: 'bg-green-50 text-green-700',
-    purple: 'bg-purple-50 text-purple-700',
-    orange: 'bg-orange-50 text-orange-700',
+    blue: 'bg-[#4c87ff]/20 text-[#4c87ff] border border-[#4c87ff]/30',
+    green: 'bg-[#41e2b8]/20 text-[#41e2b8] border border-[#41e2b8]/30',
+    purple: 'bg-[#29536b]/20 text-[#29536b] border border-[#29536b]/30',
+    orange: 'bg-[#4c87ff]/20 text-[#4c87ff] border border-[#4c87ff]/30',
   };
 
   return (
-    <div className='bg-white rounded-lg shadow p-6 border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer'>
+    <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-6 border border-white/10 hover:border-[#4c87ff]/50 hover:shadow-xl transition-all cursor-pointer'>
       <div className='flex items-center gap-4'>
         <div
           className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${colorClasses[color]} shadow-sm`}
@@ -185,8 +185,8 @@ function StatCard({
           {icon}
         </div>
         <div className='flex-1 min-w-0'>
-          <p className='text-gray-600 text-sm mb-1 font-medium'>{title}</p>
-          <p className='text-3xl font-bold text-gray-900'>
+          <p className='text-gray-200 text-sm mb-1 font-medium'>{title}</p>
+          <p className='text-3xl font-bold text-white'>
             {value.toLocaleString()}
           </p>
         </div>
@@ -209,13 +209,13 @@ function QuickActionCard({
   return (
     <a
       href={href}
-      className='block p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all'
+      className='block p-4 border border-white/10 rounded-lg bg-black/30 backdrop-blur-md hover:border-[#4c87ff]/50 hover:bg-black/40 hover:shadow-lg transition-all'
     >
       <div className='flex items-start gap-3'>
-        <div className='text-blue-600 mt-0.5'>{icon}</div>
+        <div className='text-[#4c87ff] mt-0.5'>{icon}</div>
         <div>
-          <h3 className='font-semibold text-gray-900 mb-1'>{title}</h3>
-          <p className='text-sm text-gray-600'>{description}</p>
+          <h3 className='font-semibold text-white mb-1'>{title}</h3>
+          <p className='text-sm text-gray-300'>{description}</p>
         </div>
       </div>
     </a>

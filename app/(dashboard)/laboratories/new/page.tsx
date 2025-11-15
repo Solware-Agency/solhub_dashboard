@@ -60,19 +60,19 @@ export default function NewLaboratoryPage() {
   return (
     <div>
       <div className='mb-8'>
-        <h1 className='text-3xl font-bold text-gray-900'>Crear Cliente</h1>
-        <p className='text-gray-600 mt-1'>
+        <h1 className='text-3xl font-bold text-white drop-shadow-lg'>Crear Cliente</h1>
+        <p className='text-gray-200 mt-1 drop-shadow-md'>
           El cliente se creará con valores por defecto para features, branding y
           configuración
         </p>
       </div>
 
-      <div className='bg-white p-8 rounded-lg shadow max-w-2xl'>
+      <div className='bg-black/30 backdrop-blur-md p-8 rounded-lg shadow-lg max-w-2xl border border-white/10'>
         <form onSubmit={handleSubmit} className='space-y-6'>
           <div>
             <label
               htmlFor='name'
-              className='block text-sm font-medium text-gray-700 mb-2'
+              className='block text-sm font-medium text-gray-200 mb-2'
             >
               Nombre del Cliente <span className='text-red-500'>*</span>
             </label>
@@ -83,21 +83,21 @@ export default function NewLaboratoryPage() {
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+              className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
               placeholder='Ej: Cliente Vargas'
               required
               disabled={loading}
             />
-            <p className='text-sm text-gray-500 mt-1'>
+            <p className='text-sm text-gray-300 mt-1'>
               Nombre completo del cliente
             </p>
           </div>
 
-          <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
-            <h3 className='text-sm font-semibold text-blue-900 mb-2'>
+          <div className='bg-[#4c87ff]/10 border border-[#4c87ff]/30 rounded-lg p-4'>
+            <h3 className='text-sm font-semibold text-white mb-2'>
               ℹ️ Valores por defecto
             </h3>
-            <ul className='text-sm text-blue-800 space-y-1'>
+            <ul className='text-sm text-gray-200 space-y-1'>
               <li>• Todas las features se crearán deshabilitadas (false)</li>
               <li>
                 • Branding: Logo null, color primario #0066cc, color secundario
@@ -108,7 +108,7 @@ export default function NewLaboratoryPage() {
                 USD/VES
               </li>
             </ul>
-            <p className='text-xs text-blue-700 mt-2'>
+            <p className='text-xs text-[#4c87ff] mt-2'>
               Puedes editar estos valores después de crear el cliente
             </p>
           </div>
@@ -117,7 +117,7 @@ export default function NewLaboratoryPage() {
             <button
               type='submit'
               disabled={loading}
-              className='px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+              className='px-6 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-[#4c87ff]/30'
             >
               {loading ? 'Creando...' : 'Crear Cliente'}
             </button>
@@ -125,7 +125,7 @@ export default function NewLaboratoryPage() {
               type='button'
               onClick={() => router.back()}
               disabled={loading}
-              className='px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50'
+              className='px-6 py-2 border border-white/20 text-white rounded-lg hover:bg-black/40 transition-colors disabled:opacity-50 bg-black/20 backdrop-blur-sm'
             >
               Cancelar
             </button>

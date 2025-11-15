@@ -16,25 +16,36 @@ export default function LaboratoryDetailsPage() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    const loadLaboratory = async () => {
+      const id = params.id as string;
+      if (!id) return;
+      
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('laboratories')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (!error && data) {
+          setLaboratory(data);
+        } else {
+          alert('❌ Error al cargar cliente');
+          router.push('/laboratories');
+        }
+      } catch (error) {
+        console.error('Error loading laboratory:', error);
+        alert('❌ Error al cargar cliente');
+        router.push('/laboratories');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadLaboratory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
-
-  const loadLaboratory = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('laboratories')
-      .select('*')
-      .eq('id', params.id)
-      .single();
-
-    if (!error && data) {
-      setLaboratory(data);
-    } else {
-      alert('❌ Error al cargar cliente');
-      router.push('/laboratories');
-    }
-    setLoading(false);
-  };
 
   const handleDelete = async () => {
     if (!laboratory) return;
@@ -69,7 +80,7 @@ export default function LaboratoryDetailsPage() {
   };
 
   if (loading) {
-    return <div className='text-gray-600'>Cargando detalles...</div>;
+    return <div className='text-gray-200'>Cargando detalles...</div>;
   }
 
   if (!laboratory) {
@@ -83,16 +94,16 @@ export default function LaboratoryDetailsPage() {
     <div>
       {/* Header */}
       <div className='mb-8'>
-        <div className='flex items-center gap-2 text-sm text-gray-600 mb-2'>
-          <Link href='/laboratories' className='hover:text-blue-600'>
+        <div className='flex items-center gap-2 text-sm text-gray-300 mb-2'>
+          <Link href='/laboratories' className='hover:text-[#4c87ff]'>
             Clientes
           </Link>
           <span>/</span>
-          <span className='text-gray-900'>{laboratory.name}</span>
+          <span className='text-white'>{laboratory.name}</span>
         </div>
         <div className='flex justify-between items-start'>
           <div>
-            <h1 className='text-3xl font-bold text-gray-900'>
+            <h1 className='text-3xl font-bold text-white drop-shadow-lg'>
               {laboratory.name}
             </h1>
             <div className='flex items-center gap-3 mt-2'>
@@ -103,7 +114,7 @@ export default function LaboratoryDetailsPage() {
               >
                 {laboratory.status}
               </span>
-              <span className='text-sm text-gray-500'>
+              <span className='text-sm text-gray-300'>
                 Creado:{' '}
                 {new Date(laboratory.created_at).toLocaleDateString('es-ES')}
               </span>
@@ -112,7 +123,7 @@ export default function LaboratoryDetailsPage() {
           <div className='flex gap-3'>
             <Link
               href={`/laboratories/${laboratory.id}/edit`}
-              className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1'
+              className='px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] transition-colors flex items-center gap-1 shadow-lg shadow-[#4c87ff]/30'
             >
               <Edit className='w-4 h-4' />
               Editar
@@ -131,35 +142,35 @@ export default function LaboratoryDetailsPage() {
       {/* Grid de Detalles */}
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
         {/* Información Básica */}
-        <div className='bg-white rounded-lg shadow p-6'>
-          <h2 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
+        <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-6 border border-white/10'>
+          <h2 className='text-lg font-semibold text-white mb-4 flex items-center gap-2'>
             <ClipboardList className='w-5 h-5' />
             Información Básica
           </h2>
           <div className='space-y-3'>
             <div>
-              <label className='text-sm font-medium text-gray-500'>ID</label>
-              <p className='text-sm font-mono bg-gray-50 px-2 py-1 rounded mt-1 text-gray-600'>
+              <label className='text-sm font-medium text-gray-200'>ID</label>
+              <p className='text-sm font-mono bg-black/20 backdrop-blur-sm px-2 py-1 rounded mt-1 text-gray-300 border border-white/10'>
                 {laboratory.id}
               </p>
             </div>
             <div>
-              <label className='text-sm font-medium text-gray-500'>Slug</label>
-              <p className='text-sm font-mono bg-gray-50 px-2 py-1 rounded mt-1 text-gray-600'>
+              <label className='text-sm font-medium text-gray-200'>Slug</label>
+              <p className='text-sm font-mono bg-black/20 backdrop-blur-sm px-2 py-1 rounded mt-1 text-gray-300 border border-white/10'>
                 {laboratory.slug}
               </p>
             </div>
             <div>
-              <label className='text-sm font-medium text-gray-500'>
+              <label className='text-sm font-medium text-gray-200'>
                 Nombre
               </label>
-              <p className='text-sm mt-1 text-gray-600'>{laboratory.name}</p>
+              <p className='text-sm mt-1 text-white'>{laboratory.name}</p>
             </div>
             <div>
-              <label className='text-sm font-medium text-gray-500'>
+              <label className='text-sm font-medium text-gray-200'>
                 Estado
               </label>
-              <p className='text-sm mt-1 capitalize text-gray-600'>
+              <p className='text-sm mt-1 capitalize text-white'>
                 {laboratory.status}
               </p>
             </div>
@@ -167,51 +178,51 @@ export default function LaboratoryDetailsPage() {
         </div>
 
         {/* Branding */}
-        <div className='bg-white rounded-lg shadow p-6'>
-          <h2 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
+        <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-6 border border-white/10'>
+          <h2 className='text-lg font-semibold text-white mb-4 flex items-center gap-2'>
             🎨 Branding
           </h2>
           <div className='space-y-3'>
             <div>
-              <label className='text-sm font-medium text-gray-500'>Logo</label>
-              <p className='text-sm mt-1 text-gray-600'>
+              <label className='text-sm font-medium text-gray-200'>Logo</label>
+              <p className='text-sm mt-1 text-white'>
                 {laboratory.branding?.logo || (
                   <span className='text-gray-400 italic'>No configurado</span>
                 )}
               </p>
             </div>
             <div>
-              <label className='text-sm font-medium text-gray-500'>Ícono</label>
-              <p className='text-sm mt-1 text-gray-600'>
+              <label className='text-sm font-medium text-gray-200'>Ícono</label>
+              <p className='text-sm mt-1 text-white'>
                 {laboratory.branding?.icon || 'solhub'}
               </p>
             </div>
             <div>
-              <label className='text-sm font-medium text-gray-500'>
+              <label className='text-sm font-medium text-gray-200'>
                 Color Primario
               </label>
               <div className='flex items-center gap-2 mt-1'>
                 <div
-                  className='w-8 h-8 rounded border border-gray-300'
+                  className='w-8 h-8 rounded border border-white/20'
                   style={{ backgroundColor: laboratory.branding?.primaryColor }}
                 />
-                <span className='text-sm font-mono text-gray-600'>
+                <span className='text-sm font-mono text-white'>
                   {laboratory.branding?.primaryColor}
                 </span>
               </div>
             </div>
             <div>
-              <label className='text-sm font-medium text-gray-500'>
+              <label className='text-sm font-medium text-gray-200'>
                 Color Secundario
               </label>
               <div className='flex items-center gap-2 mt-1'>
                 <div
-                  className='w-8 h-8 rounded border border-gray-300'
+                  className='w-8 h-8 rounded border border-white/20'
                   style={{
                     backgroundColor: laboratory.branding?.secondaryColor,
                   }}
                 />
-                <span className='text-sm font-mono text-gray-600'>
+                <span className='text-sm font-mono text-white'>
                   {laboratory.branding?.secondaryColor}
                 </span>
               </div>
@@ -220,11 +231,11 @@ export default function LaboratoryDetailsPage() {
         </div>
 
         {/* Features */}
-        <div className='bg-white rounded-lg shadow p-6'>
-          <h2 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
+        <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-6 border border-white/10'>
+          <h2 className='text-lg font-semibold text-white mb-4 flex items-center gap-2'>
             <Flag className='w-5 h-5' />
             Features Habilitadas
-            <span className='text-sm font-normal text-gray-500'>
+            <span className='text-sm font-normal text-gray-300'>
               ({enabledFeatures.length} de {featuresArray.length})
             </span>
           </h2>
@@ -232,14 +243,14 @@ export default function LaboratoryDetailsPage() {
             {featuresArray.map(([key, value]) => (
               <div
                 key={key}
-                className='flex items-center justify-between py-2 border-b border-gray-100 last:border-0'
+                className='flex items-center justify-between py-2 border-b border-white/10 last:border-0'
               >
-                <span className='text-sm font-mono text-gray-700'>{key}</span>
+                <span className='text-sm font-mono text-white'>{key}</span>
                 <span
                   className={`px-2 py-1 rounded text-xs font-semibold ${
                     value
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-100 text-gray-600'
+                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                      : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
                   }`}
                 >
                   {value ? '✓ Habilitado' : '○ Deshabilitado'}
@@ -250,13 +261,13 @@ export default function LaboratoryDetailsPage() {
         </div>
 
         {/* Configuración */}
-        <div className='bg-white rounded-lg shadow p-6'>
-          <h2 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
+        <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-6 border border-white/10'>
+          <h2 className='text-lg font-semibold text-white mb-4 flex items-center gap-2'>
             ⚙️ Configuración
           </h2>
           <div className='space-y-3'>
             <div>
-              <label className='text-sm font-medium text-gray-500'>
+              <label className='text-sm font-medium text-gray-200'>
                 Sucursales
               </label>
               <div className='mt-1 flex flex-wrap gap-1'>
@@ -264,7 +275,7 @@ export default function LaboratoryDetailsPage() {
                   (branch: string, i: number) => (
                     <span
                       key={i}
-                      className='px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs'
+                      className='px-2 py-1 bg-[#4c87ff]/20 text-[#4c87ff] rounded text-xs border border-[#4c87ff]/30'
                     >
                       {branch}
                     </span>
@@ -273,7 +284,7 @@ export default function LaboratoryDetailsPage() {
               </div>
             </div>
             <div>
-              <label className='text-sm font-medium text-gray-500'>
+              <label className='text-sm font-medium text-gray-200'>
                 Métodos de Pago
               </label>
               <div className='mt-1 flex flex-wrap gap-1'>
@@ -281,7 +292,7 @@ export default function LaboratoryDetailsPage() {
                   (method: string, i: number) => (
                     <span
                       key={i}
-                      className='px-2 py-1 bg-green-50 text-green-700 rounded text-xs'
+                      className='px-2 py-1 bg-[#41e2b8]/20 text-[#41e2b8] rounded text-xs border border-[#41e2b8]/30'
                     >
                       {method}
                     </span>
@@ -290,32 +301,32 @@ export default function LaboratoryDetailsPage() {
               </div>
             </div>
             <div>
-              <label className='text-sm font-medium text-gray-500'>
+              <label className='text-sm font-medium text-gray-200'>
                 Tasa de Cambio
               </label>
-              <p className='text-sm mt-1 text-gray-600'>
+              <p className='text-sm mt-1 text-white'>
                 {laboratory.config?.defaultExchangeRate} USD/VES
               </p>
             </div>
             <div>
-              <label className='text-sm font-medium text-gray-500'>
+              <label className='text-sm font-medium text-gray-200'>
                 Zona Horaria
               </label>
-              <p className='text-sm mt-1 text-gray-600'>
+              <p className='text-sm mt-1 text-white'>
                 {laboratory.config?.timezone}
               </p>
             </div>
             {laboratory.config?.webhooks && (
               <div>
-                <label className='text-sm font-medium text-gray-500'>
+                <label className='text-sm font-medium text-gray-200'>
                   Webhooks
                 </label>
-                <div className='mt-1 space-y-1 text-xs font-mono bg-gray-50 p-2 rounded'>
+                <div className='mt-1 space-y-1 text-xs font-mono bg-black/20 backdrop-blur-sm p-2 rounded border border-white/10'>
                   {Object.entries(laboratory.config.webhooks).map(
                     ([key, value]) => (
                       <div key={key}>
-                        <span className='text-gray-600'>{key}:</span>{' '}
-                        <span className='text-blue-600'>{value as string}</span>
+                        <span className='text-white'>{key}:</span>{' '}
+                        <span className='text-[#4c87ff]'>{value as string}</span>
                       </div>
                     ),
                   )}
@@ -329,15 +340,15 @@ export default function LaboratoryDetailsPage() {
       {/* Modal: Confirmar Eliminación */}
       {showDeleteModal && (
         <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-          <div className='bg-white rounded-lg p-6 max-w-md w-full mx-4'>
-            <h3 className='text-lg font-semibold text-gray-900 mb-4'>
+          <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-6 max-w-md w-full mx-4 border border-white/10'>
+            <h3 className='text-lg font-semibold text-white mb-4'>
               ⚠️ Confirmar Eliminación
             </h3>
-            <p className='text-gray-600 mb-4'>
+            <p className='text-gray-200 mb-4'>
               ¿Estás seguro de eliminar el cliente{' '}
-              <strong>{laboratory.name}</strong>?
+              <strong className='text-white'>{laboratory.name}</strong>?
             </p>
-            <p className='text-sm text-red-600 mb-6'>
+            <p className='text-sm text-red-400 mb-6'>
               Esta acción eliminará TODOS los datos asociados al cliente
               (usuarios, pacientes, casos, etc.) y no se puede deshacer.
             </p>
@@ -352,7 +363,7 @@ export default function LaboratoryDetailsPage() {
               <button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={deleting}
-                className='flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50'
+                className='flex-1 px-4 py-2 border border-white/20 text-white rounded-lg hover:bg-black/40 transition-colors disabled:opacity-50 bg-black/20 backdrop-blur-sm'
               >
                 Cancelar
               </button>

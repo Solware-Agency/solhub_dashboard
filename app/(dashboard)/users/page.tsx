@@ -91,7 +91,7 @@ export default function UsersPage() {
   const getRoleBadge = (role: string) => {
     const styles: Record<string, string> = {
       owner: 'bg-purple-100 text-purple-800',
-      admin: 'bg-blue-100 text-blue-800',
+      admin: 'bg-[#4c87ff]/20 text-[#4c87ff] border border-[#4c87ff]/30',
       employee: 'bg-gray-100 text-gray-800',
       patologo: 'bg-green-100 text-green-800',
       residente: 'bg-yellow-100 text-yellow-800',
@@ -108,26 +108,26 @@ export default function UsersPage() {
   };
 
   if (loading) {
-    return <div className='text-gray-600'>Cargando usuarios...</div>;
+    return <div className='text-gray-200'>Cargando usuarios...</div>;
   }
 
   return (
     <div>
       <div className='mb-8'>
         <div className='flex items-center gap-3 mb-2'>
-          <Users className='w-8 h-8 text-gray-700' />
-          <h1 className='text-3xl font-bold text-gray-900'>Usuarios Global</h1>
+          <Users className='w-8 h-8 text-white' />
+          <h1 className='text-3xl font-bold text-white drop-shadow-lg'>Usuarios Global</h1>
         </div>
-        <p className='text-gray-600 mt-1'>
+        <p className='text-gray-200 mt-1 drop-shadow-md'>
           Vista global de todos los usuarios del sistema
         </p>
       </div>
 
       {/* Filtros */}
-      <div className='bg-white p-4 rounded-lg shadow mb-6'>
+      <div className='bg-black/30 backdrop-blur-md p-4 rounded-lg shadow-lg mb-6 border border-white/10'>
         <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
+            <label className='block text-sm font-medium text-gray-200 mb-2'>
               Buscar
             </label>
             <div className='relative'>
@@ -137,7 +137,7 @@ export default function UsersPage() {
                 value={filter.search}
                 onChange={(e) => setFilter({ ...filter, search: e.target.value })}
                 placeholder='Email, nombre...'
-                className='w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                className='w-full pl-10 pr-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
               />
             </div>
           </div>
@@ -149,7 +149,7 @@ export default function UsersPage() {
             <select
               value={filter.role}
               onChange={(e) => setFilter({ ...filter, role: e.target.value })}
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+              className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white'
             >
               <option value='all'>Todos</option>
               {uniqueRoles.map((role) => (
@@ -167,7 +167,7 @@ export default function UsersPage() {
             <select
               value={filter.status}
               onChange={(e) => setFilter({ ...filter, status: e.target.value })}
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+              className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white'
             >
               <option value='all'>Todos</option>
               <option value='aprobado'>Aprobado</option>
@@ -184,7 +184,7 @@ export default function UsersPage() {
               onChange={(e) =>
                 setFilter({ ...filter, laboratory: e.target.value })
               }
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+              className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white'
             >
               <option value='all'>Todos</option>
               {uniqueLabs.map((lab) => (
@@ -199,80 +199,80 @@ export default function UsersPage() {
 
       {/* Estadísticas Rápidas */}
       <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
-        <div className='bg-white p-4 rounded-lg shadow border border-gray-200 hover:border-purple-500 hover:shadow-md transition-all duration-200 cursor-pointer'>
-          <p className='text-sm text-gray-600'>Total Usuarios</p>
-          <p className='text-2xl font-bold text-gray-900'>{users.length}</p>
+        <div className='bg-black/30 backdrop-blur-md p-4 rounded-lg shadow-lg border border-white/10 hover:border-purple-500/50 hover:shadow-xl transition-all duration-200 cursor-pointer'>
+          <p className='text-sm text-gray-300'>Total Usuarios</p>
+          <p className='text-2xl font-bold text-white'>{users.length}</p>
         </div>
-        <div className='bg-white p-4 rounded-lg shadow border border-gray-200 hover:border-green-500 hover:shadow-md transition-all duration-200 cursor-pointer'>
-          <p className='text-sm text-gray-600'>Aprobados</p>
-          <p className='text-2xl font-bold text-green-600'>
+        <div className='bg-black/30 backdrop-blur-md p-4 rounded-lg shadow-lg border border-white/10 hover:border-green-500/50 hover:shadow-xl transition-all duration-200 cursor-pointer'>
+          <p className='text-sm text-gray-300'>Aprobados</p>
+          <p className='text-2xl font-bold text-green-400'>
             {users.filter((u) => u.estado === 'aprobado').length}
           </p>
         </div>
-        <div className='bg-white p-4 rounded-lg shadow border border-gray-200 hover:border-orange-500 hover:shadow-md transition-all duration-200 cursor-pointer'>
-          <p className='text-sm text-gray-600'>Pendientes</p>
+        <div className='bg-black/30 backdrop-blur-md p-4 rounded-lg shadow-lg border border-white/10 hover:border-orange-500/50 hover:shadow-xl transition-all duration-200 cursor-pointer'>
+          <p className='text-sm text-gray-300'>Pendientes</p>
           <p className='text-2xl font-bold text-yellow-600'>
             {users.filter((u) => u.estado === 'pendiente').length}
           </p>
         </div>
-        <div className='bg-white p-4 rounded-lg shadow border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200 cursor-pointer'>
-          <p className='text-sm text-gray-600'>Clientes</p>
-          <p className='text-2xl font-bold text-blue-600'>
+        <div className='bg-black/30 backdrop-blur-md p-4 rounded-lg shadow-lg border border-white/10 hover:border-[#4c87ff]/50 hover:shadow-xl transition-all duration-200 cursor-pointer'>
+          <p className='text-sm text-gray-300'>Clientes</p>
+          <p className='text-2xl font-bold text-[#4c87ff]'>
             {uniqueLabs.length}
           </p>
         </div>
       </div>
 
       {/* Tabla de Usuarios */}
-      <div className='bg-white rounded-lg shadow overflow-hidden'>
+      <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg overflow-hidden border border-white/10'>
         <div className='overflow-x-auto'>
           <table className='w-full'>
-            <thead className='bg-gray-50'>
+            <thead className='bg-black/40 backdrop-blur-sm'>
               <tr>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                   Usuario
                 </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                   Cliente
                 </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                   Rol
                 </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                   Sucursal
                 </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                   Estado
                 </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                   Fecha Registro
                 </th>
               </tr>
             </thead>
-            <tbody className='divide-y divide-gray-200'>
+            <tbody className='divide-y divide-white/10'>
               {users.length === 0 ? (
                 <tr>
                   <td
                     colSpan={6}
-                    className='px-6 py-8 text-center text-gray-500'
+                    className='px-6 py-8 text-center text-gray-300'
                   >
                     No se encontraron usuarios
                   </td>
                 </tr>
               ) : (
                 users.map((user) => (
-                  <tr key={user.id} className='hover:bg-gray-50'>
+                  <tr key={user.id} className='hover:bg-black/40'>
                     <td className='px-6 py-4'>
                       <div>
-                        <div className='text-sm font-medium text-gray-900'>
+                        <div className='text-sm font-medium text-white'>
                           {user.display_name || 'Sin nombre'}
                         </div>
-                        <div className='text-sm text-gray-500'>
+                        <div className='text-sm text-gray-300'>
                           {user.email}
                         </div>
                       </div>
                     </td>
-                    <td className='px-6 py-4 text-sm text-gray-900'>
+                    <td className='px-6 py-4 text-sm text-white'>
                       {user.laboratory?.name || 'N/A'}
                     </td>
                     <td className='px-6 py-4'>
@@ -284,7 +284,7 @@ export default function UsersPage() {
                         {user.role}
                       </span>
                     </td>
-                    <td className='px-6 py-4 text-sm text-gray-600'>
+                    <td className='px-6 py-4 text-sm text-gray-300'>
                       {user.assigned_branch || '-'}
                     </td>
                     <td className='px-6 py-4'>
@@ -296,7 +296,7 @@ export default function UsersPage() {
                         {user.estado}
                       </span>
                     </td>
-                    <td className='px-6 py-4 text-sm text-gray-600'>
+                    <td className='px-6 py-4 text-sm text-gray-300'>
                       {new Date(user.created_at).toLocaleDateString('es-ES')}
                     </td>
                   </tr>
