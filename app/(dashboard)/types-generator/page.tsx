@@ -12,7 +12,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 
-export default function TypesGeneratorPage() {
+function TypesGeneratorPage() {
   const [types, setTypes] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -120,26 +120,26 @@ export interface Laboratory {
     <div>
       <div className='mb-8'>
         <div className='flex items-center gap-3 mb-2'>
-          <FileCode className='w-8 h-8 text-gray-700' />
-          <h1 className='text-3xl font-bold text-gray-900'>
+          <FileCode className='w-8 h-8 text-white' />
+          <h1 className='text-3xl font-bold text-white drop-shadow-lg'>
             Generador de Tipos TypeScript
           </h1>
         </div>
-        <p className='text-gray-600 mt-1'>
+        <p className='text-gray-200 mt-1 drop-shadow-md'>
           Mantén sincronizados los tipos TypeScript del proyecto principal
         </p>
       </div>
 
-      <div className='bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6'>
+      <div className='bg-[#4c87ff]/10 border-l-4 border-[#4c87ff] p-4 mb-6 backdrop-blur-sm border border-[#4c87ff]/30 rounded'>
         <div className='flex'>
           <div className='flex-shrink-0'>
-            <AlertTriangle className='w-6 h-6 text-yellow-600' />
+            <AlertTriangle className='w-6 h-6 text-[#4c87ff]' />
           </div>
           <div className='ml-3'>
-            <h3 className='text-sm font-semibold text-yellow-800'>
+            <h3 className='text-sm font-semibold text-white'>
               Importante
             </h3>
-            <div className='mt-2 text-sm text-yellow-700'>
+            <div className='mt-2 text-sm text-gray-200'>
               <p className='mb-2'>
                 Cada vez que agregues una nueva feature al sistema, debes:
               </p>
@@ -148,7 +148,7 @@ export interface Laboratory {
                 <li>Copiar el código generado</li>
                 <li>
                   Pegarlo en{' '}
-                  <code className='bg-yellow-100 px-1 py-0.5 rounded'>
+                  <code className='bg-black/30 px-1 py-0.5 rounded text-[#4c87ff] border border-[#4c87ff]/30'>
                     src/shared/types/types.ts
                   </code>{' '}
                   del proyecto principal de Solhub
@@ -165,7 +165,7 @@ export interface Laboratory {
         <button
           onClick={generateTypes}
           disabled={loading}
-          className='px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2'
+          className='px-6 py-3 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2 shadow-lg shadow-[#4c87ff]/30'
         >
           {loading ? (
             <>
@@ -210,7 +210,7 @@ export interface Laboratory {
       </div>
 
       {types && (
-        <div className='bg-white rounded-lg shadow overflow-hidden'>
+        <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg overflow-hidden border border-white/10'>
           <div className='bg-gray-800 px-4 py-3 flex items-center justify-between'>
             <span className='text-sm font-mono text-green-400'>types.ts</span>
             <span className='text-xs text-gray-400'>
@@ -227,9 +227,9 @@ export interface Laboratory {
       )}
 
       {!types && (
-        <div className='bg-white rounded-lg shadow p-12 text-center'>
+        <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-12 text-center border border-white/10'>
           <FileCode className='w-16 h-16 mx-auto mb-4 text-gray-400' />
-          <p className='text-gray-600'>
+          <p className='text-gray-300'>
             Haz clic en "Generar Tipos" para crear el código TypeScript
             actualizado
           </p>
@@ -238,3 +238,5 @@ export interface Laboratory {
     </div>
   );
 }
+
+export default TypesGeneratorPage;

@@ -209,21 +209,21 @@ export default function EditLaboratoryPage() {
       {/* Header */}
       <div className='mb-8'>
         <div className='flex items-center gap-2 text-sm text-gray-600 mb-2'>
-          <Link href='/laboratories' className='hover:text-blue-600'>
+          <Link href='/laboratories' className='hover:text-[#4c87ff]'>
             Clientes
           </Link>
           <span>/</span>
           <Link
             href={`/laboratories/${params.id}`}
-            className='hover:text-blue-600'
+            className='hover:text-[#4c87ff]'
           >
             {laboratory.name}
           </Link>
           <span>/</span>
-          <span className='text-gray-900'>Editar</span>
+          <span className='text-white'>Editar</span>
         </div>
-        <h1 className='text-3xl font-bold text-gray-900'>Editar Cliente</h1>
-        <p className='text-gray-600 mt-1'>
+        <h1 className='text-3xl font-bold text-white drop-shadow-lg'>Editar Cliente</h1>
+        <p className='text-gray-200 mt-1 drop-shadow-md'>
           Actualiza la información del cliente {laboratory.name}
         </p>
       </div>
@@ -231,14 +231,14 @@ export default function EditLaboratoryPage() {
       {/* Formulario */}
       <form onSubmit={handleSubmit} className='space-y-6'>
         {/* Información Básica */}
-        <div className='bg-white p-6 rounded-lg shadow'>
-          <h2 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
+        <div className='bg-black/30 backdrop-blur-md p-6 rounded-lg shadow-lg border border-white/10'>
+          <h2 className='text-lg font-semibold text-white mb-4 flex items-center gap-2'>
             <ClipboardList className='w-5 h-5' />
             Información Básica
           </h2>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
+              <label className='block text-sm font-medium text-gray-200 mb-2'>
                 Nombre <span className='text-red-500'>*</span>
               </label>
               <input
@@ -247,13 +247,13 @@ export default function EditLaboratoryPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
                 required
                 disabled={saving}
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
+              <label className='block text-sm font-medium text-gray-200 mb-2'>
                 Slug <span className='text-gray-400'>(No editable)</span>
               </label>
               <input
@@ -267,7 +267,7 @@ export default function EditLaboratoryPage() {
               </p>
             </div>
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
+              <label className='block text-sm font-medium text-gray-200 mb-2'>
                 Estado <span className='text-red-500'>*</span>
               </label>
               <select
@@ -275,7 +275,7 @@ export default function EditLaboratoryPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, status: e.target.value as any })
                 }
-                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
                 disabled={saving}
               >
                 <option value='active'>Activo</option>
@@ -287,13 +287,13 @@ export default function EditLaboratoryPage() {
         </div>
 
         {/* Branding */}
-        <div className='bg-white p-6 rounded-lg shadow'>
+        <div className='bg-black/30 backdrop-blur-md p-6 rounded-lg shadow-lg border border-white/10'>
           <h2 className='text-lg font-semibold text-gray-900 mb-4'>
             🎨 Branding
           </h2>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
+              <label className='block text-sm font-medium text-gray-200 mb-2'>
                 Logo URL
               </label>
               <input
@@ -308,13 +308,13 @@ export default function EditLaboratoryPage() {
                     },
                   })
                 }
-                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
                 placeholder='/logos/labname.png'
                 disabled={saving}
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
+              <label className='block text-sm font-medium text-gray-200 mb-2'>
                 Ícono
               </label>
               <input
@@ -326,13 +326,13 @@ export default function EditLaboratoryPage() {
                     branding: { ...formData.branding, icon: e.target.value },
                   })
                 }
-                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
                 placeholder='solhub'
                 disabled={saving}
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
+              <label className='block text-sm font-medium text-gray-200 mb-2'>
                 Color Primario
               </label>
               <div className='flex gap-2'>
@@ -369,7 +369,7 @@ export default function EditLaboratoryPage() {
               </div>
             </div>
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
+              <label className='block text-sm font-medium text-gray-200 mb-2'>
                 Color Secundario
               </label>
               <div className='flex gap-2'>
@@ -409,27 +409,27 @@ export default function EditLaboratoryPage() {
         </div>
 
         {/* Configuración */}
-        <div className='bg-white p-6 rounded-lg shadow'>
+        <div className='bg-black/30 backdrop-blur-md p-6 rounded-lg shadow-lg border border-white/10'>
           <h2 className='text-lg font-semibold text-gray-900 mb-4'>
             ⚙️ Configuración
           </h2>
           <div className='space-y-6'>
             {/* Sucursales */}
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
+              <label className='block text-sm font-medium text-gray-200 mb-2'>
                 Sucursales
               </label>
               <div className='flex flex-wrap gap-2 mb-2'>
                 {formData.config.branches.map((branch, index) => (
                   <div
                     key={index}
-                    className='flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded'
+                    className='flex items-center gap-1 px-3 py-1 bg-[#4c87ff]/20 text-[#4c87ff] rounded border border-[#4c87ff]/30'
                   >
                     <span className='text-sm'>{branch}</span>
                     <button
                       type='button'
                       onClick={() => removeArrayItem('branches', index)}
-                      className='text-blue-900 hover:text-blue-950'
+                      className='text-[#29536b] hover:text-[#07004d]'
                       disabled={saving}
                     >
                       ×
@@ -462,7 +462,7 @@ export default function EditLaboratoryPage() {
                     addArrayItem('branches', input.value);
                     input.value = '';
                   }}
-                  className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700'
+                  className='px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] shadow-lg shadow-[#4c87ff]/30'
                   disabled={saving}
                 >
                   Agregar
@@ -472,7 +472,7 @@ export default function EditLaboratoryPage() {
 
             {/* Métodos de Pago */}
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
+              <label className='block text-sm font-medium text-gray-200 mb-2'>
                 Métodos de Pago
               </label>
               <div className='flex flex-wrap gap-2 mb-2'>
@@ -518,7 +518,7 @@ export default function EditLaboratoryPage() {
                     addArrayItem('paymentMethods', input.value);
                     input.value = '';
                   }}
-                  className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700'
+                  className='px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] shadow-lg shadow-[#4c87ff]/30'
                   disabled={saving}
                 >
                   Agregar
@@ -529,7 +529,7 @@ export default function EditLaboratoryPage() {
             {/* Tasa de Cambio y Zona Horaria */}
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className='block text-sm font-medium text-gray-200 mb-2'>
                   Tasa de Cambio (USD/VES)
                 </label>
                 <input
@@ -545,16 +545,16 @@ export default function EditLaboratoryPage() {
                       },
                     })
                   }
-                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
                   disabled={saving}
                 />
               </div>
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className='block text-sm font-medium text-gray-200 mb-2'>
                   Zona Horaria
                 </label>
                 <select
-                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
                   name='timezone'
                   id='timezone'
                   value={formData.config.timezone}
@@ -577,7 +577,7 @@ export default function EditLaboratoryPage() {
 
             {/* Webhooks */}
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
+              <label className='block text-sm font-medium text-gray-200 mb-2'>
                 Webhooks (Opcional)
               </label>
               <div className='space-y-3'>
@@ -597,7 +597,7 @@ export default function EditLaboratoryPage() {
                     })
                   }
                   placeholder='Generate Doc Webhook'
-                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
                   disabled={saving}
                 />
                 <input
@@ -616,7 +616,7 @@ export default function EditLaboratoryPage() {
                     })
                   }
                   placeholder='Generate PDF Webhook'
-                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
                   disabled={saving}
                 />
                 <input
@@ -635,7 +635,7 @@ export default function EditLaboratoryPage() {
                     })
                   }
                   placeholder='Send Email Webhook'
-                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
                   disabled={saving}
                 />
               </div>
@@ -645,8 +645,8 @@ export default function EditLaboratoryPage() {
 
         {/* Configuración de Módulos */}
         {laboratory && (
-          <div className='bg-white p-6 rounded-lg shadow'>
-            <h2 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
+          <div className='bg-black/30 backdrop-blur-md p-6 rounded-lg shadow-lg border border-white/10'>
+            <h2 className='text-lg font-semibold text-white mb-4 flex items-center gap-2'>
               <Settings className='w-5 h-5' />
               ⚙️ Configuración de Módulos
             </h2>
@@ -915,7 +915,7 @@ export default function EditLaboratoryPage() {
           <button
             type='submit'
             disabled={saving}
-            className='px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium'
+            className='px-6 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 shadow-lg shadow-[#4c87ff]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium'
           >
             {saving ? (
               'Guardando...'

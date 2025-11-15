@@ -226,8 +226,8 @@ export default function ModulesPage() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
-          <Package className="w-8 h-8 text-gray-700" />
-          <h1 className="text-3xl font-bold text-gray-700">Catálogo de Módulos</h1>
+          <Package className="w-8 h-8 text-white" />
+          <h1 className="text-3xl font-bold text-white drop-shadow-lg">Catálogo de Módulos</h1>
         </div>
         <button
           onClick={() => {
@@ -235,7 +235,7 @@ export default function ModulesPage() {
             setEditingModule(null);
             setShowForm(true);
           }}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+          className="bg-[#4c87ff] text-white px-4 py-2 rounded-lg hover:bg-[#3d6fe6] shadow-lg shadow-[#4c87ff]/30 transition-colors flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Crear Nuevo Módulo
@@ -243,23 +243,23 @@ export default function ModulesPage() {
       </div>
 
       {showForm && (
-        <div className="bg-white border rounded-lg p-6 mb-6">
+        <div className="bg-black/30 backdrop-blur-md border border-white/10 rounded-lg shadow-lg p-6 mb-6">
           <div className="flex items-center gap-2 mb-4">
             {editingModule ? (
               <>
-                <Edit className="w-5 h-5 text-gray-700" />
-                <h2 className="text-xl font-bold text-gray-700">Editar Módulo</h2>
+                <Edit className="w-5 h-5 text-white" />
+                <h2 className="text-xl font-bold text-white">Editar Módulo</h2>
               </>
             ) : (
               <>
-                <Plus className="w-5 h-5 text-gray-700" />
-                <h2 className="text-xl font-bold text-gray-700">Crear Nuevo Módulo</h2>
+                <Plus className="w-5 h-5 text-white" />
+                <h2 className="text-xl font-bold text-white">Crear Nuevo Módulo</h2>
               </>
             )}
           </div>
 
-          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded mb-4">
-            <p className="text-sm text-gray-700 flex items-start gap-2">
+          <div className="bg-[#4c87ff]/10 border border-[#4c87ff]/30 p-4 rounded mb-4">
+            <p className="text-sm text-gray-200 flex items-start gap-2">
               <span className="text-yellow-600 font-bold">⚠️</span>
               <span><strong>Importante:</strong> Primero debes crear la feature en "Features" antes de crear el módulo.</span>
             </p>
@@ -267,11 +267,11 @@ export default function ModulesPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block mb-2 font-semibold text-gray-700">Feature Key:</label>
+              <label className="block mb-2 font-semibold text-gray-200">Feature Key:</label>
               <select
                 value={formData.feature_key}
                 onChange={(e) => setFormData({ ...formData, feature_key: e.target.value })}
-                className="w-full border rounded px-3 py-2 text-gray-700"
+                className="w-full border border-white/20 rounded px-3 py-2 bg-black/20 backdrop-blur-sm text-white"
                 required
               >
                 <option value="">Seleccionar feature...</option>
@@ -284,12 +284,12 @@ export default function ModulesPage() {
             </div>
 
             <div>
-              <label className="block mb-2 font-semibold text-gray-700">Nombre del Módulo:</label>
+              <label className="block mb-2 font-semibold text-gray-200">Nombre del Módulo:</label>
               <input
                 type="text"
                 value={formData.module_name}
                 onChange={(e) => setFormData({ ...formData, module_name: e.target.value })}
-                className="w-full border rounded px-3 py-2 text-gray-700"
+                className="w-full border border-white/20 rounded px-3 py-2 bg-black/20 backdrop-blur-sm text-white placeholder-gray-400"
                 placeholder="ej: registrationForm"
                 required
               />
@@ -297,7 +297,7 @@ export default function ModulesPage() {
 
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="font-semibold text-gray-700">Campos del Formulario:</label>
+                <label className="font-semibold text-white">Campos del Formulario:</label>
                 <button
                   type="button"
                   onClick={addField}
@@ -308,8 +308,8 @@ export default function ModulesPage() {
                 </button>
               </div>
               {Object.entries(formData.structure.fields).map(([fieldName, fieldConfig]) => (
-                <div key={fieldName} className="border rounded p-3 mb-2">
-                  <div className="flex justify-between items-start mb-2 text-gray-700">
+                <div key={fieldName} className="border border-white/20 rounded p-3 mb-2 bg-black/20 backdrop-blur-sm">
+                  <div className="flex justify-between items-start mb-2 text-white">
                     <strong>Campo: {fieldName}</strong>
                     <button
                       type="button"
@@ -322,7 +322,7 @@ export default function ModulesPage() {
                   </div>
                   <div className="grid grid-cols-1 gap-2">
                     <div>
-                      <label className="text-sm text-gray-700">Label:</label>
+                      <label className="text-sm text-gray-200">Label:</label>
                       <input
                         type="text"
                         value={fieldConfig.label}
@@ -338,11 +338,11 @@ export default function ModulesPage() {
                             },
                           })
                         }
-                        className="w-full border rounded px-2 py-1 text-sm text-gray-700"
+                        className="w-full border border-white/20 rounded px-2 py-1 text-sm bg-black/20 backdrop-blur-sm text-white placeholder-gray-400"
                       />
                     </div>
                     <div>
-                      <label className="text-sm text-gray-700">
+                      <label className="text-sm text-gray-200">
                         <input
                           type="checkbox"
                           checked={fieldConfig.defaultEnabled}
@@ -364,7 +364,7 @@ export default function ModulesPage() {
                       </label>
                     </div>
                     <div>
-                      <label className="text-sm text-gray-700">
+                      <label className="text-sm text-gray-200">
                         <input
                           type="checkbox"
                           checked={fieldConfig.defaultRequired}
@@ -392,7 +392,7 @@ export default function ModulesPage() {
 
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="font-semibold text-gray-700">Acciones:</label>
+                <label className="font-semibold text-white">Acciones:</label>
                 <button
                   type="button"
                   onClick={addAction}
@@ -403,8 +403,8 @@ export default function ModulesPage() {
                 </button>
               </div>
               {Object.entries(formData.structure.actions).map(([actionName, actionConfig]) => (
-                <div key={actionName} className="border rounded p-3 mb-2">
-                  <div className="flex justify-between items-start mb-2 text-gray-700">
+                <div key={actionName} className="border border-white/20 rounded p-3 mb-2 bg-black/20 backdrop-blur-sm">
+                  <div className="flex justify-between items-start mb-2 text-white">
                     <strong>Acción: {actionName}</strong>
                     <button
                       type="button"
@@ -417,7 +417,7 @@ export default function ModulesPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-sm text-gray-700">Label:</label>
+                      <label className="text-sm text-gray-200">Label:</label>
                       <input
                         type="text"
                         value={actionConfig.label}
@@ -433,11 +433,11 @@ export default function ModulesPage() {
                             },
                           })
                         }
-                        className="w-full border rounded px-2 py-1 text-sm text-gray-700"
+                        className="w-full border border-white/20 rounded px-2 py-1 text-sm bg-black/20 backdrop-blur-sm text-white placeholder-gray-400"
                       />
                     </div>
                     <div>
-                      <label className="text-sm text-gray-700">
+                      <label className="text-sm text-gray-200">
                         <input
                           type="checkbox"
                           checked={actionConfig.defaultEnabled}
@@ -466,7 +466,7 @@ export default function ModulesPage() {
             <div className="flex gap-4">
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                className="bg-[#4c87ff] text-white px-4 py-2 rounded-lg hover:bg-[#3d6fe6] shadow-lg shadow-[#4c87ff]/30 transition-colors flex items-center gap-2"
               >
                 <Save className="w-4 h-4" />
                 Guardar Módulo
@@ -478,7 +478,7 @@ export default function ModulesPage() {
                   setEditingModule(null);
                   resetForm();
                 }}
-                className="bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition-colors flex items-center gap-2"
+                className="bg-[#4c87ff] text-white px-4 py-2 rounded-lg hover:bg-[#3d6fe6] transition-colors flex items-center gap-2 shadow-lg shadow-[#4c87ff]/30"
               >
                 <X className="w-4 h-4" />
                 Cancelar
@@ -488,28 +488,28 @@ export default function ModulesPage() {
         </div>
       )}
 
-      <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
+      <div className="bg-black/30 backdrop-blur-md border border-white/10 rounded-lg shadow-lg overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-100">
+          <thead className="bg-black/40 backdrop-blur-sm">
             <tr>
-              <th className="px-4 py-3 text-left text-gray-700">Módulo</th>
-              <th className="px-4 py-3 text-left text-gray-700">Feature Key</th>
-              <th className="px-4 py-3 text-left text-gray-700">Estado</th>
-              <th className="px-4 py-3 text-left text-gray-700">Acciones</th>
+              <th className="px-4 py-3 text-left text-gray-300">Módulo</th>
+              <th className="px-4 py-3 text-left text-gray-300">Feature Key</th>
+              <th className="px-4 py-3 text-left text-gray-300">Estado</th>
+              <th className="px-4 py-3 text-left text-gray-300">Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-white/10">
             {modules.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-700">
+                <td colSpan={4} className="px-4 py-8 text-center text-gray-300">
                   No hay módulos creados aún
                 </td>
               </tr>
             ) : (
               modules.map((module) => (
-                <tr key={module.id} className="border-t">
-                  <td className="px-4 py-3 font-semibold text-gray-700">{module.module_name}</td>
-                  <td className="px-4 py-3 text-gray-700">{module.feature_key}</td>
+                <tr key={module.id} className="border-t border-white/10 hover:bg-black/40">
+                  <td className="px-4 py-3 font-semibold text-white">{module.module_name}</td>
+                  <td className="px-4 py-3 text-gray-300">{module.feature_key}</td>
                   <td className="px-4 py-3">
                     {module.is_active ? (
                       <span className="text-green-600 flex items-center gap-1">
@@ -524,7 +524,7 @@ export default function ModulesPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEdit(module)}
-                        className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-700 transition-colors flex items-center gap-1"
+                        className="bg-[#4c87ff] text-white px-3 py-1 rounded-lg text-sm hover:bg-[#3d6fe6] shadow-md shadow-[#4c87ff]/30 transition-colors flex items-center gap-1"
                       >
                         <Edit className="w-3 h-3" />
                         Editar

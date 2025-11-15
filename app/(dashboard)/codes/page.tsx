@@ -118,7 +118,7 @@ export default function CodesPage() {
   }
 
   if (loading) {
-    return <div className="text-gray-600">Cargando códigos...</div>
+    return <div className="text-gray-200">Cargando códigos...</div>
   }
 
   return (
@@ -126,18 +126,18 @@ export default function CodesPage() {
       <div className='flex justify-between items-center mb-8'>
         <div>
           <div className='flex items-center gap-3 mb-2'>
-            <Key className='w-8 h-8 text-gray-700' />
-            <h1 className='text-3xl font-bold text-gray-900'>
+            <Key className='w-8 h-8 text-white' />
+            <h1 className='text-3xl font-bold text-white drop-shadow-lg'>
               Códigos de Acceso
             </h1>
           </div>
-          <p className='text-gray-600 mt-1'>
+          <p className='text-gray-200 mt-1 drop-shadow-md'>
             Gestiona códigos para que usuarios se registren en clientes
           </p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2'
+          className='px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] transition-colors flex items-center gap-2 shadow-lg shadow-[#4c87ff]/30'
         >
           {showForm ? (
             <>
@@ -155,17 +155,17 @@ export default function CodesPage() {
 
       {/* Formulario */}
       {showForm && (
-        <div className='bg-white p-6 rounded-lg shadow mb-6'>
+        <div className='bg-black/30 backdrop-blur-md p-6 rounded-lg shadow-lg mb-6 border border-white/10'>
           <div className='flex items-center gap-2 mb-4'>
-            <Plus className='w-5 h-5 text-gray-700' />
-            <h2 className='text-lg font-semibold text-gray-900'>
+            <Plus className='w-5 h-5 text-white' />
+            <h2 className='text-lg font-semibold text-white'>
               Crear Nuevo Código
             </h2>
           </div>
           <form onSubmit={handleSubmit}>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className='block text-sm font-medium text-gray-200 mb-2'>
                   Cliente <span className='text-red-500'>*</span>
                 </label>
                 <select
@@ -173,7 +173,7 @@ export default function CodesPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, laboratory_id: e.target.value })
                   }
-                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white'
                   required
                 >
                   <option value=''>Seleccionar cliente...</option>
@@ -186,7 +186,7 @@ export default function CodesPage() {
               </div>
 
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className='block text-sm font-medium text-gray-200 mb-2'>
                   Código <span className='text-red-500'>*</span>
                 </label>
                 <div className='flex gap-2'>
@@ -199,7 +199,7 @@ export default function CodesPage() {
                         code: e.target.value.toUpperCase(),
                       })
                     }
-                    className='flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                    className='flex-1 px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
                     placeholder='CONSPAT-ABC123'
                     required
                   />
@@ -207,7 +207,7 @@ export default function CodesPage() {
                     type='button'
                     onClick={generateRandomCode}
                     disabled={!formData.laboratory_id}
-                    className='px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+                    className='px-3 py-2 bg-black/30 backdrop-blur-sm text-white rounded-lg hover:bg-black/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-white/20'
                     title='Generar código aleatorio'
                   >
                     <RefreshCw className='w-4 h-4' />
@@ -216,7 +216,7 @@ export default function CodesPage() {
               </div>
 
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className='block text-sm font-medium text-gray-200 mb-2'>
                   Usos Máximos (opcional)
                 </label>
                 <input
@@ -225,14 +225,14 @@ export default function CodesPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, max_uses: e.target.value })
                   }
-                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white'
                   placeholder='Dejar vacío = ilimitado'
                   min='1'
                 />
               </div>
 
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className='block text-sm font-medium text-gray-200 mb-2'>
                   Fecha de Expiración (opcional)
                 </label>
                 <input
@@ -241,7 +241,7 @@ export default function CodesPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, expires_at: e.target.value })
                   }
-                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white'
                   min={new Date().toISOString().split('T')[0]}
                 />
               </div>
@@ -259,23 +259,23 @@ export default function CodesPage() {
       )}
 
       {/* Tabla de Códigos */}
-      <div className='bg-white rounded-lg shadow overflow-hidden'>
+      <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg overflow-hidden border border-white/10'>
         <table className='w-full'>
-          <thead className='bg-gray-50'>
+          <thead className='bg-black/40 backdrop-blur-sm'>
             <tr>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                 Código
               </th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                 Cliente
               </th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                 Usos
               </th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                 Expira
               </th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                 Estado
               </th>
               <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
@@ -283,10 +283,10 @@ export default function CodesPage() {
               </th>
             </tr>
           </thead>
-          <tbody className='divide-y divide-gray-200'>
+          <tbody className='divide-y divide-white/10'>
             {codes.length === 0 ? (
               <tr>
-                <td colSpan={6} className='px-6 py-8 text-center text-gray-500'>
+                <td colSpan={6} className='px-6 py-8 text-center text-gray-300'>
                   No hay códigos creados
                 </td>
               </tr>
@@ -297,25 +297,25 @@ export default function CodesPage() {
                 const isMaxed =
                   code.max_uses !== null && code.current_uses >= code.max_uses;
                 return (
-                  <tr key={code.id} className='hover:bg-gray-50'>
+                  <tr key={code.id} className='hover:bg-black/40'>
                     <td className='px-6 py-4'>
-                      <span className='flex items-center gap-2 font-mono text-sm font-semibold text-gray-900'>
+                        <span className='flex items-center gap-2 font-mono text-sm font-semibold text-white'>
                         {code.code}
                         <button
                           onClick={() => handleCopyToClipboard(code.code, 'Código')}
-                          className='ml-2 text-gray-500 hover:text-gray-700'
+                          className='ml-2 text-gray-300 hover:text-white'
                         >
-                          <Copy className='w-4 h-4 cursor-pointer hover:text-gray-700' />
+                          <Copy className='w-4 h-4 cursor-pointer hover:text-white' />
                         </button>
                       </span>
                     </td>
-                    <td className='px-6 py-4 text-sm text-gray-900'>
+                    <td className='px-6 py-4 text-sm text-white'>
                       {code.laboratory.name}
                     </td>
-                    <td className='px-6 py-4 text-sm text-gray-600'>
+                    <td className='px-6 py-4 text-sm text-gray-300'>
                       {code.current_uses} / {code.max_uses || '∞'}
                     </td>
-                    <td className='px-6 py-4 text-sm text-gray-600'>
+                    <td className='px-6 py-4 text-sm text-gray-300'>
                       {code.expires_at
                         ? new Date(code.expires_at).toLocaleDateString('es-ES')
                         : 'Nunca'}
@@ -358,7 +358,7 @@ export default function CodesPage() {
                         onClick={() =>
                           toggleCodeStatus(code.id, code.is_active)
                         }
-                        className='bg-blue-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-700 transition-colors flex items-center gap-1'
+                        className='bg-[#4c87ff] text-white px-3 py-1 rounded-lg text-sm hover:bg-[#3d6fe6] shadow-md shadow-[#4c87ff]/30 transition-colors flex items-center gap-1'
                       >
                         {code.is_active ? (
                           <>
@@ -381,7 +381,7 @@ export default function CodesPage() {
         </table>
       </div>
 
-      <p className='mt-4 text-sm text-gray-600'>
+      <p className='mt-4 text-sm text-gray-300'>
         Total: <span className='font-semibold'>{codes.length}</span> código
         {codes.length !== 1 && 's'}
       </p>

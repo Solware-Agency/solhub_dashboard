@@ -136,7 +136,7 @@ export default function FeaturesPage() {
 
   const getCategoryBadge = (category: string) => {
     const styles = {
-      core: 'bg-blue-100 text-blue-800',
+      core: 'bg-[#4c87ff]/20 text-[#4c87ff] border border-[#4c87ff]/30',
       premium: 'bg-purple-100 text-purple-800',
       addon: 'bg-orange-100 text-orange-800',
     };
@@ -147,7 +147,7 @@ export default function FeaturesPage() {
     const styles = {
       free: 'bg-gray-100 text-gray-800',
       basic: 'bg-green-100 text-green-800',
-      pro: 'bg-blue-100 text-blue-800',
+      pro: 'bg-[#41e2b8]/20 text-[#41e2b8] border border-[#41e2b8]/30',
       enterprise: 'bg-purple-100 text-purple-800',
     };
     return styles[plan as keyof typeof styles] || styles.free;
@@ -255,32 +255,32 @@ export default function FeaturesPage() {
   };
 
   if (loading) {
-    return <div className='text-gray-600'>Cargando...</div>;
+    return <div className='text-gray-200'>Cargando...</div>;
   }
 
   return (
     <div>
       <div className='mb-8'>
         <div className='flex items-center gap-3 mb-2'>
-          <Flag className='w-8 h-8 text-gray-700' />
-          <h1 className='text-3xl font-bold text-gray-900'>
+          <Flag className='w-8 h-8 text-white' />
+          <h1 className='text-3xl font-bold text-white drop-shadow-lg'>
             Gestión de Features
           </h1>
         </div>
-        <p className='text-gray-600 mt-1'>
+        <p className='text-gray-200 mt-1 drop-shadow-md'>
           Administra el catálogo de features y asígnalas a clientes
         </p>
       </div>
 
       {/* Tabs */}
-      <div className='mb-6 border-b border-gray-200'>
+      <div className='mb-6 border-b border-white/10'>
         <div className='flex gap-8'>
           <button
             onClick={() => setActiveTab('catalog')}
             className={`pb-4 px-2 font-medium transition-colors flex items-center gap-2 ${
               activeTab === 'catalog'
-                ? 'border-b-2 border-blue-600 text-blue-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'border-b-2 border-[#4c87ff] text-[#4c87ff]'
+                : 'text-gray-300 hover:text-white'
             }`}
           >
             <BookOpen className='w-4 h-4' />
@@ -290,8 +290,8 @@ export default function FeaturesPage() {
             onClick={() => setActiveTab('assign')}
             className={`pb-4 px-2 font-medium transition-colors flex items-center gap-2 ${
               activeTab === 'assign'
-                ? 'border-b-2 border-blue-600 text-blue-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'border-b-2 border-[#4c87ff] text-[#4c87ff]'
+                : 'text-gray-300 hover:text-white'
             }`}
           >
             <Building2 className='w-4 h-4' />
@@ -302,19 +302,19 @@ export default function FeaturesPage() {
 
       {/* Tab: Catálogo de Features */}
       {activeTab === 'catalog' && (
-        <div className='bg-white rounded-lg shadow'>
-          <div className='px-6 py-4 border-b border-gray-200 flex justify-between items-center'>
+        <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg border border-white/10'>
+          <div className='px-6 py-4 border-b border-white/10 flex justify-between items-center'>
             <div>
-              <h2 className='text-xl font-semibold text-gray-900'>
+              <h2 className='text-xl font-semibold text-white'>
                 Catálogo de Features
               </h2>
-              <p className='text-sm text-gray-500 mt-1'>
+              <p className='text-sm text-gray-300 mt-1'>
                 {features.length} features en el sistema
               </p>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2'
+              className='px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] transition-colors font-medium flex items-center gap-2 shadow-lg shadow-[#4c87ff]/30'
             >
               <Plus className='w-4 h-4' />
               Nueva Feature
@@ -324,17 +324,17 @@ export default function FeaturesPage() {
           <div className='p-6'>
             <table className='w-full'>
               <thead>
-                <tr className='border-b border-gray-200'>
-                  <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                <tr className='border-b border-white/10'>
+                  <th className='px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                     Feature
                   </th>
-                  <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                  <th className='px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                     Key
                   </th>
-                  <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                  <th className='px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                     Categoría
                   </th>
-                  <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                  <th className='px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                     Plan
                   </th>
                   <th className='px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
@@ -346,22 +346,22 @@ export default function FeaturesPage() {
                 {features.map((feature) => (
                   <tr
                     key={feature.id}
-                    className='border-b border-gray-100 hover:bg-gray-50 transition-colors'
+                    className='border-b border-white/10 hover:bg-black/40 transition-colors'
                   >
                     <td className='px-4 py-4'>
                       <div>
-                        <p className='font-medium text-gray-900'>
+                        <p className='font-medium text-white'>
                           {feature.name}
                         </p>
                         {feature.description && (
-                          <p className='text-sm text-gray-500 mt-1'>
+                          <p className='text-sm text-gray-300 mt-1'>
                             {feature.description}
                           </p>
                         )}
                       </div>
                     </td>
                     <td className='px-4 py-4'>
-                      <code className='text-xs bg-gray-200 px-2 py-1 rounded text-gray-600'>
+                      <code className='text-xs bg-black/40 px-2 py-1 rounded text-gray-300 border border-white/10'>
                         {feature.key}
                       </code>
                     </td>
@@ -390,7 +390,7 @@ export default function FeaturesPage() {
                             setEditingFeature(feature);
                             setShowEditModal(true);
                           }}
-                          className='bg-blue-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-700 transition-colors flex items-center gap-1'
+                          className='bg-[#4c87ff] text-white px-3 py-1 rounded-lg text-sm hover:bg-[#3d6fe6] transition-colors flex items-center gap-1 shadow-md shadow-[#4c87ff]/30'
                         >
                           <Edit className='w-3 h-3' />
                           Editar
@@ -419,15 +419,15 @@ export default function FeaturesPage() {
       {activeTab === 'assign' && (
         <>
           {laboratories.length === 0 ? (
-            <div className='bg-white rounded-lg shadow p-12 text-center'>
+            <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-12 text-center border border-white/10'>
               <Building2 className='w-16 h-16 mx-auto mb-4 text-gray-400' />
-              <p className='text-gray-600'>No hay clientes en el sistema</p>
+              <p className='text-gray-300'>No hay clientes en el sistema</p>
             </div>
           ) : (
             <div className='grid grid-cols-12 gap-6'>
               {/* Selector de Cliente */}
-              <div className='col-span-3 bg-white rounded-lg shadow p-4'>
-                <h2 className='font-semibold text-gray-900 mb-4'>Clientes</h2>
+              <div className='col-span-3 bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-4 border border-white/10'>
+                <h2 className='font-semibold text-white mb-4'>Clientes</h2>
                 <div className='space-y-2'>
                   {laboratories.map((lab) => (
                     <button
@@ -435,14 +435,14 @@ export default function FeaturesPage() {
                       onClick={() => setSelectedLab(lab)}
                       className={`block w-full text-left px-4 py-3 rounded-lg transition-colors ${
                         selectedLab?.id === lab.id
-                          ? 'bg-blue-50 text-blue-700 border-2 border-blue-500 font-medium'
-                          : 'hover:bg-gray-50 border-2 border-transparent'
+                          ? 'bg-[#4c87ff]/20 text-[#4c87ff] border-2 border-[#4c87ff] font-medium'
+                          : 'hover:bg-black/40 border-2 border-transparent'
                       }`}
                     >
-                      <div className='font-medium text-gray-900'>
+                      <div className='font-medium text-white'>
                         {lab.name}
                       </div>
-                      <div className='text-xs text-gray-500 mt-1'>
+                      <div className='text-xs text-gray-300 mt-1'>
                         {lab.slug}
                       </div>
                     </button>
@@ -453,15 +453,15 @@ export default function FeaturesPage() {
               {/* Features del Lab Seleccionado */}
               <div className='col-span-9'>
                 {selectedLab ? (
-                  <div className='bg-white rounded-lg shadow'>
-                    <div className='px-6 py-4 border-b border-gray-200'>
-                      <h2 className='text-xl font-semibold text-gray-900'>
+                  <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg border border-white/10'>
+                    <div className='px-6 py-4 border-b border-white/10'>
+                      <h2 className='text-xl font-semibold text-white'>
                         Features de:{' '}
-                        <span className='text-blue-600'>
+                        <span className='text-[#4c87ff]'>
                           {selectedLab.name}
                         </span>
                       </h2>
-                      <p className='text-sm text-gray-500 mt-1'>
+                      <p className='text-sm text-gray-300 mt-1'>
                         {
                           features.filter(
                             (f) =>
@@ -478,13 +478,13 @@ export default function FeaturesPage() {
                       <table className='w-full'>
                         <thead>
                           <tr className='border-b border-gray-200'>
-                            <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                            <th className='px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                               Feature
                             </th>
-                            <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                            <th className='px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                               Categoría
                             </th>
-                            <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+                            <th className='px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                               Plan
                             </th>
                             <th className='px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase'>
@@ -501,17 +501,17 @@ export default function FeaturesPage() {
                             return (
                               <tr
                                 key={feature.id}
-                                className='border-b border-gray-100 hover:bg-gray-50 transition-colors'
+                                className='border-b border-white/10 hover:bg-black/40 transition-colors'
                               >
                                 <td className='px-4 py-4'>
                                   <div>
-                                    <p className='font-medium text-gray-900'>
+                                    <p className='font-medium text-white'>
                                       {feature.name}
                                     </p>
-                                    <p className='text-sm text-gray-500 mt-1'>
+                                    <p className='text-sm text-gray-300 mt-1'>
                                       {feature.description}
                                     </p>
-                                    <p className='text-xs text-gray-400 mt-1 font-mono'>
+                                    <p className='text-xs text-gray-300 mt-1 font-mono'>
                                       {feature.key}
                                     </p>
                                   </div>
@@ -567,9 +567,9 @@ export default function FeaturesPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className='bg-white rounded-lg shadow p-12 text-center'>
+                  <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-12 text-center border border-white/10'>
                     <Flag className='w-16 h-16 mx-auto mb-4 text-gray-400' />
-                    <p className='text-gray-600'>
+                    <p className='text-gray-300'>
                       Selecciona un cliente para gestionar sus features
                     </p>
                   </div>
@@ -607,14 +607,14 @@ export default function FeaturesPage() {
       {/* Modal: Confirmar Eliminación */}
       {showDeleteModal && deletingFeature && (
         <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-          <div className='bg-white rounded-lg p-6 max-w-md w-full mx-4'>
+          <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-6 max-w-md w-full mx-4 border border-white/10'>
             <div className='flex items-center gap-2 mb-4'>
               <AlertTriangle className='w-5 h-5 text-red-600' />
-              <h3 className='text-lg font-semibold text-gray-900'>
+              <h3 className='text-lg font-semibold text-white'>
                 Confirmar Eliminación
               </h3>
             </div>
-            <p className='text-gray-600 mb-4'>
+            <p className='text-gray-300 mb-4'>
               ¿Estás seguro de eliminar la feature{' '}
               <strong>{deletingFeature.name}</strong>?
             </p>
@@ -643,7 +643,7 @@ export default function FeaturesPage() {
                   setDeletingFeature(null);
                 }}
                 disabled={saving}
-                className='flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2'
+                className='flex-1 px-4 py-2 border border-white/20 text-white rounded-lg hover:bg-black/40 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 bg-black/20 backdrop-blur-sm'
               >
                 <X className='w-4 h-4' />
                 Cancelar
@@ -685,9 +685,9 @@ function FeatureFormModal({
   };
 
   return (
-    <div className='fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4'>
-      <div className='bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto'>
-        <h3 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
+      <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4'>
+      <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/10'>
+        <h3 className='text-lg font-semibold text-white mb-4 flex items-center gap-2'>
           {mode === 'create' ? (
             <>
               <Plus className='w-5 h-5' />
@@ -705,7 +705,7 @@ function FeatureFormModal({
           {/* Key (solo en create) */}
           {mode === 'create' && (
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-1'>
+              <label className='block text-sm font-medium text-gray-200 mb-1'>
                 Key (camelCase) <span className='text-red-500'>*</span>
               </label>
               <input
@@ -714,13 +714,13 @@ function FeatureFormModal({
                 onChange={(e) =>
                   setFormData({ ...formData, key: e.target.value })
                 }
-                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
                 placeholder='Ej: hasBillingModule'
                 pattern='[a-z][a-zA-Z0-9]*'
                 required
                 disabled={saving}
               />
-              <p className='text-xs text-gray-500 mt-1'>
+              <p className='text-xs text-gray-300 mt-1'>
                 Debe empezar con minúscula y usar camelCase
               </p>
             </div>
@@ -728,7 +728,7 @@ function FeatureFormModal({
 
           {/* Name */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
+            <label className='block text-sm font-medium text-gray-200 mb-1'>
               Nombre <span className='text-red-500'>*</span>
             </label>
             <input
@@ -737,7 +737,7 @@ function FeatureFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+              className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
               placeholder='Ej: Módulo de Facturación'
               required
               disabled={saving}
@@ -746,7 +746,7 @@ function FeatureFormModal({
 
           {/* Description */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
+            <label className='block text-sm font-medium text-gray-200 mb-1'>
               Descripción
             </label>
             <textarea
@@ -754,7 +754,7 @@ function FeatureFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+              className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
               placeholder='Descripción detallada de la feature'
               rows={3}
               disabled={saving}
@@ -763,7 +763,7 @@ function FeatureFormModal({
 
           {/* Category */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
+            <label className='block text-sm font-medium text-gray-200 mb-1'>
               Categoría <span className='text-red-500'>*</span>
             </label>
             <select
@@ -774,7 +774,7 @@ function FeatureFormModal({
                   category: e.target.value as 'core' | 'premium' | 'addon',
                 })
               }
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+              className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
               disabled={saving}
             >
               <option value='core'>Core</option>
@@ -785,7 +785,7 @@ function FeatureFormModal({
 
           {/* Required Plan */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
+            <label className='block text-sm font-medium text-gray-200 mb-1'>
               Plan Requerido <span className='text-red-500'>*</span>
             </label>
             <select
@@ -800,7 +800,7 @@ function FeatureFormModal({
                     | 'enterprise',
                 })
               }
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+              className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
               disabled={saving}
             >
               <option value='free'>Free</option>
@@ -812,7 +812,7 @@ function FeatureFormModal({
 
           {/* Icon */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
+            <label className='block text-sm font-medium text-gray-200 mb-1'>
               Ícono (opcional)
             </label>
             <input
@@ -821,15 +821,15 @@ function FeatureFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, icon: e.target.value })
               }
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+              className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
               placeholder='Ej: 💰'
               disabled={saving}
             />
           </div>
 
           {mode === 'create' && (
-            <div className='bg-blue-50 border border-blue-200 rounded-lg p-3'>
-              <p className='text-sm text-blue-800'>
+            <div className='bg-[#4c87ff]/10 border border-[#4c87ff]/30 rounded-lg p-3'>
+              <p className='text-sm text-[#29536b]'>
                 <strong>ℹ️ Nota:</strong> Al crear la feature, se sincronizará
                 automáticamente con TODOS los clientes (con valor FALSE por
                 defecto).
@@ -842,7 +842,7 @@ function FeatureFormModal({
             <button
               type='submit'
               disabled={saving}
-              className='flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
+              className='flex-1 px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-[#4c87ff]/30'
             >
               {saving ? (
                 'Guardando...'
@@ -857,7 +857,7 @@ function FeatureFormModal({
               type='button'
               onClick={onClose}
               disabled={saving}
-              className='flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2'
+              className='flex-1 px-4 py-2 border border-white/20 text-white rounded-lg hover:bg-black/40 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 bg-black/20 backdrop-blur-sm'
             >
               <X className='w-4 h-4' />
               Cancelar
