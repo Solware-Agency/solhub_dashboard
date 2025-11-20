@@ -141,6 +141,11 @@ export default function EditLaboratoryPage() {
           updateData.config.webhooks.sendEmail = webhooks.sendEmail;
       }
 
+      // CRÍTICO: Incluir modules en config para no perder la configuración de módulos
+      if (formData.config.modules && Object.keys(formData.config.modules).length > 0) {
+        updateData.config.modules = formData.config.modules;
+      }
+
       const response = await fetch(`/api/laboratories/${params.id}`, {
         method: 'PATCH',
         headers: {
