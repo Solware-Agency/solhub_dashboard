@@ -337,7 +337,7 @@ export default function FeaturesPage() {
                   <th className='px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                     Plan
                   </th>
-                  <th className='px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+                  <th className='px-4 py-3 text-right text-xs font-medium text-gray-300 uppercase'>
                     Acciones
                   </th>
                 </tr>
@@ -487,7 +487,7 @@ export default function FeaturesPage() {
                             <th className='px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                               Plan
                             </th>
-                            <th className='px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase'>
+                            <th className='px-4 py-3 text-center text-xs font-medium text-gray-300 uppercase'>
                               Estado
                             </th>
                           </tr>
