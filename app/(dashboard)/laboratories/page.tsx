@@ -191,7 +191,7 @@ export default function LaboratoriesPage() {
               <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
                 Fecha Creación
               </th>
-              <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+              <th className='px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider'>
                 Acciones
               </th>
             </tr>
@@ -251,8 +251,8 @@ export default function LaboratoriesPage() {
         </table>
       </div>
 
-      <p className='mt-4 text-sm text-gray-600'>
-        Total: <span className='font-semibold'>{laboratories.length}</span>{' '}
+      <p className='mt-4 text-sm text-gray-200'>
+        Total: <span className='font-semibold text-white'>{laboratories.length}</span>{' '}
         cliente
         {laboratories.length !== 1 && 's'}
       </p>

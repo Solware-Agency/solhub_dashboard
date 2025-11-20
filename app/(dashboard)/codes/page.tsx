@@ -278,7 +278,7 @@ export default function CodesPage() {
               <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                 Estado
               </th>
-              <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase'>
+              <th className='px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase'>
                 Acciones
               </th>
             </tr>
@@ -353,13 +353,14 @@ export default function CodesPage() {
                         )}
                       </span>
                     </td>
-                    <td className='px-6 py-4 text-right'>
-                      <button
-                        onClick={() =>
-                          toggleCodeStatus(code.id, code.is_active)
-                        }
-                        className='bg-[#4c87ff] text-white px-3 py-1 rounded-lg text-sm hover:bg-[#3d6fe6] shadow-md shadow-[#4c87ff]/30 transition-colors flex items-center gap-1'
-                      >
+                    <td className='px-6 py-4'>
+                      <div className='flex justify-end'>
+                        <button
+                          onClick={() =>
+                            toggleCodeStatus(code.id, code.is_active)
+                          }
+                          className='bg-[#4c87ff] text-white px-3 py-1 rounded-lg text-sm hover:bg-[#3d6fe6] shadow-md shadow-[#4c87ff]/30 transition-colors flex items-center gap-1'
+                        >
                         {code.is_active ? (
                           <>
                             <XCircle className='w-3 h-3' />
@@ -371,7 +372,8 @@ export default function CodesPage() {
                             Activar
                           </>
                         )}
-                      </button>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
