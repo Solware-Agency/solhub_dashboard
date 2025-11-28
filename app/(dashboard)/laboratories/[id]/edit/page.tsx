@@ -9,7 +9,7 @@ import type {
   ModuleCatalog,
   ModuleConfig,
 } from '@/lib/types/database';
-import { ClipboardList, Save, Settings } from 'lucide-react';
+import { ClipboardList, Save, Settings, ChevronUp, ChevronDown, X, Plus } from 'lucide-react';
 
 export default function EditLaboratoryPage() {
   const router = useRouter();
@@ -31,6 +31,7 @@ export default function EditLaboratoryPage() {
       secondaryColor: '#00cc66',
     },
     config: {
+      examTypes: ['Biopsia', 'Citología', 'Inmunohistoquímica'],
       branches: ['Principal'],
       paymentMethods: ['Efectivo', 'Zelle'],
       defaultExchangeRate: 36.5,
@@ -85,6 +86,7 @@ export default function EditLaboratoryPage() {
           secondaryColor: data.branding?.secondaryColor || '#00cc66',
         },
         config: {
+          examTypes: data.config?.examTypes || ['Biopsia', 'Citología', 'Inmunohistoquímica'],
           branches: data.config?.branches || ['Principal'],
           paymentMethods: data.config?.paymentMethods || ['Efectivo', 'Zelle'],
           defaultExchangeRate: data.config?.defaultExchangeRate || 36.5,
@@ -109,6 +111,36 @@ export default function EditLaboratoryPage() {
     setSaving(true);
 
     try {
+      // Validar antes de guardar
+      const errors: string[] = [];
+      
+      if (formData.config.examTypes.length === 0) {
+        errors.push('Debe haber al menos 1 tipo de examen');
+      }
+      if (formData.config.branches.length === 0) {
+        errors.push('Debe haber al menos 1 sede');
+      }
+      if (formData.config.paymentMethods.length === 0) {
+        errors.push('Debe haber al menos 1 método de pago');
+      }
+      
+      // Validar duplicados
+      if (new Set(formData.config.examTypes).size !== formData.config.examTypes.length) {
+        errors.push('Hay tipos de examen duplicados');
+      }
+      if (new Set(formData.config.branches).size !== formData.config.branches.length) {
+        errors.push('Hay sedes duplicadas');
+      }
+      if (new Set(formData.config.paymentMethods).size !== formData.config.paymentMethods.length) {
+        errors.push('Hay métodos de pago duplicados');
+      }
+      
+      if (errors.length > 0) {
+        alert('❌ Errores de validación:\n' + errors.join('\n'));
+        setSaving(false);
+        return;
+      }
+
       // Construir objeto de actualización
       const updateData: any = {
         name: formData.name,
@@ -120,6 +152,7 @@ export default function EditLaboratoryPage() {
           secondaryColor: formData.branding.secondaryColor,
         },
         config: {
+          examTypes: formData.config.examTypes.filter((e) => e.trim() !== ''),
           branches: formData.config.branches.filter((b) => b.trim() !== ''),
           paymentMethods: formData.config.paymentMethods.filter(
             (p) => p.trim() !== '',
@@ -171,30 +204,86 @@ export default function EditLaboratoryPage() {
 
   // Helper para agregar item a array
   const addArrayItem = (
-    field: 'branches' | 'paymentMethods',
+    field: 'examTypes' | 'branches' | 'paymentMethods',
     value: string,
   ) => {
-    if (value.trim()) {
-      setFormData({
-        ...formData,
-        config: {
-          ...formData.config,
-          [field]: [...formData.config[field], value],
-        },
-      });
+    const trimmedValue = value.trim();
+    if (!trimmedValue) return;
+    
+    const currentArray = formData.config[field];
+    
+    // Validar duplicados
+    if (currentArray.includes(trimmedValue)) {
+      alert(`❌ "${trimmedValue}" ya existe en la lista`);
+      return;
     }
-  };
-
-  // Helper para eliminar item de array
-  const removeArrayItem = (
-    field: 'branches' | 'paymentMethods',
-    index: number,
-  ) => {
+    
     setFormData({
       ...formData,
       config: {
         ...formData.config,
-        [field]: formData.config[field].filter((_, i) => i !== index),
+        [field]: [...currentArray, trimmedValue],
+      },
+    });
+  };
+
+  // Helper para eliminar item de array
+  const removeArrayItem = (
+    field: 'examTypes' | 'branches' | 'paymentMethods',
+    index: number,
+  ) => {
+    const currentArray = formData.config[field];
+    
+    // Validar mínimo 1 item
+    if (currentArray.length <= 1) {
+      alert(`❌ Debe haber al menos 1 ${field === 'examTypes' ? 'tipo de examen' : field === 'branches' ? 'sede' : 'método de pago'}`);
+      return;
+    }
+    
+    setFormData({
+      ...formData,
+      config: {
+        ...formData.config,
+        [field]: currentArray.filter((_, i) => i !== index),
+      },
+    });
+  };
+
+  // Helper para reordenar (mover arriba)
+  const moveItemUp = (
+    field: 'examTypes' | 'branches' | 'paymentMethods',
+    index: number,
+  ) => {
+    if (index === 0) return;
+    
+    const newArray = [...formData.config[field]];
+    [newArray[index - 1], newArray[index]] = [newArray[index], newArray[index - 1]];
+    
+    setFormData({
+      ...formData,
+      config: {
+        ...formData.config,
+        [field]: newArray,
+      },
+    });
+  };
+
+  // Helper para reordenar (mover abajo)
+  const moveItemDown = (
+    field: 'examTypes' | 'branches' | 'paymentMethods',
+    index: number,
+  ) => {
+    const currentArray = formData.config[field];
+    if (index === currentArray.length - 1) return;
+    
+    const newArray = [...currentArray];
+    [newArray[index], newArray[index + 1]] = [newArray[index + 1], newArray[index]];
+    
+    setFormData({
+      ...formData,
+      config: {
+        ...formData.config,
+        [field]: newArray,
       },
     });
   };
@@ -415,30 +504,174 @@ export default function EditLaboratoryPage() {
 
         {/* Configuración */}
         <div className='bg-black/30 backdrop-blur-md p-6 rounded-lg shadow-lg border border-white/10'>
-          <h2 className='text-lg font-semibold text-gray-900 mb-4'>
+          <h2 className='text-lg font-semibold text-white mb-4 flex items-center gap-2'>
+            <Settings className='w-5 h-5' />
             ⚙️ Configuración
           </h2>
-          <div className='space-y-6'>
+          <p className='text-sm text-gray-400 mb-6'>
+            Estas opciones aparecerán en los dropdowns del formulario de registro del cliente.
+          </p>
+          <div className='space-y-8'>
+            {/* Tipos de Examen */}
+            <div>
+              <label className='block text-sm font-medium text-white mb-3'>
+                Tipos de Examen <span className='text-gray-400 text-xs'>(Configurados por Admin)</span>
+              </label>
+              <p className='text-xs text-gray-400 mb-3'>
+                Estas opciones aparecerán en el dropdown "Tipo de Examen" del formulario de registro del cliente.
+              </p>
+              <div className='space-y-2 mb-3'>
+                {formData.config.examTypes.map((examType, index) => (
+                  <div
+                    key={index}
+                    className='flex items-center gap-2 p-3 bg-black/40 backdrop-blur-sm rounded-lg border border-white/10'
+                  >
+                    <span className='text-sm text-gray-300 mr-2 min-w-[24px]'>{index + 1}.</span>
+                    <input
+                      type='text'
+                      value={examType}
+                      onChange={(e) => {
+                        const newTypes = [...formData.config.examTypes];
+                        newTypes[index] = e.target.value;
+                        setFormData({
+                          ...formData,
+                          config: {
+                            ...formData.config,
+                            examTypes: newTypes,
+                          },
+                        });
+                      }}
+                      className='flex-1 px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
+                      disabled={saving}
+                    />
+                    <div className='flex items-center gap-1'>
+                      <button
+                        type='button'
+                        onClick={() => moveItemUp('examTypes', index)}
+                        disabled={index === 0 || saving}
+                        className='p-2 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed'
+                        title='Mover arriba'
+                      >
+                        <ChevronUp className='w-4 h-4' />
+                      </button>
+                      <button
+                        type='button'
+                        onClick={() => moveItemDown('examTypes', index)}
+                        disabled={index === formData.config.examTypes.length - 1 || saving}
+                        className='p-2 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed'
+                        title='Mover abajo'
+                      >
+                        <ChevronDown className='w-4 h-4' />
+                      </button>
+                      <button
+                        type='button'
+                        onClick={() => removeArrayItem('examTypes', index)}
+                        disabled={formData.config.examTypes.length <= 1 || saving}
+                        className='p-2 text-red-400 hover:text-red-300 disabled:opacity-30 disabled:cursor-not-allowed'
+                        title='Eliminar'
+                      >
+                        <X className='w-4 h-4' />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className='flex gap-2'>
+                <input
+                  type='text'
+                  id='newExamType'
+                  placeholder='Nuevo tipo de examen'
+                  className='flex-1 px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
+                  disabled={saving}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const input = e.currentTarget;
+                      addArrayItem('examTypes', input.value);
+                      input.value = '';
+                    }
+                  }}
+                />
+                <button
+                  type='button'
+                  onClick={() => {
+                    const input = document.getElementById('newExamType') as HTMLInputElement;
+                    addArrayItem('examTypes', input.value);
+                    input.value = '';
+                  }}
+                  className='px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] shadow-lg shadow-[#4c87ff]/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2'
+                  disabled={saving}
+                >
+                  <Plus className='w-4 h-4' />
+                  Agregar
+                </button>
+              </div>
+              <p className='text-xs text-gray-500 mt-2'>
+                ℹ️ Mínimo 1 tipo requerido
+              </p>
+            </div>
+
             {/* Sucursales */}
             <div>
-              <label className='block text-sm font-medium text-gray-200 mb-2'>
-                Sucursales
+              <label className='block text-sm font-medium text-white mb-3'>
+                Sedes <span className='text-gray-400 text-xs'>(Configuradas por Admin)</span>
               </label>
-              <div className='flex flex-wrap gap-2 mb-2'>
+              <p className='text-xs text-gray-400 mb-3'>
+                Estas opciones aparecerán en el dropdown "Sede" del formulario de registro del cliente.
+              </p>
+              <div className='space-y-2 mb-3'>
                 {formData.config.branches.map((branch, index) => (
                   <div
                     key={index}
-                    className='flex items-center gap-1 px-3 py-1 bg-[#4c87ff]/20 text-[#4c87ff] rounded border border-[#4c87ff]/30'
+                    className='flex items-center gap-2 p-3 bg-black/40 backdrop-blur-sm rounded-lg border border-white/10'
                   >
-                    <span className='text-sm'>{branch}</span>
-                    <button
-                      type='button'
-                      onClick={() => removeArrayItem('branches', index)}
-                      className='text-[#29536b] hover:text-[#07004d]'
+                    <span className='text-sm text-gray-300 mr-2 min-w-[24px]'>{index + 1}.</span>
+                    <input
+                      type='text'
+                      value={branch}
+                      onChange={(e) => {
+                        const newBranches = [...formData.config.branches];
+                        newBranches[index] = e.target.value;
+                        setFormData({
+                          ...formData,
+                          config: {
+                            ...formData.config,
+                            branches: newBranches,
+                          },
+                        });
+                      }}
+                      className='flex-1 px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
                       disabled={saving}
-                    >
-                      ×
-                    </button>
+                    />
+                    <div className='flex items-center gap-1'>
+                      <button
+                        type='button'
+                        onClick={() => moveItemUp('branches', index)}
+                        disabled={index === 0 || saving}
+                        className='p-2 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed'
+                        title='Mover arriba'
+                      >
+                        <ChevronUp className='w-4 h-4' />
+                      </button>
+                      <button
+                        type='button'
+                        onClick={() => moveItemDown('branches', index)}
+                        disabled={index === formData.config.branches.length - 1 || saving}
+                        className='p-2 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed'
+                        title='Mover abajo'
+                      >
+                        <ChevronDown className='w-4 h-4' />
+                      </button>
+                      <button
+                        type='button'
+                        onClick={() => removeArrayItem('branches', index)}
+                        disabled={formData.config.branches.length <= 1 || saving}
+                        className='p-2 text-red-400 hover:text-red-300 disabled:opacity-30 disabled:cursor-not-allowed'
+                        title='Eliminar'
+                      >
+                        <X className='w-4 h-4' />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -446,8 +679,8 @@ export default function EditLaboratoryPage() {
                 <input
                   type='text'
                   id='newBranch'
-                  placeholder='Nueva sucursal'
-                  className='flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  placeholder='Nueva sede'
+                  className='flex-1 px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
                   disabled={saving}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -461,40 +694,83 @@ export default function EditLaboratoryPage() {
                 <button
                   type='button'
                   onClick={() => {
-                    const input = document.getElementById(
-                      'newBranch',
-                    ) as HTMLInputElement;
+                    const input = document.getElementById('newBranch') as HTMLInputElement;
                     addArrayItem('branches', input.value);
                     input.value = '';
                   }}
-                  className='px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] shadow-lg shadow-[#4c87ff]/30'
+                  className='px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] shadow-lg shadow-[#4c87ff]/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2'
                   disabled={saving}
                 >
+                  <Plus className='w-4 h-4' />
                   Agregar
                 </button>
               </div>
+              <p className='text-xs text-gray-500 mt-2'>
+                ℹ️ Mínimo 1 sede requerida
+              </p>
             </div>
 
             {/* Métodos de Pago */}
             <div>
-              <label className='block text-sm font-medium text-gray-200 mb-2'>
-                Métodos de Pago
+              <label className='block text-sm font-medium text-white mb-3'>
+                Métodos de Pago <span className='text-gray-400 text-xs'>(Configurados por Admin)</span>
               </label>
-              <div className='flex flex-wrap gap-2 mb-2'>
+              <p className='text-xs text-gray-400 mb-3'>
+                Estas opciones aparecerán en el dropdown "Método de Pago" del formulario de registro del cliente.
+              </p>
+              <div className='space-y-2 mb-3'>
                 {formData.config.paymentMethods.map((method, index) => (
                   <div
                     key={index}
-                    className='flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 rounded'
+                    className='flex items-center gap-2 p-3 bg-black/40 backdrop-blur-sm rounded-lg border border-white/10'
                   >
-                    <span className='text-sm'>{method}</span>
-                    <button
-                      type='button'
-                      onClick={() => removeArrayItem('paymentMethods', index)}
-                      className='text-green-900 hover:text-green-950'
+                    <span className='text-sm text-gray-300 mr-2 min-w-[24px]'>{index + 1}.</span>
+                    <input
+                      type='text'
+                      value={method}
+                      onChange={(e) => {
+                        const newMethods = [...formData.config.paymentMethods];
+                        newMethods[index] = e.target.value;
+                        setFormData({
+                          ...formData,
+                          config: {
+                            ...formData.config,
+                            paymentMethods: newMethods,
+                          },
+                        });
+                      }}
+                      className='flex-1 px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
                       disabled={saving}
-                    >
-                      ×
-                    </button>
+                    />
+                    <div className='flex items-center gap-1'>
+                      <button
+                        type='button'
+                        onClick={() => moveItemUp('paymentMethods', index)}
+                        disabled={index === 0 || saving}
+                        className='p-2 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed'
+                        title='Mover arriba'
+                      >
+                        <ChevronUp className='w-4 h-4' />
+                      </button>
+                      <button
+                        type='button'
+                        onClick={() => moveItemDown('paymentMethods', index)}
+                        disabled={index === formData.config.paymentMethods.length - 1 || saving}
+                        className='p-2 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed'
+                        title='Mover abajo'
+                      >
+                        <ChevronDown className='w-4 h-4' />
+                      </button>
+                      <button
+                        type='button'
+                        onClick={() => removeArrayItem('paymentMethods', index)}
+                        disabled={formData.config.paymentMethods.length <= 1 || saving}
+                        className='p-2 text-red-400 hover:text-red-300 disabled:opacity-30 disabled:cursor-not-allowed'
+                        title='Eliminar'
+                      >
+                        <X className='w-4 h-4' />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -503,7 +779,7 @@ export default function EditLaboratoryPage() {
                   type='text'
                   id='newPayment'
                   placeholder='Nuevo método de pago'
-                  className='flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600'
+                  className='flex-1 px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
                   disabled={saving}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -517,18 +793,20 @@ export default function EditLaboratoryPage() {
                 <button
                   type='button'
                   onClick={() => {
-                    const input = document.getElementById(
-                      'newPayment',
-                    ) as HTMLInputElement;
+                    const input = document.getElementById('newPayment') as HTMLInputElement;
                     addArrayItem('paymentMethods', input.value);
                     input.value = '';
                   }}
-                  className='px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] shadow-lg shadow-[#4c87ff]/30'
+                  className='px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] shadow-lg shadow-[#4c87ff]/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2'
                   disabled={saving}
                 >
+                  <Plus className='w-4 h-4' />
                   Agregar
                 </button>
               </div>
+              <p className='text-xs text-gray-500 mt-2'>
+                ℹ️ Mínimo 1 método requerido
+              </p>
             </div>
 
             {/* Tasa de Cambio y Zona Horaria */}
