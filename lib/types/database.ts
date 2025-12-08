@@ -42,6 +42,11 @@ export interface LaboratoryConfig {
     generatePdf?: string;
     sendEmail?: string;
   };
+  // Configuración de códigos personalizados
+  codeTemplate?: string; // Plantilla de código (ej: "{examCode}{counter:4}{month}{year:2}")
+  codeMappings?: {
+    [examType: string]: string; // Mapeo de tipo de examen a código (ej: "Citología" -> "CI")
+  };
 }
 
 export interface Laboratory {
