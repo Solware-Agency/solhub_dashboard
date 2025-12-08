@@ -31,3 +31,18 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Estilos para selects y options - Tema oscuro */
+select {
+  color-scheme: dark;
+}
+
+select option {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
