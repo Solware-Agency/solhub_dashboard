@@ -43,6 +43,7 @@ ${features.map((f) => `  ${f.key}: boolean`).join('\n')}
       const brandingInterface = `export interface LaboratoryBranding {
   logo?: string | null      // URL del logo o null
   icon?: string             // Nombre del ícono (por defecto: "solhub")
+  favicon?: string | null   // URL del favicon o null
   primaryColor: string      // Color primario (por defecto: "#0066cc")
   secondaryColor: string    // Color secundario (por defecto: "#00cc66")
 }`;

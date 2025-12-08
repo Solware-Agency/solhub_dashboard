@@ -27,6 +27,7 @@ export default function EditLaboratoryPage() {
     branding: {
       logo: '' as string | null,
       icon: '',
+      favicon: '' as string | null,
       primaryColor: '#0066cc',
       secondaryColor: '#00cc66',
     },
@@ -82,6 +83,7 @@ export default function EditLaboratoryPage() {
         branding: {
           logo: data.branding?.logo || null,
           icon: data.branding?.icon || 'solhub',
+          favicon: data.branding?.favicon || null,
           primaryColor: data.branding?.primaryColor || '#0066cc',
           secondaryColor: data.branding?.secondaryColor || '#00cc66',
         },
@@ -422,6 +424,27 @@ export default function EditLaboratoryPage() {
                 }
                 className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
                 placeholder='solhub'
+                disabled={saving}
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-200 mb-2'>
+                Favicon URL
+              </label>
+              <input
+                type='text'
+                value={formData.branding.favicon || ''}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    branding: {
+                      ...formData.branding,
+                      favicon: e.target.value || null,
+                    },
+                  })
+                }
+                className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
+                placeholder='/favicon.ico'
                 disabled={saving}
               />
             </div>
