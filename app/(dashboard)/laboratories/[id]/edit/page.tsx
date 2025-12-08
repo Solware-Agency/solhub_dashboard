@@ -415,10 +415,10 @@ export default function EditLaboratoryPage() {
               <input
                 type='text'
                 value={formData.slug}
-                className='w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500'
+                className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm text-white opacity-60 cursor-not-allowed'
                 disabled
               />
-              <p className='text-xs text-gray-500 mt-1'>
+              <p className='text-xs text-gray-400 mt-1'>
                 El slug no se puede modificar después de crear el cliente
               </p>
             </div>
@@ -432,11 +432,20 @@ export default function EditLaboratoryPage() {
                   setFormData({ ...formData, status: e.target.value as any })
                 }
                 className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
+                style={{
+                  colorScheme: 'dark',
+                }}
                 disabled={saving}
               >
-                <option value='active'>Activo</option>
-                <option value='inactive'>Inactivo</option>
-                <option value='trial'>Prueba</option>
+                <option value='active' className='bg-black text-white'>
+                  Activo
+                </option>
+                <option value='inactive' className='bg-black text-white'>
+                  Inactivo
+                </option>
+                <option value='trial' className='bg-black text-white'>
+                  Prueba
+                </option>
               </select>
             </div>
           </div>
@@ -444,7 +453,7 @@ export default function EditLaboratoryPage() {
 
         {/* Branding */}
         <div className='bg-black/30 backdrop-blur-md p-6 rounded-lg shadow-lg border border-white/10'>
-          <h2 className='text-lg font-semibold text-gray-900 mb-4'>
+          <h2 className='text-lg font-semibold text-white mb-4'>
             🎨 Branding
           </h2>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
@@ -504,7 +513,7 @@ export default function EditLaboratoryPage() {
                       },
                     })
                   }
-                  className='w-16 h-10 border border-gray-300 rounded-lg'
+                  className='w-16 h-10 border border-white/20 rounded-lg'
                   disabled={saving}
                 />
                 <input
@@ -519,7 +528,7 @@ export default function EditLaboratoryPage() {
                       },
                     })
                   }
-                  className='flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-gray-600'
+                  className='flex-1 px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 font-mono text-white placeholder-gray-400'
                   disabled={saving}
                 />
               </div>
@@ -541,7 +550,7 @@ export default function EditLaboratoryPage() {
                       },
                     })
                   }
-                  className='w-16 h-10 border border-gray-300 rounded-lg'
+                  className='w-16 h-10 border border-white/20 rounded-lg'
                   disabled={saving}
                 />
                 <input
@@ -556,7 +565,7 @@ export default function EditLaboratoryPage() {
                       },
                     })
                   }
-                  className='flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-gray-600'
+                  className='flex-1 px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 font-mono text-white placeholder-gray-400'
                   disabled={saving}
                 />
               </div>
@@ -940,6 +949,9 @@ export default function EditLaboratoryPage() {
                 </label>
                 <select
                   className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
+                  style={{
+                    colorScheme: 'dark',
+                  }}
                   name='timezone'
                   id='timezone'
                   value={formData.config.timezone}
@@ -952,7 +964,11 @@ export default function EditLaboratoryPage() {
                   disabled={saving}
                 >
                   {timeZones.map((timezone) => (
-                    <option key={timezone} value={timezone}>
+                    <option
+                      key={timezone}
+                      value={timezone}
+                      className='bg-black text-white'
+                    >
                       {timezone}
                     </option>
                   ))}
@@ -1433,7 +1449,7 @@ export default function EditLaboratoryPage() {
               <Settings className='w-5 h-5' />
               ⚙️ Configuración de Módulos
             </h2>
-            <p className='text-sm text-gray-600 mb-4'>
+            <p className='text-sm text-gray-300 mb-4'>
               Configura campos, acciones y settings de cada módulo. Solo
               aparecen módulos de features habilitadas.
             </p>
@@ -1455,8 +1471,8 @@ export default function EditLaboratoryPage() {
                 };
 
                 return (
-                  <div key={module.id} className='mb-6 border rounded-lg p-4'>
-                    <h3 className='font-semibold text-gray-800 mb-3'>
+                  <div key={module.id} className='mb-6 border border-white/10 rounded-lg p-4 bg-black/20'>
+                    <h3 className='font-semibold text-white mb-3'>
                       📦 {module.module_name} ({module.feature_key})
                     </h3>
 
@@ -1464,7 +1480,7 @@ export default function EditLaboratoryPage() {
                     {module.structure.fields &&
                       Object.keys(module.structure.fields).length > 0 && (
                         <div className='mb-4'>
-                          <h4 className='text-sm font-medium text-gray-700 mb-2'>
+                          <h4 className='text-sm font-medium text-gray-300 mb-2'>
                             Campos:
                           </h4>
                           <div className='space-y-2'>
@@ -1489,12 +1505,12 @@ export default function EditLaboratoryPage() {
                                 return (
                                   <div
                                     key={fieldName}
-                                    className='flex items-center gap-4 p-2 bg-gray-50 rounded'
+                                    className='flex items-center gap-4 p-2 bg-black/40 backdrop-blur-sm rounded border border-white/10'
                                   >
-                                    <span className='flex-1 font-medium text-gray-700'>
+                                    <span className='flex-1 font-medium text-white'>
                                       {fieldDef.label}
                                     </span>
-                                    <label className='flex items-center gap-2 text-gray-700'>
+                                    <label className='flex items-center gap-2 text-gray-300'>
                                       <input
                                         type='checkbox'
                                         checked={fieldConfig.enabled}
@@ -1537,7 +1553,7 @@ export default function EditLaboratoryPage() {
                                         Habilitado
                                       </span>
                                     </label>
-                                    <label className='flex items-center gap-2 text-gray-700'>
+                                    <label className='flex items-center gap-2 text-gray-300'>
                                       <input
                                         type='checkbox'
                                         checked={fieldConfig.required}
@@ -1591,7 +1607,7 @@ export default function EditLaboratoryPage() {
                     {module.structure.actions &&
                       Object.keys(module.structure.actions).length > 0 && (
                         <div className='mb-4'>
-                          <h4 className='text-sm font-medium text-gray-700 mb-2'>
+                          <h4 className='text-sm font-medium text-gray-300 mb-2'>
                             Acciones:
                           </h4>
                           <div className='space-y-2'>
@@ -1604,12 +1620,12 @@ export default function EditLaboratoryPage() {
                                 return (
                                   <div
                                     key={actionName}
-                                    className='flex items-center gap-4 p-2 bg-gray-50 rounded'
+                                    className='flex items-center gap-4 p-2 bg-black/40 backdrop-blur-sm rounded border border-white/10'
                                   >
-                                    <span className='flex-1 font-medium text-gray-700'>
+                                    <span className='flex-1 font-medium text-white'>
                                       {actionDef.label}
                                     </span>
-                                    <label className='flex items-center gap-2 text-gray-700'>
+                                    <label className='flex items-center gap-2 text-gray-300'>
                                       <input
                                         type='checkbox'
                                         checked={actionEnabled}
@@ -1662,18 +1678,18 @@ export default function EditLaboratoryPage() {
                     {module.structure.settings &&
                       Object.keys(module.structure.settings).length > 0 && (
                         <div>
-                          <h4 className='text-sm font-medium mb-2 text-gray-700'>
+                          <h4 className='text-sm font-medium mb-2 text-gray-300'>
                             Settings:
                           </h4>
-                          <div className='text-sm text-gray-600 bg-gray-50 p-3 rounded'>
-                            <pre className='whitespace-pre-wrap'>
+                          <div className='text-sm text-gray-300 bg-black/40 backdrop-blur-sm p-3 rounded border border-white/10'>
+                            <pre className='whitespace-pre-wrap text-gray-200'>
                               {JSON.stringify(
                                 module.structure.settings,
                                 null,
                                 2,
                               )}
                             </pre>
-                            <p className='text-xs text-gray-500 mt-2'>
+                            <p className='text-xs text-gray-400 mt-2'>
                               ⚠️ Los settings se configuran desde el catálogo de
                               módulos
                             </p>
@@ -1690,7 +1706,7 @@ export default function EditLaboratoryPage() {
                   module.feature_key as keyof typeof laboratory.features
                 ],
             ).length === 0 && (
-              <p className='text-gray-500 text-sm'>
+              <p className='text-gray-400 text-sm'>
                 No hay módulos configurados para las features habilitadas de
                 este laboratorio. Crea módulos en &quot;Módulos&quot; para las
                 features que este laboratorio tiene habilitadas.
