@@ -182,6 +182,7 @@ export default function EditLaboratoryPage() {
         branding: {
           logo: formData.branding.logo || null,
           icon: formData.branding.icon,
+          favicon: formData.branding.favicon || null,
           primaryColor: formData.branding.primaryColor,
           secondaryColor: formData.branding.secondaryColor,
         },
