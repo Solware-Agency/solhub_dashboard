@@ -37,6 +37,7 @@ export interface LaboratoryConfig {
   paymentMethods: string[];
   defaultExchangeRate: number;
   timezone: string;
+  phoneNumber?: string; // Número de teléfono del laboratorio
   webhooks?: {
     // OPCIONAL - No todos los labs lo tienen
     generateDoc?: string;

@@ -53,8 +53,7 @@ ${features.map((f) => `  ${f.key}: boolean`).join('\n')}
   branches: string[]
   paymentMethods: string[]
   defaultExchangeRate: number
-  timezone: string
-  webhooks?: {              // OPCIONAL - No todos los labs lo tienen
+  timezone: string  phoneNumber?: string      // OPCIONAL - Número de teléfono del laboratorio  webhooks?: {              // OPCIONAL - No todos los labs lo tienen
     generateDoc?: string
     generatePdf?: string
     sendEmail?: string

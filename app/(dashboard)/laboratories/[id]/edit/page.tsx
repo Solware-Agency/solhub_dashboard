@@ -52,6 +52,7 @@ export default function EditLaboratoryPage() {
       paymentMethods: ['Efectivo', 'Zelle'],
       defaultExchangeRate: 36.5,
       timezone: 'America/Caracas',
+      phoneNumber: '',
       webhooks: {
         generateDoc: '',
         generatePdf: '',
@@ -114,6 +115,7 @@ export default function EditLaboratoryPage() {
           paymentMethods: data.config?.paymentMethods || ['Efectivo', 'Zelle'],
           defaultExchangeRate: data.config?.defaultExchangeRate || 36.5,
           timezone: data.config?.timezone || 'America/Caracas',
+          phoneNumber: data.config?.phoneNumber || '',
           webhooks: data.config?.webhooks || {
             generateDoc: '',
             generatePdf: '',
@@ -194,6 +196,7 @@ export default function EditLaboratoryPage() {
           ),
           defaultExchangeRate: formData.config.defaultExchangeRate,
           timezone: formData.config.timezone,
+          phoneNumber: formData.config.phoneNumber?.replace(/[^\d+]/g, '') || '',
         },
       };
 
@@ -944,8 +947,8 @@ export default function EditLaboratoryPage() {
               </p>
             </div>
 
-            {/* Tasa de Cambio y Zona Horaria */}
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            {/* Tasa de Cambio, Zona Horaria y Teléfono */}
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
               <div>
                 <label className='block text-sm font-medium text-gray-200 mb-2'>
                   Tasa de Cambio (USD/VES)
@@ -997,6 +1000,27 @@ export default function EditLaboratoryPage() {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label className='block text-sm font-medium text-gray-200 mb-2'>
+                  Teléfono
+                </label>
+                <input
+                  type='text'
+                  value={formData.config.phoneNumber || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      config: {
+                        ...formData.config,
+                        phoneNumber: e.target.value,
+                      },
+                    })
+                  }
+                  className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
+                  placeholder='+58 412-1234567'
+                  disabled={saving}
+                />
               </div>
             </div>
 
