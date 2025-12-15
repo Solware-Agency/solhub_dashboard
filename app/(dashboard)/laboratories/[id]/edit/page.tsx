@@ -1005,22 +1005,29 @@ export default function EditLaboratoryPage() {
                 <label className='block text-sm font-medium text-gray-200 mb-2'>
                   Teléfono
                 </label>
-                <input
-                  type='text'
-                  value={formData.config.phoneNumber || ''}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      config: {
-                        ...formData.config,
-                        phoneNumber: e.target.value,
-                      },
-                    })
-                  }
-                  className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
-                  placeholder='+58 412-1234567'
-                  disabled={saving}
-                />
+                <div className='flex items-center'>
+                  <span className='px-3 py-2 bg-black/30 border border-white/20 rounded-l-lg text-white select-none'>+</span>
+                  <input
+                    type='text'
+                    inputMode='numeric'
+                    pattern='[0-9]*'
+                    value={(formData.config.phoneNumber || '').replace(/^\+/, '')}
+                    onChange={(e) => {
+                      // Solo permitir números
+                      const onlyNums = e.target.value.replace(/\D/g, '');
+                      setFormData({
+                        ...formData,
+                        config: {
+                          ...formData.config,
+                          phoneNumber: '+' + onlyNums,
+                        },
+                      });
+                    }}
+                    className='w-full px-3 py-2 border-t border-b border-r border-white/20 rounded-r-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
+                    placeholder='584121234567'
+                    disabled={saving}
+                  />
+                </div>
               </div>
             </div>
 
