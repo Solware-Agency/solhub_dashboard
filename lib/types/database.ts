@@ -22,6 +22,7 @@ export interface LaboratoryFeatures {
   hasUsers: boolean;
   hasChangeHistory: boolean;
   hasReports: boolean;
+  hasSampleTypeCosts: boolean;
 }
 
 export interface LaboratoryBranding {
