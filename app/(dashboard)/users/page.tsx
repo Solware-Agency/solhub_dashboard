@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
 import { Users, Search } from 'lucide-react'
 
 interface UserWithLab {
@@ -35,31 +34,32 @@ export default function UsersPage() {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('profiles')
-        .select('*, laboratory:laboratories(name, slug)')
-        .order('created_at', { ascending: false });
-
+      // Construir parámetros de búsqueda para el API
+      const params = new URLSearchParams();
+      
       if (filter.laboratory !== 'all') {
-        query = query.eq('laboratory_id', filter.laboratory);
+        params.append('laboratory_id', filter.laboratory);
       }
-
+      
       if (filter.role !== 'all') {
-        query = query.eq('role', filter.role);
+        params.append('role', filter.role);
       }
-
+      
       if (filter.status !== 'all') {
-        query = query.eq('estado', filter.status);
+        params.append('estado', filter.status);
       }
 
-      const { data, error } = await query;
-
-      console.log('🔍 Query result:', { data, error, count: data?.length });
-
-      if (error) {
-        console.error('❌ Error en query:', error);
-        throw error;
+      // Llamar al API Route
+      const response = await fetch(`/api/users?${params.toString()}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al cargar usuarios');
       }
+
+      const { data } = await response.json();
+      
+      console.log('🔍 Query result:', { data, count: data?.length });
 
       let filteredData = data || [];
 
