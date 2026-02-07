@@ -54,7 +54,12 @@ export default function UsersPage() {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      console.log('🔍 Query result:', { data, error, count: data?.length });
+
+      if (error) {
+        console.error('❌ Error en query:', error);
+        throw error;
+      }
 
       let filteredData = data || [];
 
@@ -72,7 +77,7 @@ export default function UsersPage() {
       setUsers(filteredData as UserWithLab[]);
     } catch (error) {
       console.error('Error loading users:', error);
-      alert('Error al cargar usuarios');
+      alert('Error al cargar usuarios: ' + (error as any).message);
     } finally {
       setLoading(false);
     }
