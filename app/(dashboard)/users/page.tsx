@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase/client'
 import { Users, Search } from 'lucide-react'
 
 interface UserWithLab {
@@ -34,47 +35,45 @@ export default function UsersPage() {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      // Llamar a la API Route para obtener usuarios con service_role
-      const response = await fetch('/api/users');
-      const result = await response.json();
+      let query = supabase
+        .from('profiles')
+        .select('*, laboratory:laboratories(name, slug)')
+        .order('created_at', { ascending: false });
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Error al cargar usuarios');
-      }
-
-      let filteredData = result.data || [];
-
-      // Aplicar filtros en el cliente
       if (filter.laboratory !== 'all') {
-        filteredData = filteredData.filter(
-          (user: any) => user.laboratory?.slug === filter.laboratory
-        );
+        query = query.eq('laboratory_id', filter.laboratory);
       }
 
       if (filter.role !== 'all') {
-        filteredData = filteredData.filter(
-          (user: any) => user.role === filter.role
-        );
+        query = query.eq('role', filter.role);
       }
 
       if (filter.status !== 'all') {
-        filteredData = filteredData.filter(
-          (user: any) => user.estado === filter.status
-        );
+        query = query.eq('estado', filter.status);
       }
 
-      // Filtro de búsqueda
+      const { data, error } = await query;
+
+      console.log('🔍 Query result:', { data, error, count: data?.length });
+
+      if (error) {
+        console.error('❌ Error en query:', error);
+        throw error;
+      }
+
+      let filteredData = data || [];
+
+      // Filtro de búsqueda en el cliente
       if (filter.search) {
         const searchLower = filter.search.toLowerCase();
         filteredData = filteredData.filter(
-          (user: any) =>
+          (user) =>
             user.email?.toLowerCase().includes(searchLower) ||
             user.display_name?.toLowerCase().includes(searchLower) ||
-            user.laboratory?.name?.toLowerCase().includes(searchLower),
+            (user.laboratory as any)?.name?.toLowerCase().includes(searchLower),
         );
       }
 
-      console.log('✅ Usuarios cargados:', filteredData.length);
       setUsers(filteredData as UserWithLab[]);
     } catch (error) {
       console.error('Error loading users:', error);
