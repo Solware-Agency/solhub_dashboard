@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { Users, Search, Edit, Save, X } from 'lucide-react'
+import { Users, Search } from 'lucide-react'
 
 interface UserWithLab {
   id: string
@@ -28,9 +28,7 @@ export default function UsersPage() {
     status: 'all',
     search: '',
   });
-  const [editingUser, setEditingUser] = useState<UserWithLab | null>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   useEffect(() => {
     loadUsers();
@@ -127,61 +125,38 @@ export default function UsersPage() {
   // Obtener roles únicos
   const uniqueRoles = Array.from(new Set(users.map((u) => u.role)));
 
-  const getRoleBadge = (role: string) => {
-    const styles: Record<string, string> = {
-      owner: 'bg-purple-100 text-purple-800',
-      admin: 'bg-[#4c87ff]/20 text-[#4c87ff] border border-[#4c87ff]/30',
-      employee: 'bg-gray-100 text-gray-800',
-      patologo: 'bg-green-100 text-green-800',
-      residente: 'bg-yellow-100 text-yellow-800',
-      citotecno: 'bg-orange-100 text-orange-800',
-      medicowner: 'bg-indigo-100 text-indigo-800',
-    };
-    return styles[role] || 'bg-gray-100 text-gray-800';
-  };
-
   const getStatusBadge = (status: string) => {
     return status === 'aprobado'
       ? 'bg-green-100 text-green-800'
       : 'bg-yellow-100 text-yellow-800';
   };
 
-  const handleEdit = (user: UserWithLab) => {
-    setEditingUser(user);
-    setShowEditModal(true);
-  };
-
-  const handleSaveEdit = async () => {
-    if (!editingUser) return;
-
-    setSaving(true);
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    setUpdatingUserId(userId);
     try {
-      const response = await fetch(`/api/users/${editingUser.id}`, {
+      const response = await fetch(`/api/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          role: editingUser.role,
-          estado: editingUser.estado,
-        }),
+        body: JSON.stringify({ role: newRole }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al actualizar usuario');
+        throw new Error(errorData.error || 'Error al actualizar rol');
       }
 
       const result = await response.json();
 
       // Actualizar usuario en la lista
-      setUsers(users.map(u => u.id === editingUser.id ? result.data : u));
-      setShowEditModal(false);
-      setEditingUser(null);
+      setUsers(users.map(u => u.id === userId ? result.data : u));
     } catch (error: any) {
       alert('❌ Error: ' + error.message);
+      // Recargar usuarios en caso de error
+      loadUsers();
     } finally {
-      setSaving(false);
+      setUpdatingUserId(null);
     }
   };
 
@@ -328,16 +303,13 @@ export default function UsersPage() {
                 <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                   Fecha Registro
                 </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
-                  Acciones
-                </th>
               </tr>
             </thead>
             <tbody className='divide-y divide-white/10'>
               {users.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={6}
                     className='px-6 py-8 text-center text-gray-300'
                   >
                     No se encontraron usuarios
@@ -360,13 +332,22 @@ export default function UsersPage() {
                       {user.laboratory?.name || 'N/A'}
                     </td>
                     <td className='px-6 py-4'>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-semibold ${getRoleBadge(
-                          user.role,
-                        )}`}
+                      <select
+                        value={user.role}
+                        onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                        disabled={updatingUserId === user.id}
+                        className='px-2 py-1 rounded text-xs font-semibold border border-white/20 bg-black/20 text-white focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 disabled:opacity-50 cursor-pointer'
                       >
-                        {user.role}
-                      </span>
+                        {availableRoles.length > 0 ? (
+                          availableRoles.map((role) => (
+                            <option key={role} value={role}>
+                              {role}
+                            </option>
+                          ))
+                        ) : (
+                          <option value={user.role}>{user.role}</option>
+                        )}
+                      </select>
                     </td>
                     <td className='px-6 py-4 text-sm text-gray-300'>
                       {user.assigned_branch || '-'}
@@ -383,15 +364,6 @@ export default function UsersPage() {
                     <td className='px-6 py-4 text-sm text-gray-300'>
                       {new Date(user.created_at).toLocaleDateString('es-ES')}
                     </td>
-                    <td className='px-6 py-4'>
-                      <button
-                        onClick={() => handleEdit(user)}
-                        className='text-[#4c87ff] hover:text-[#3d6fe6] transition-colors'
-                        title='Editar usuario'
-                      >
-                        <Edit className='w-4 h-4' />
-                      </button>
-                    </td>
                   </tr>
                 ))
               )}
@@ -399,107 +371,6 @@ export default function UsersPage() {
           </table>
         </div>
       </div>
-
-      {/* Modal de Edición */}
-      {showEditModal && editingUser && (
-        <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50'>
-          <div className='bg-gray-900 border border-white/10 rounded-lg p-6 w-full max-w-md shadow-2xl'>
-            <div className='flex justify-between items-center mb-4'>
-              <h3 className='text-xl font-bold text-white'>Editar Usuario</h3>
-              <button
-                onClick={() => {
-                  setShowEditModal(false);
-                  setEditingUser(null);
-                }}
-                className='text-gray-400 hover:text-white'
-              >
-                <X className='w-5 h-5' />
-              </button>
-            </div>
-
-            <div className='space-y-4'>
-              <div>
-                <label className='block text-sm font-medium text-gray-300 mb-2'>
-                  Usuario
-                </label>
-                <div className='text-white font-medium'>
-                  {editingUser.display_name || 'Sin nombre'}
-                </div>
-                <div className='text-sm text-gray-400'>{editingUser.email}</div>
-              </div>
-
-              <div>
-                <label className='block text-sm font-medium text-gray-300 mb-2'>
-                  Cliente
-                </label>
-                <div className='text-white'>
-                  {editingUser.laboratory?.name || 'N/A'}
-                </div>
-              </div>
-
-              <div>
-                <label className='block text-sm font-medium text-gray-300 mb-2'>
-                  Rol
-                </label>
-                <select
-                  value={editingUser.role}
-                  onChange={(e) =>
-                    setEditingUser({ ...editingUser, role: e.target.value })
-                  }
-                  className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/30 text-white focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50'
-                >
-                  {availableRoles.length > 0 ? (
-                    availableRoles.map((role) => (
-                      <option key={role} value={role}>
-                        {role}
-                      </option>
-                    ))
-                  ) : (
-                    <option disabled>Cargando roles...</option>
-                  )}
-                </select>
-              </div>
-
-              <div>
-                <label className='block text-sm font-medium text-gray-300 mb-2'>
-                  Estado
-                </label>
-                <select
-                  value={editingUser.estado}
-                  onChange={(e) =>
-                    setEditingUser({ ...editingUser, estado: e.target.value })
-                  }
-                  className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/30 text-white focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50'
-                >
-                  <option value='pendiente'>Pendiente</option>
-                  <option value='aprobado'>Aprobado</option>
-                </select>
-              </div>
-            </div>
-
-            <div className='flex gap-3 mt-6'>
-              <button
-                onClick={handleSaveEdit}
-                disabled={saving}
-                className='flex-1 bg-[#4c87ff] text-white py-2 px-4 rounded-lg hover:bg-[#3d6fe6] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
-              >
-                <Save className='w-4 h-4' />
-                {saving ? 'Guardando...' : 'Guardar'}
-              </button>
-              <button
-                onClick={() => {
-                  setShowEditModal(false);
-                  setEditingUser(null);
-                }}
-                disabled={saving}
-                className='px-4 py-2 border border-white/20 text-gray-300 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50'
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
