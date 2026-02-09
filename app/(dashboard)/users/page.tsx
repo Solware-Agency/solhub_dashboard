@@ -21,7 +21,6 @@ interface UserWithLab {
 export default function UsersPage() {
   const [users, setUsers] = useState<UserWithLab[]>([]);
   const [loading, setLoading] = useState(true);
-  const [availableRoles, setAvailableRoles] = useState<string[]>([]);
   const [filter, setFilter] = useState({
     laboratory: 'all',
     role: 'all',
@@ -32,35 +31,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     loadUsers();
-    loadAvailableRoles();
   }, [filter]);
-
-  const loadAvailableRoles = async () => {
-    try {
-      // Obtener todos los available_roles de todos los laboratorios
-      const { data, error } = await supabase
-        .from('laboratories')
-        .select('available_roles')
-        .not('available_roles', 'is', null);
-
-      if (error) throw error;
-
-      // Unir todos los arrays y eliminar duplicados
-      const allRoles = new Set<string>();
-      data?.forEach((lab: any) => {
-        if (Array.isArray(lab.available_roles)) {
-          lab.available_roles.forEach((role: string) => allRoles.add(role));
-        }
-      });
-
-      setAvailableRoles(Array.from(allRoles).sort());
-      console.log('✅ Roles disponibles cargados:', Array.from(allRoles).sort());
-    } catch (error) {
-      console.error('Error loading roles:', error);
-      // Fallback a roles comunes si falla
-      setAvailableRoles(['owner', 'admin', 'employee', 'patologo', 'residente']);
-    }
-  };
 
   const loadUsers = async () => {
     setLoading(true);
@@ -338,15 +309,17 @@ export default function UsersPage() {
                         disabled={updatingUserId === user.id}
                         className='px-2 py-1 rounded text-xs font-semibold border border-white/20 bg-black/20 text-white focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 disabled:opacity-50 cursor-pointer'
                       >
-                        {availableRoles.length > 0 ? (
-                          availableRoles.map((role) => (
-                            <option key={role} value={role}>
-                              {role}
-                            </option>
-                          ))
-                        ) : (
-                          <option value={user.role}>{user.role}</option>
-                        )}
+                        <option value="owner">owner</option>
+                        <option value="employee">employee</option>
+                        <option value="patologo">patologo</option>
+                        <option value="citotecno">citotecno</option>
+                        <option value="residente">residente</option>
+                        <option value="enfermero">enfermero</option>
+                        <option value="medico_tratante">medico_tratante</option>
+                        <option value="call_center">call_center</option>
+                        <option value="imagenologia">imagenologia</option>
+                        <option value="laboratorio">laboratorio</option>
+                        <option value="prueba">prueba</option>
                       </select>
                     </td>
                     <td className='px-6 py-4 text-sm text-gray-300'>
