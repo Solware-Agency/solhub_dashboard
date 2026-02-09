@@ -122,22 +122,22 @@ export default function CodesPage() {
   }
 
   return (
-    <div>
-      <div className='flex justify-between items-center mb-8'>
-        <div>
+    <div className='min-w-0'>
+      <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8'>
+        <div className='min-w-0'>
           <div className='flex items-center gap-3 mb-2'>
-            <Key className='w-8 h-8 text-white' />
-            <h1 className='text-3xl font-bold text-white drop-shadow-lg'>
+            <Key className='w-7 h-7 sm:w-8 sm:h-8 text-white shrink-0' />
+            <h1 className='text-2xl sm:text-3xl font-bold text-white drop-shadow-lg'>
               Códigos de Acceso
             </h1>
           </div>
-          <p className='text-gray-200 mt-1 drop-shadow-md'>
+          <p className='text-gray-200 mt-1 text-sm sm:text-base drop-shadow-md'>
             Gestiona códigos para que usuarios se registren en clientes
           </p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className='px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] transition-colors flex items-center gap-2 shadow-lg shadow-[#4c87ff]/30'
+          className='w-full sm:w-auto px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#4c87ff]/30 shrink-0'
         >
           {showForm ? (
             <>
@@ -259,8 +259,9 @@ export default function CodesPage() {
       )}
 
       {/* Tabla de Códigos */}
-      <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg overflow-hidden border border-white/10'>
-        <table className='w-full'>
+      <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg overflow-hidden border border-white/10 max-w-full'>
+        <div className='overflow-x-auto max-w-full'>
+          <table className='w-full min-w-[600px]'>
           <thead className='bg-black/40 backdrop-blur-sm'>
             <tr>
               <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
@@ -381,6 +382,7 @@ export default function CodesPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       <p className='mt-4 text-sm text-gray-300'>

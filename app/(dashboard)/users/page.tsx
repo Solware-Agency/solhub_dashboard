@@ -112,13 +112,13 @@ export default function UsersPage() {
   }
 
   return (
-    <div>
-      <div className='mb-8'>
+    <div className='min-w-0'>
+      <div className='mb-6 sm:mb-8'>
         <div className='flex items-center gap-3 mb-2'>
-          <Users className='w-8 h-8 text-white' />
-          <h1 className='text-3xl font-bold text-white drop-shadow-lg'>Usuarios Global</h1>
+          <Users className='w-7 h-7 sm:w-8 sm:h-8 text-white shrink-0' />
+          <h1 className='text-2xl sm:text-3xl font-bold text-white drop-shadow-lg'>Usuarios Global</h1>
         </div>
-        <p className='text-gray-200 mt-1 drop-shadow-md'>
+        <p className='text-gray-200 mt-1 text-sm sm:text-base drop-shadow-md'>
           Vista global de todos los usuarios del sistema
         </p>
       </div>
@@ -143,7 +143,7 @@ export default function UsersPage() {
           </div>
 
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
+            <label className='block text-sm font-medium text-gray-200 mb-2'>
               Rol
             </label>
             <select
@@ -161,7 +161,7 @@ export default function UsersPage() {
           </div>
 
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
+            <label className='block text-sm font-medium text-gray-200 mb-2'>
               Estado
             </label>
             <select
@@ -176,7 +176,7 @@ export default function UsersPage() {
           </div>
 
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
+            <label className='block text-sm font-medium text-gray-200 mb-2'>
               Cliente
             </label>
             <select
@@ -224,9 +224,9 @@ export default function UsersPage() {
       </div>
 
       {/* Tabla de Usuarios */}
-      <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg overflow-hidden border border-white/10'>
-        <div className='overflow-x-auto'>
-          <table className='w-full'>
+      <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg overflow-hidden border border-white/10 max-w-full'>
+        <div className='overflow-x-auto max-w-full'>
+          <table className='w-full min-w-[720px]'>
             <thead className='bg-black/40 backdrop-blur-sm'>
               <tr>
                 <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>

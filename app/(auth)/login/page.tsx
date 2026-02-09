@@ -108,8 +108,9 @@ export default function LoginPage() {
       waveOpacity={0.5}
       blur={10}
       speed="fast"
+      containerClassName="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center p-4 sm:p-6 overflow-x-hidden w-full max-w-[100vw]"
     >
-      <div className='max-w-md w-full p-8 bg-black/30 backdrop-blur-md rounded-lg shadow-lg border border-white/10'>
+      <div className='max-w-md w-full p-4 sm:p-6 md:p-8 bg-black/30 backdrop-blur-md rounded-lg shadow-lg border border-white/10'>
         <div className='text-center mb-8 relative'>
           <div className='relative flex items-center justify-center mb-4'>
             <div

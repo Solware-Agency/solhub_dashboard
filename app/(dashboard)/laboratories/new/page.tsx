@@ -67,7 +67,7 @@ export default function NewLaboratoryPage() {
         </p>
       </div>
 
-      <div className='bg-black/30 backdrop-blur-md p-8 rounded-lg shadow-lg max-w-2xl border border-white/10'>
+      <div className='bg-black/30 backdrop-blur-md p-4 sm:p-6 md:p-8 rounded-lg shadow-lg w-full max-w-2xl border border-white/10'>
         <form onSubmit={handleSubmit} className='space-y-6'>
           <div>
             <label

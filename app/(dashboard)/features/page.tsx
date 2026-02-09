@@ -259,8 +259,8 @@ export default function FeaturesPage() {
   }
 
   return (
-    <div>
-      <div className='mb-8'>
+    <div className='min-w-0 max-w-full'>
+      <div className='mb-6 sm:mb-8'>
         <div className='flex items-center gap-3 mb-2'>
           <Flag className='w-8 h-8 text-white' />
           <h1 className='text-3xl font-bold text-white drop-shadow-lg'>
@@ -321,8 +321,8 @@ export default function FeaturesPage() {
             </button>
           </div>
 
-          <div className='p-6'>
-            <table className='w-full'>
+          <div className='p-4 sm:p-6 overflow-x-auto max-w-full'>
+            <table className='w-full min-w-[500px]'>
               <thead>
                 <tr className='border-b border-white/10'>
                   <th className='px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
@@ -424,9 +424,9 @@ export default function FeaturesPage() {
               <p className='text-gray-300'>No hay clientes en el sistema</p>
             </div>
           ) : (
-            <div className='grid grid-cols-12 gap-6'>
+            <div className='grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6'>
               {/* Selector de Cliente */}
-              <div className='col-span-3 bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-4 border border-white/10'>
+              <div className='md:col-span-3 bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-4 border border-white/10 min-w-0'>
                 <h2 className='font-semibold text-white mb-4'>Clientes</h2>
                 <div className='space-y-2'>
                   {laboratories.map((lab) => (
@@ -451,10 +451,10 @@ export default function FeaturesPage() {
               </div>
 
               {/* Features del Lab Seleccionado */}
-              <div className='col-span-9'>
+              <div className='md:col-span-9 min-w-0'>
                 {selectedLab ? (
-                  <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg border border-white/10'>
-                    <div className='px-6 py-4 border-b border-white/10'>
+                  <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg border border-white/10 overflow-hidden max-w-full'>
+                    <div className='px-4 sm:px-6 py-4 border-b border-white/10'>
                       <h2 className='text-xl font-semibold text-white'>
                         Features de:{' '}
                         <span className='text-[#4c87ff]'>
@@ -474,8 +474,8 @@ export default function FeaturesPage() {
                       </p>
                     </div>
 
-                    <div className='p-6'>
-                      <table className='w-full'>
+                    <div className='p-4 sm:p-6 overflow-x-auto max-w-full'>
+                      <table className='w-full min-w-[400px]'>
                         <thead>
                           <tr className='border-b border-gray-200'>
                             <th className='px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
