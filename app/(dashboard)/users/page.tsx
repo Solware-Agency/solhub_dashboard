@@ -323,6 +323,9 @@ export default function UsersPage() {
                   Sucursal
                 </th>
                 <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
+                  Estado
+                </th>
+                <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                   Fecha Registro
                 </th>
                 <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
