@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Users, Search } from 'lucide-react'
+import { supabase } from '@/lib/supabase/client'
+import { Users, Search, Edit, Save, X } from 'lucide-react'
 
 interface UserWithLab {
   id: string
@@ -20,16 +21,48 @@ interface UserWithLab {
 export default function UsersPage() {
   const [users, setUsers] = useState<UserWithLab[]>([]);
   const [loading, setLoading] = useState(true);
+  const [availableRoles, setAvailableRoles] = useState<string[]>([]);
   const [filter, setFilter] = useState({
     laboratory: 'all',
     role: 'all',
     status: 'all',
     search: '',
   });
+  const [editingUser, setEditingUser] = useState<UserWithLab | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadUsers();
+    loadAvailableRoles();
   }, [filter]);
+
+  const loadAvailableRoles = async () => {
+    try {
+      // Obtener todos los available_roles de todos los laboratorios
+      const { data, error } = await supabase
+        .from('laboratories')
+        .select('available_roles')
+        .not('available_roles', 'is', null);
+
+      if (error) throw error;
+
+      // Unir todos los arrays y eliminar duplicados
+      const allRoles = new Set<string>();
+      data?.forEach((lab: any) => {
+        if (Array.isArray(lab.available_roles)) {
+          lab.available_roles.forEach((role: string) => allRoles.add(role));
+        }
+      });
+
+      setAvailableRoles(Array.from(allRoles).sort());
+      console.log('✅ Roles disponibles cargados:', Array.from(allRoles).sort());
+    } catch (error) {
+      console.error('Error loading roles:', error);
+      // Fallback a roles comunes si falla
+      setAvailableRoles(['owner', 'admin', 'employee', 'patologo', 'residente']);
+    }
+  };
 
   const loadUsers = async () => {
     setLoading(true);
@@ -111,6 +144,45 @@ export default function UsersPage() {
     return status === 'aprobado'
       ? 'bg-green-100 text-green-800'
       : 'bg-yellow-100 text-yellow-800';
+  };
+
+  const handleEdit = (user: UserWithLab) => {
+    setEditingUser(user);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingUser) return;
+
+    setSaving(true);
+    try {
+      const response = await fetch(`/api/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          role: editingUser.role,
+          estado: editingUser.estado,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al actualizar usuario');
+      }
+
+      const result = await response.json();
+
+      // Actualizar usuario en la lista
+      setUsers(users.map(u => u.id === editingUser.id ? result.data : u));
+      setShowEditModal(false);
+      setEditingUser(null);
+    } catch (error: any) {
+      alert('❌ Error: ' + error.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -214,7 +286,10 @@ export default function UsersPage() {
           <p className='text-2xl font-bold text-green-400'>
             {users.filter((u) => u.estado === 'aprobado').length}
           </p>
-        </div>
+        </div>  <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
+                  Acciones
+                </th>
+              
         <div className='bg-black/30 backdrop-blur-md p-4 rounded-lg shadow-lg border border-white/10 hover:border-orange-500/50 hover:shadow-xl transition-all duration-200 cursor-pointer'>
           <p className='text-sm text-gray-300'>Pendientes</p>
           <p className='text-2xl font-bold text-yellow-600'>
@@ -248,10 +323,10 @@ export default function UsersPage() {
                   Sucursal
                 </th>
                 <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
-                  Estado
+                  Fecha Registro
                 </th>
                 <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
-                  Fecha Registro
+                  Acciones
                 </th>
               </tr>
             </thead>
@@ -259,7 +334,7 @@ export default function UsersPage() {
               {users.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className='px-6 py-8 text-center text-gray-300'
                   >
                     No se encontraron usuarios
@@ -305,6 +380,15 @@ export default function UsersPage() {
                     <td className='px-6 py-4 text-sm text-gray-300'>
                       {new Date(user.created_at).toLocaleDateString('es-ES')}
                     </td>
+                    <td className='px-6 py-4'>
+                      <button
+                        onClick={() => handleEdit(user)}
+                        className='text-[#4c87ff] hover:text-[#3d6fe6] transition-colors'
+                        title='Editar usuario'
+                      >
+                        <Edit className='w-4 h-4' />
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -312,6 +396,107 @@ export default function UsersPage() {
           </table>
         </div>
       </div>
+
+      {/* Modal de Edición */}
+      {showEditModal && editingUser && (
+        <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50'>
+          <div className='bg-gray-900 border border-white/10 rounded-lg p-6 w-full max-w-md shadow-2xl'>
+            <div className='flex justify-between items-center mb-4'>
+              <h3 className='text-xl font-bold text-white'>Editar Usuario</h3>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingUser(null);
+                }}
+                className='text-gray-400 hover:text-white'
+              >
+                <X className='w-5 h-5' />
+              </button>
+            </div>
+
+            <div className='space-y-4'>
+              <div>
+                <label className='block text-sm font-medium text-gray-300 mb-2'>
+                  Usuario
+                </label>
+                <div className='text-white font-medium'>
+                  {editingUser.display_name || 'Sin nombre'}
+                </div>
+                <div className='text-sm text-gray-400'>{editingUser.email}</div>
+              </div>
+
+              <div>
+                <label className='block text-sm font-medium text-gray-300 mb-2'>
+                  Cliente
+                </label>
+                <div className='text-white'>
+                  {editingUser.laboratory?.name || 'N/A'}
+                </div>
+              </div>
+
+              <div>
+                <label className='block text-sm font-medium text-gray-300 mb-2'>
+                  Rol
+                </label>
+                <select
+                  value={editingUser.role}
+                  onChange={(e) =>
+                    setEditingUser({ ...editingUser, role: e.target.value })
+                  }
+                  className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/30 text-white focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50'
+                >
+                  {availableRoles.length > 0 ? (
+                    availableRoles.map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>Cargando roles...</option>
+                  )}
+                </select>
+              </div>
+
+              <div>
+                <label className='block text-sm font-medium text-gray-300 mb-2'>
+                  Estado
+                </label>
+                <select
+                  value={editingUser.estado}
+                  onChange={(e) =>
+                    setEditingUser({ ...editingUser, estado: e.target.value })
+                  }
+                  className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/30 text-white focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50'
+                >
+                  <option value='pendiente'>Pendiente</option>
+                  <option value='aprobado'>Aprobado</option>
+                </select>
+              </div>
+            </div>
+
+            <div className='flex gap-3 mt-6'>
+              <button
+                onClick={handleSaveEdit}
+                disabled={saving}
+                className='flex-1 bg-[#4c87ff] text-white py-2 px-4 rounded-lg hover:bg-[#3d6fe6] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
+              >
+                <Save className='w-4 h-4' />
+                {saving ? 'Guardando...' : 'Guardar'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingUser(null);
+                }}
+                disabled={saving}
+                className='px-4 py-2 border border-white/20 text-gray-300 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50'
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
