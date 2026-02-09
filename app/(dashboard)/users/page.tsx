@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
 import { Users, Search } from 'lucide-react'
 
 interface UserWithLab {
@@ -35,44 +34,51 @@ export default function UsersPage() {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('profiles')
-        .select('*, laboratory:laboratories(name, slug)')
-        .order('created_at', { ascending: false });
+      // Llamar a la API Route para obtener usuarios con service_role
+      const response = await fetch('/api/users');
+      const result = await response.json();
 
+      if (!response.ok) {
+        throw new Error(result.error || 'Error al cargar usuarios');
+      }
+
+      let filteredData = result.data || [];
+
+      // Aplicar filtros en el cliente
       if (filter.laboratory !== 'all') {
-        query = query.eq('laboratory_id', filter.laboratory);
-      }
-
-      if (filter.role !== 'all') {
-        query = query.eq('role', filter.role);
-      }
-
-      if (filter.status !== 'all') {
-        query = query.eq('estado', filter.status);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      let filteredData = data || [];
-
-      // Filtro de búsqueda en el cliente
-      if (filter.search) {
-        const searchLower = filter.search.toLowerCase();
         filteredData = filteredData.filter(
-          (user) =>
-            user.email?.toLowerCase().includes(searchLower) ||
-            user.display_name?.toLowerCase().includes(searchLower) ||
-            (user.laboratory as any)?.name?.toLowerCase().includes(searchLower),
+          (user: any) => user.laboratory?.slug === filter.laboratory
         );
       }
 
+      if (filter.role !== 'all') {
+        filteredData = filteredData.filter(
+          (user: any) => user.role === filter.role
+        );
+      }
+
+      if (filter.status !== 'all') {
+        filteredData = filteredData.filter(
+          (user: any) => user.estado === filter.status
+        );
+      }
+
+      // Filtro de búsqueda
+      if (filter.search) {
+        const searchLower = filter.search.toLowerCase();
+        filteredData = filteredData.filter(
+          (user: any) =>
+            user.email?.toLowerCase().includes(searchLower) ||
+            user.display_name?.toLowerCase().includes(searchLower) ||
+            user.laboratory?.name?.toLowerCase().includes(searchLower),
+        );
+      }
+
+      console.log('✅ Usuarios cargados:', filteredData.length);
       setUsers(filteredData as UserWithLab[]);
     } catch (error) {
       console.error('Error loading users:', error);
-      alert('Error al cargar usuarios');
+      alert('Error al cargar usuarios: ' + (error as any).message);
     } finally {
       setLoading(false);
     }

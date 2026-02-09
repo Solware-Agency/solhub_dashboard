@@ -23,6 +23,7 @@ export interface LaboratoryFeatures {
   hasChangeHistory: boolean;
   hasReports: boolean;
   hasSampleTypeCosts: boolean;
+  hasAseguradoras?: boolean;
 }
 
 export interface LaboratoryBranding {

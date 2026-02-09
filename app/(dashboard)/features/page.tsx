@@ -537,7 +537,7 @@ export default function FeaturesPage() {
                                 <td className='px-4 py-4 text-center'>
                                   <button
                                     onClick={() =>
-                                      toggleFeature(feature.key, isEnabled)
+                                      toggleFeature(feature.key, isEnabled ?? false)
                                     }
                                     disabled={saving}
                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 justify-center ${
