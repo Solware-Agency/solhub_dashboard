@@ -232,10 +232,7 @@ export default function UsersPage() {
           <p className='text-2xl font-bold text-green-400'>
             {users.filter((u) => u.estado === 'aprobado').length}
           </p>
-        </div>  <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
-                  Acciones
-                </th>
-              
+        </div>
         <div className='bg-black/30 backdrop-blur-md p-4 rounded-lg shadow-lg border border-white/10 hover:border-orange-500/50 hover:shadow-xl transition-all duration-200 cursor-pointer'>
           <p className='text-sm text-gray-300'>Pendientes</p>
           <p className='text-2xl font-bold text-yellow-600'>
