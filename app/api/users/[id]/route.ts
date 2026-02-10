@@ -16,11 +16,11 @@ const supabaseAdmin = createClient(
 // PUT/PATCH: Actualizar usuario
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const updateData = await request.json();
-    const userId = params.id;
+    const { id: userId } = await params;
 
     const { data, error } = await supabaseAdmin
       .from('profiles')
