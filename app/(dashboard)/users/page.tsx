@@ -316,6 +316,7 @@ export default function UsersPage() {
                         <option value="call_center">call_center</option>
                         <option value="imagenologia">imagenologia</option>
                         <option value="laboratorio">laboratorio</option>
+                        <option value="coordinador">coordinador</option>
                         <option value="prueba">prueba</option>
                       </select>
                     </td>
