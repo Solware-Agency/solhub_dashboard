@@ -131,6 +131,35 @@ export default function UsersPage() {
     }
   };
 
+  const handleEstadoChange = async (userId: string, newEstado: string) => {
+    if (newEstado !== 'aprobado' && newEstado !== 'pendiente') return;
+    setUpdatingUserId(userId);
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ estado: newEstado }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al actualizar estado');
+      }
+
+      const result = await response.json();
+
+      // Actualizar usuario en la lista
+      setUsers(users.map(u => u.id === userId ? result.data : u));
+    } catch (error: any) {
+      alert('❌ Error: ' + error.message);
+      loadUsers();
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
   if (loading) {
     return <div className='text-gray-200'>Cargando usuarios...</div>;
   }
@@ -324,13 +353,15 @@ export default function UsersPage() {
                       {user.assigned_branch || '-'}
                     </td>
                     <td className='px-6 py-4'>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-semibold ${getStatusBadge(
-                          user.estado,
-                        )}`}
+                      <select
+                        value={user.estado}
+                        onChange={(e) => handleEstadoChange(user.id, e.target.value)}
+                        disabled={updatingUserId === user.id}
+                        className='px-2 py-1 rounded text-xs font-semibold border border-white/20 bg-black/20 text-white focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 disabled:opacity-50 cursor-pointer'
                       >
-                        {user.estado}
-                      </span>
+                        <option value='aprobado'>Aprobado</option>
+                        <option value='pendiente'>Pendiente</option>
+                      </select>
                     </td>
                     <td className='px-6 py-4 text-sm text-gray-300'>
                       {new Date(user.created_at).toLocaleDateString('es-ES')}
