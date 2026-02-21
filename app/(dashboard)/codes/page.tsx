@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
 import type { LaboratoryCode, Laboratory } from '@/lib/types/database'
 import { Key, Plus, X, Save, RefreshCw, CheckCircle2, XCircle, AlertCircle, Copy } from 'lucide-react'
  
@@ -27,12 +26,12 @@ export default function CodesPage() {
     setLoading(true)
     try {
       const [codesRes, labsRes] = await Promise.all([
-        supabase.from('laboratory_codes').select('*, laboratory:laboratories(*)').order('created_at', { ascending: false }),
-        supabase.from('laboratories').select('*').eq('status', 'active').order('name'),
+        fetch('/api/codes').then((r) => r.json()),
+        fetch('/api/laboratories?status=active').then((r) => r.json()),
       ])
 
-      if (codesRes.data) setCodes(codesRes.data as CodeWithLab[])
-      if (labsRes.data) setLaboratories(labsRes.data)
+      setCodes((codesRes.data ?? []) as CodeWithLab[])
+      setLaboratories(labsRes.data ?? [])
     } catch (error) {
       console.error('Error loading data:', error)
     } finally {

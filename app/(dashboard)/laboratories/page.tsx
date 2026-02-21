@@ -21,31 +21,30 @@ export default function LaboratoriesPage() {
     filterRef.current = filter;
   }, [filter]);
 
-  // Efecto para cargar datos cuando cambia el filtro
+  // Efecto para cargar datos cuando cambia el filtro (vía API para evitar RLS en cliente)
   useEffect(() => {
     const loadLaboratories = async () => {
       setLoading(true);
-      let query = supabase
-        .from('laboratories')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (filter !== 'all') {
-        query = query.eq('status', filter);
+      try {
+        const url = filter === 'all' ? '/api/laboratories' : `/api/laboratories?status=${filter}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Error al cargar clientes');
+        const json = await res.json();
+        const data = json.data ?? [];
+        setLaboratories(data.sort((a: Laboratory, b: Laboratory) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        ));
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
       }
-
-      const { data, error } = await query;
-
-      if (!error && data) {
-        setLaboratories(data);
-      }
-      setLoading(false);
     };
 
     loadLaboratories();
   }, [filter]);
 
-  // Efecto separado para la suscripción de realtime (solo se ejecuta una vez)
+  // Realtime: si RLS en laboratories restringe SELECT, el canal podría no recibir filas; entonces usar solo carga vía API.
   useEffect(() => {
     // Suscripción a cambios en tiempo real
     const channel = supabase

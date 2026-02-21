@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import {
   Building2,
   CheckCircle2,
@@ -35,25 +34,14 @@ export default function DashboardPage() {
 
   const loadStats = async () => {
     try {
-      const [labs, activeLabs, users, cases] = await Promise.all([
-        supabase
-          .from('laboratories')
-          .select('*', { count: 'exact', head: true }),
-        supabase
-          .from('laboratories')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'active'),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase
-          .from('medical_records_clean')
-          .select('*', { count: 'exact', head: true }),
-      ]);
-
+      const res = await fetch('/api/dashboard/stats');
+      if (!res.ok) throw new Error('Error al cargar estadísticas');
+      const data = await res.json();
       setStats({
-        totalLabs: labs.count || 0,
-        activeLabs: activeLabs.count || 0,
-        totalUsers: users.count || 0,
-        totalCases: cases.count || 0,
+        totalLabs: data.totalLabs ?? 0,
+        activeLabs: data.activeLabs ?? 0,
+        totalUsers: data.totalUsers ?? 0,
+        totalCases: data.totalCases ?? 0,
       });
     } catch (error) {
       console.error('Error loading stats:', error);

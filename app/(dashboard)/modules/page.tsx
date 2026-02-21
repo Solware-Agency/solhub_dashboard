@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import type { ModuleCatalog, FeatureCatalog } from '@/lib/types/database';
 import { Package, Plus, Edit, Trash2, Save, X, CheckCircle2 } from 'lucide-react';
 
@@ -29,15 +28,12 @@ export default function ModulesPage() {
     try {
       setLoading(true);
       const [modulesRes, featuresRes] = await Promise.all([
-        supabase.from('module_catalog').select('*').order('created_at', { ascending: false }),
-        supabase.from('feature_catalog').select('*').eq('is_active', true).order('name'),
+        fetch('/api/modules').then((r) => r.json()),
+        fetch('/api/features').then((r) => r.json()),
       ]);
 
-      if (modulesRes.error) throw modulesRes.error;
-      if (featuresRes.error) throw featuresRes.error;
-
-      setModules(modulesRes.data || []);
-      setFeatures(featuresRes.data || []);
+      setModules(modulesRes.data ?? []);
+      setFeatures((featuresRes.data ?? []).filter((f: FeatureCatalog) => f.is_active !== false));
     } catch (error: any) {
       console.error('Error loading data:', error);
       alert('Error al cargar datos: ' + error.message);

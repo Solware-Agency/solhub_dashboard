@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import {
   RefreshCw,
   Copy,
@@ -22,15 +21,11 @@ function TypesGeneratorPage() {
     setCopied(false);
 
     try {
-      // Obtener todas las features del catálogo
-      const { data: features, error } = await supabase
-        .from('feature_catalog')
-        .select('key')
-        .eq('is_active', true)
-        .order('name');
-
-      if (error) throw error;
-      if (!features || features.length === 0) {
+      const res = await fetch('/api/features');
+      if (!res.ok) throw new Error('Error al cargar features');
+      const json = await res.json();
+      const features = (json.data ?? []).filter((f: { is_active?: boolean }) => f.is_active !== false);
+      if (!features.length) {
         throw new Error('No se encontraron features en el catálogo');
       }
 

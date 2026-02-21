@@ -13,6 +13,32 @@ const supabaseAdmin = createClient(
   }
 );
 
+// GET: Listar códigos con laboratorio (evita RLS en cliente; uso con service_role)
+export async function GET() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('laboratory_codes')
+      .select('*, laboratory:laboratories(*)')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Error al listar códigos:', error);
+      return NextResponse.json(
+        { error: error.message, details: error },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({ data: data ?? [] });
+  } catch (error: any) {
+    console.error('❌ Error inesperado:', error);
+    return NextResponse.json(
+      { error: error.message || 'Error al listar códigos' },
+      { status: 500 }
+    );
+  }
+}
+
 // POST: Crear nuevo código
 export async function POST(request: NextRequest) {
   try {

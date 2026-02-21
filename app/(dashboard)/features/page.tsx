@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import type { Laboratory, FeatureCatalog } from '@/lib/types/database';
 import { BookOpen, Building2, Flag, Plus, Edit, Trash2, Save, X, CheckCircle2, AlertTriangle } from 'lucide-react';
 
@@ -33,24 +32,18 @@ export default function FeaturesPage() {
   const loadData = async () => {
     try {
       const [labsRes, featuresRes] = await Promise.all([
-        supabase.from('laboratories').select('*').order('name'),
-        supabase
-          .from('feature_catalog')
-          .select('*')
-          .eq('is_active', true)
-          .order('name'),
+        fetch('/api/laboratories').then((r) => r.json()),
+        fetch('/api/features').then((r) => r.json()),
       ]);
 
-      if (labsRes.data) {
-        setLaboratories(labsRes.data);
-        if (labsRes.data.length > 0) {
-          setSelectedLab(labsRes.data[0]);
-        }
+      const labs = labsRes.data ?? [];
+      if (labs.length > 0) {
+        setLaboratories(labs);
+        setSelectedLab(labs[0]);
       }
 
-      if (featuresRes.data) {
-        setFeatures(featuresRes.data);
-      }
+      const feat = featuresRes.data ?? [];
+      setFeatures(feat.filter((f: FeatureCatalog) => f.is_active !== false));
     } catch (error) {
       console.error('Error loading data:', error);
       alert('Error al cargar datos');

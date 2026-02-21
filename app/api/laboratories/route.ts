@@ -13,6 +13,41 @@ const supabaseAdmin = createClient(
   }
 );
 
+// GET: Listar laboratorios (evita RLS en cliente; uso con service_role)
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status'); // opcional: active | inactive | trial
+
+    let query = supabaseAdmin
+      .from('laboratories')
+      .select('*')
+      .order('name');
+
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('❌ Error al listar laboratorios:', error);
+      return NextResponse.json(
+        { error: error.message, details: error },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({ data: data ?? [] });
+  } catch (error: any) {
+    console.error('❌ Error inesperado:', error);
+    return NextResponse.json(
+      { error: error.message || 'Error al listar laboratorios' },
+      { status: 500 }
+    );
+  }
+}
+
 // POST: Crear nuevo laboratorio
 export async function POST(request: NextRequest) {
   try {
