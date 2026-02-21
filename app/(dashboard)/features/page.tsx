@@ -32,21 +32,33 @@ export default function FeaturesPage() {
   const loadData = async () => {
     try {
       const [labsRes, featuresRes] = await Promise.all([
-        fetch('/api/laboratories').then((r) => r.json()),
-        fetch('/api/features').then((r) => r.json()),
+        fetch('/api/laboratories'),
+        fetch('/api/features?active=false'), // todas (activas e inactivas) para el catálogo
       ]);
 
-      const labs = labsRes.data ?? [];
+      const labsJson = await labsRes.json();
+      const featuresJson = await featuresRes.json();
+
+      if (!labsRes.ok) {
+        console.error('Error labs:', labsRes.status, labsJson);
+        throw new Error(labsJson?.error || 'Error al cargar laboratorios');
+      }
+      if (!featuresRes.ok) {
+        console.error('Error features:', featuresRes.status, featuresJson);
+        throw new Error(featuresJson?.error || 'Error al cargar features');
+      }
+
+      const labs = labsJson.data ?? [];
       if (labs.length > 0) {
         setLaboratories(labs);
         setSelectedLab(labs[0]);
       }
 
-      const feat = featuresRes.data ?? [];
-      setFeatures(feat.filter((f: FeatureCatalog) => f.is_active !== false));
+      const feat = featuresJson.data ?? [];
+      setFeatures(feat);
     } catch (error) {
       console.error('Error loading data:', error);
-      alert('Error al cargar datos');
+      alert(error instanceof Error ? error.message : 'Error al cargar datos');
     } finally {
       setLoading(false);
     }
