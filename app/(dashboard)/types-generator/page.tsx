@@ -24,14 +24,15 @@ function TypesGeneratorPage() {
       const res = await fetch('/api/features');
       if (!res.ok) throw new Error('Error al cargar features');
       const json = await res.json();
-      const features = (json.data ?? []).filter((f: { is_active?: boolean }) => f.is_active !== false);
+      type FeatureRow = { key: string; is_active?: boolean };
+      const features = (json.data ?? []).filter((f: FeatureRow) => f.is_active !== false) as FeatureRow[];
       if (!features.length) {
         throw new Error('No se encontraron features en el catálogo');
       }
 
       // Generar interface LaboratoryFeatures
       const featuresInterface = `export interface LaboratoryFeatures {
-${features.map((f) => `  ${f.key}: boolean`).join('\n')}
+${features.map((f: FeatureRow) => `  ${f.key}: boolean`).join('\n')}
 }`;
 
       // Generar interface LaboratoryBranding (ESTRUCTURA FIJA)
