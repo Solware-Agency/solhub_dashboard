@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { Users, Search } from 'lucide-react'
 
 interface UserWithLab {
@@ -18,6 +17,162 @@ interface UserWithLab {
   }
 }
 
+// Barra de filtros separada - no se desmonta al filtrar
+function UsersFiltersBar({
+  filter,
+  onFilterChange,
+  uniqueLabs,
+  uniqueRoles,
+}: {
+  filter: { laboratory: string; role: string; status: string; search: string }
+  onFilterChange: (f: typeof filter) => void
+  uniqueLabs: { name: string; slug: string }[]
+  uniqueRoles: string[]
+}) {
+  return (
+    <div className='bg-black/30 backdrop-blur-md p-4 rounded-lg shadow-lg mb-6 border border-white/10'>
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+        <div>
+          <label className='block text-sm font-medium text-gray-200 mb-2'>Buscar</label>
+          <div className='relative'>
+            <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
+            <input
+              type='text'
+              value={filter.search}
+              onChange={(e) => onFilterChange({ ...filter, search: e.target.value })}
+              placeholder='Email, nombre...'
+              className='w-full pl-10 pr-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
+            />
+          </div>
+        </div>
+        <div>
+          <label className='block text-sm font-medium text-gray-200 mb-2'>Rol</label>
+          <select
+            value={filter.role}
+            onChange={(e) => onFilterChange({ ...filter, role: e.target.value })}
+            className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white'
+          >
+            <option value='all'>Todos</option>
+            {uniqueRoles.map((role) => (
+              <option key={role} value={role}>{role}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className='block text-sm font-medium text-gray-200 mb-2'>Estado</label>
+          <select
+            value={filter.status}
+            onChange={(e) => onFilterChange({ ...filter, status: e.target.value })}
+            className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white'
+          >
+            <option value='all'>Todos</option>
+            <option value='aprobado'>Aprobado</option>
+            <option value='pendiente'>Pendiente</option>
+          </select>
+        </div>
+        <div>
+          <label className='block text-sm font-medium text-gray-200 mb-2'>Cliente</label>
+          <select
+            value={filter.laboratory}
+            onChange={(e) => onFilterChange({ ...filter, laboratory: e.target.value })}
+            className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white'
+          >
+            <option value='all'>Todos</option>
+            {uniqueLabs.map((lab) => (
+              <option key={lab.slug} value={lab.slug}>{lab.name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Tabla de usuarios - se actualiza según filtros sin afectar la barra
+function UsersTable({
+  users,
+  onRoleChange,
+  onEstadoChange,
+  updatingUserId,
+}: {
+  users: UserWithLab[]
+  onRoleChange: (id: string, role: string) => void
+  onEstadoChange: (id: string, estado: string) => void
+  updatingUserId: string | null
+}) {
+  return (
+    <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg overflow-hidden border border-white/10 max-w-full'>
+      <div className='overflow-x-auto max-w-full'>
+        <table className='w-full min-w-[720px]'>
+          <thead className='bg-black/40 backdrop-blur-sm'>
+            <tr>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>Usuario</th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>Cliente</th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>Rol</th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>Sucursal</th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>Estado</th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>Fecha Registro</th>
+            </tr>
+          </thead>
+          <tbody className='divide-y divide-white/10'>
+            {users.length === 0 ? (
+              <tr>
+                <td colSpan={6} className='px-6 py-8 text-center text-gray-300'>No se encontraron usuarios</td>
+              </tr>
+            ) : (
+              users.map((user) => (
+                <tr key={user.id} className='hover:bg-black/40'>
+                  <td className='px-6 py-4'>
+                    <div>
+                      <div className='text-sm font-medium text-white'>{user.display_name || 'Sin nombre'}</div>
+                      <div className='text-sm text-gray-300'>{user.email}</div>
+                    </div>
+                  </td>
+                  <td className='px-6 py-4 text-sm text-white'>{user.laboratory?.name || 'N/A'}</td>
+                  <td className='px-6 py-4'>
+                    <select
+                      value={user.role}
+                      onChange={(e) => onRoleChange(user.id, e.target.value)}
+                      disabled={updatingUserId === user.id}
+                      className='px-2 py-1 rounded text-xs font-semibold border border-white/20 bg-black/20 text-white focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 disabled:opacity-50 cursor-pointer'
+                    >
+                      <option value='owner'>owner</option>
+                      <option value='employee'>employee</option>
+                      <option value='patologo'>patologo</option>
+                      <option value='citotecno'>citotecno</option>
+                      <option value='residente'>residente</option>
+                      <option value='enfermero'>enfermero</option>
+                      <option value='medico_tratante'>medico_tratante</option>
+                      <option value='call_center'>call_center</option>
+                      <option value='imagenologia'>imagenologia</option>
+                      <option value='laboratorio'>laboratorio</option>
+                      <option value='coordinador'>coordinador</option>
+                      <option value='prueba'>prueba</option>
+                    </select>
+                  </td>
+                  <td className='px-6 py-4 text-sm text-gray-300'>{user.assigned_branch || '-'}</td>
+                  <td className='px-6 py-4'>
+                    <select
+                      value={user.estado}
+                      onChange={(e) => onEstadoChange(user.id, e.target.value)}
+                      disabled={updatingUserId === user.id}
+                      className='px-2 py-1 rounded text-xs font-semibold border border-white/20 bg-black/20 text-white focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 disabled:opacity-50 cursor-pointer'
+                    >
+                      <option value='aprobado'>Aprobado</option>
+                      <option value='pendiente'>Pendiente</option>
+                    </select>
+                  </td>
+                  <td className='px-6 py-4 text-sm text-gray-300'>{new Date(user.created_at).toLocaleDateString('es-ES')}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 export default function UsersPage() {
   const [users, setUsers] = useState<UserWithLab[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,14 +184,17 @@ export default function UsersPage() {
   });
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
+  // useDeferredValue: el input responde al instante, la tabla actualiza sin bloquear
+  const deferredSearch = useDeferredValue(filter.search);
+
+  // Cargar usuarios solo al montar - no refetch en cada tecla
   useEffect(() => {
     loadUsers();
-  }, [filter]);
+  }, []);
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     setLoading(true);
     try {
-      // Llamar a la API Route para obtener usuarios con service_role
       const response = await fetch('/api/users');
       const result = await response.json();
 
@@ -44,72 +202,60 @@ export default function UsersPage() {
         throw new Error(result.error || 'Error al cargar usuarios');
       }
 
-      let filteredData = result.data || [];
-
-      // Aplicar filtros en el cliente
-      if (filter.laboratory !== 'all') {
-        filteredData = filteredData.filter(
-          (user: any) => user.laboratory?.slug === filter.laboratory
-        );
-      }
-
-      if (filter.role !== 'all') {
-        filteredData = filteredData.filter(
-          (user: any) => user.role === filter.role
-        );
-      }
-
-      if (filter.status !== 'all') {
-        filteredData = filteredData.filter(
-          (user: any) => user.estado === filter.status
-        );
-      }
-
-      // Filtro de búsqueda
-      if (filter.search) {
-        const searchLower = filter.search.toLowerCase();
-        filteredData = filteredData.filter(
-          (user: any) =>
-            user.email?.toLowerCase().includes(searchLower) ||
-            user.display_name?.toLowerCase().includes(searchLower) ||
-            user.laboratory?.name?.toLowerCase().includes(searchLower),
-        );
-      }
-
-      console.log('✅ Usuarios cargados:', filteredData.length);
-      setUsers(filteredData as UserWithLab[]);
+      const data = (result.data || []) as UserWithLab[];
+      console.log('✅ Usuarios cargados:', data.length);
+      setUsers(data);
     } catch (error) {
       console.error('Error loading users:', error);
-      alert('Error al cargar usuarios: ' + (error as any).message);
+      alert('Error al cargar usuarios: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Obtener clientes únicos para el filtro
-  const uniqueLabs = Array.from(
-    new Set(users.map((u) => JSON.stringify(u.laboratory))),
-  )
-    .map((l) => JSON.parse(l))
-    .filter((l) => l);
+  // Filtros aplicados en cliente - sin refetch, sin loading
+  const effectiveFilter = useMemo(() => ({ ...filter, search: deferredSearch }), [filter, deferredSearch]);
 
-  // Obtener roles únicos
-  const uniqueRoles = Array.from(new Set(users.map((u) => u.role)));
+  const filteredUsers = useMemo(() => {
+    let data = [...users];
 
-  const getStatusBadge = (status: string) => {
-    return status === 'aprobado'
-      ? 'bg-green-100 text-green-800'
-      : 'bg-yellow-100 text-yellow-800';
-  };
+    if (effectiveFilter.laboratory !== 'all') {
+      data = data.filter((u) => u.laboratory?.slug === effectiveFilter.laboratory);
+    }
+    if (effectiveFilter.role !== 'all') {
+      data = data.filter((u) => u.role === effectiveFilter.role);
+    }
+    if (effectiveFilter.status !== 'all') {
+      data = data.filter((u) => u.estado === effectiveFilter.status);
+    }
+    if (effectiveFilter.search) {
+      const s = effectiveFilter.search.toLowerCase();
+      data = data.filter(
+        (u) =>
+          u.email?.toLowerCase().includes(s) ||
+          u.display_name?.toLowerCase().includes(s) ||
+          u.laboratory?.name?.toLowerCase().includes(s)
+      );
+    }
+    return data;
+  }, [users, effectiveFilter]);
 
-  const handleRoleChange = async (userId: string, newRole: string) => {
+  const uniqueLabs = useMemo(
+    () =>
+      Array.from(new Set(users.map((u) => JSON.stringify(u.laboratory))))
+        .map((l) => JSON.parse(l))
+        .filter((l: { name: string; slug: string }) => l),
+    [users]
+  );
+
+  const uniqueRoles = useMemo(() => Array.from(new Set(users.map((u) => u.role))), [users]);
+
+  const handleRoleChange = useCallback(async (userId: string, newRole: string) => {
     setUpdatingUserId(userId);
     try {
       const response = await fetch(`/api/users/${userId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: newRole }),
       });
 
@@ -117,29 +263,23 @@ export default function UsersPage() {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Error al actualizar rol');
       }
-
       const result = await response.json();
-
-      // Actualizar usuario en la lista
-      setUsers(users.map(u => u.id === userId ? result.data : u));
-    } catch (error: any) {
-      alert('❌ Error: ' + error.message);
-      // Recargar usuarios en caso de error
+      setUsers((prev) => prev.map((u) => (u.id === userId ? result.data : u)));
+    } catch (error) {
+      alert('❌ Error: ' + (error instanceof Error ? error.message : String(error)));
       loadUsers();
     } finally {
       setUpdatingUserId(null);
     }
-  };
+  }, [loadUsers]);
 
-  const handleEstadoChange = async (userId: string, newEstado: string) => {
+  const handleEstadoChange = useCallback(async (userId: string, newEstado: string) => {
     if (newEstado !== 'aprobado' && newEstado !== 'pendiente') return;
     setUpdatingUserId(userId);
     try {
       const response = await fetch(`/api/users/${userId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estado: newEstado }),
       });
 
@@ -147,18 +287,15 @@ export default function UsersPage() {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Error al actualizar estado');
       }
-
       const result = await response.json();
-
-      // Actualizar usuario en la lista
-      setUsers(users.map(u => u.id === userId ? result.data : u));
-    } catch (error: any) {
-      alert('❌ Error: ' + error.message);
+      setUsers((prev) => prev.map((u) => (u.id === userId ? result.data : u)));
+    } catch (error) {
+      alert('❌ Error: ' + (error instanceof Error ? error.message : String(error)));
       loadUsers();
     } finally {
       setUpdatingUserId(null);
     }
-  };
+  }, [loadUsers]);
 
   if (loading) {
     return <div className='text-gray-200'>Cargando usuarios...</div>;
@@ -176,203 +313,42 @@ export default function UsersPage() {
         </p>
       </div>
 
-      {/* Filtros */}
-      <div className='bg-black/30 backdrop-blur-md p-4 rounded-lg shadow-lg mb-6 border border-white/10'>
-        <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
-          <div>
-            <label className='block text-sm font-medium text-gray-200 mb-2'>
-              Buscar
-            </label>
-            <div className='relative'>
-              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
-              <input
-                type='text'
-                value={filter.search}
-                onChange={(e) => setFilter({ ...filter, search: e.target.value })}
-                placeholder='Email, nombre...'
-                className='w-full pl-10 pr-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
-              />
-            </div>
-          </div>
+      <UsersFiltersBar
+        filter={filter}
+        onFilterChange={setFilter}
+        uniqueLabs={uniqueLabs}
+        uniqueRoles={uniqueRoles}
+      />
 
-          <div>
-            <label className='block text-sm font-medium text-gray-200 mb-2'>
-              Rol
-            </label>
-            <select
-              value={filter.role}
-              onChange={(e) => setFilter({ ...filter, role: e.target.value })}
-              className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white'
-            >
-              <option value='all'>Todos</option>
-              {uniqueRoles.map((role) => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className='block text-sm font-medium text-gray-200 mb-2'>
-              Estado
-            </label>
-            <select
-              value={filter.status}
-              onChange={(e) => setFilter({ ...filter, status: e.target.value })}
-              className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white'
-            >
-              <option value='all'>Todos</option>
-              <option value='aprobado'>Aprobado</option>
-              <option value='pendiente'>Pendiente</option>
-            </select>
-          </div>
-
-          <div>
-            <label className='block text-sm font-medium text-gray-200 mb-2'>
-              Cliente
-            </label>
-            <select
-              value={filter.laboratory}
-              onChange={(e) =>
-                setFilter({ ...filter, laboratory: e.target.value })
-              }
-              className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white'
-            >
-              <option value='all'>Todos</option>
-              {uniqueLabs.map((lab) => (
-                <option key={lab.slug} value={lab.slug}>
-                  {lab.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Estadísticas Rápidas */}
       <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
         <div className='bg-black/30 backdrop-blur-md p-4 rounded-lg shadow-lg border border-white/10 hover:border-purple-500/50 hover:shadow-xl transition-all duration-200 cursor-pointer'>
           <p className='text-sm text-gray-300'>Total Usuarios</p>
-          <p className='text-2xl font-bold text-white'>{users.length}</p>
+          <p className='text-2xl font-bold text-white'>{filteredUsers.length}</p>
         </div>
         <div className='bg-black/30 backdrop-blur-md p-4 rounded-lg shadow-lg border border-white/10 hover:border-green-500/50 hover:shadow-xl transition-all duration-200 cursor-pointer'>
           <p className='text-sm text-gray-300'>Aprobados</p>
           <p className='text-2xl font-bold text-green-400'>
-            {users.filter((u) => u.estado === 'aprobado').length}
+            {filteredUsers.filter((u) => u.estado === 'aprobado').length}
           </p>
         </div>
         <div className='bg-black/30 backdrop-blur-md p-4 rounded-lg shadow-lg border border-white/10 hover:border-orange-500/50 hover:shadow-xl transition-all duration-200 cursor-pointer'>
           <p className='text-sm text-gray-300'>Pendientes</p>
           <p className='text-2xl font-bold text-yellow-600'>
-            {users.filter((u) => u.estado === 'pendiente').length}
+            {filteredUsers.filter((u) => u.estado === 'pendiente').length}
           </p>
         </div>
         <div className='bg-black/30 backdrop-blur-md p-4 rounded-lg shadow-lg border border-white/10 hover:border-[#4c87ff]/50 hover:shadow-xl transition-all duration-200 cursor-pointer'>
           <p className='text-sm text-gray-300'>Clientes</p>
-          <p className='text-2xl font-bold text-[#4c87ff]'>
-            {uniqueLabs.length}
-          </p>
+          <p className='text-2xl font-bold text-[#4c87ff]'>{uniqueLabs.length}</p>
         </div>
       </div>
 
-      {/* Tabla de Usuarios */}
-      <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg overflow-hidden border border-white/10 max-w-full'>
-        <div className='overflow-x-auto max-w-full'>
-          <table className='w-full min-w-[720px]'>
-            <thead className='bg-black/40 backdrop-blur-sm'>
-              <tr>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
-                  Usuario
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
-                  Cliente
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
-                  Rol
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
-                  Sucursal
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
-                  Estado
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
-                  Fecha Registro
-                </th>
-              </tr>
-            </thead>
-            <tbody className='divide-y divide-white/10'>
-              {users.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className='px-6 py-8 text-center text-gray-300'
-                  >
-                    No se encontraron usuarios
-                  </td>
-                </tr>
-              ) : (
-                users.map((user) => (
-                  <tr key={user.id} className='hover:bg-black/40'>
-                    <td className='px-6 py-4'>
-                      <div>
-                        <div className='text-sm font-medium text-white'>
-                          {user.display_name || 'Sin nombre'}
-                        </div>
-                        <div className='text-sm text-gray-300'>
-                          {user.email}
-                        </div>
-                      </div>
-                    </td>
-                    <td className='px-6 py-4 text-sm text-white'>
-                      {user.laboratory?.name || 'N/A'}
-                    </td>
-                    <td className='px-6 py-4'>
-                      <select
-                        value={user.role}
-                        onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                        disabled={updatingUserId === user.id}
-                        className='px-2 py-1 rounded text-xs font-semibold border border-white/20 bg-black/20 text-white focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 disabled:opacity-50 cursor-pointer'
-                      >
-                        <option value="owner">owner</option>
-                        <option value="employee">employee</option>
-                        <option value="patologo">patologo</option>
-                        <option value="citotecno">citotecno</option>
-                        <option value="residente">residente</option>
-                        <option value="enfermero">enfermero</option>
-                        <option value="medico_tratante">medico_tratante</option>
-                        <option value="call_center">call_center</option>
-                        <option value="imagenologia">imagenologia</option>
-                        <option value="laboratorio">laboratorio</option>
-                        <option value="coordinador">coordinador</option>
-                        <option value="prueba">prueba</option>
-                      </select>
-                    </td>
-                    <td className='px-6 py-4 text-sm text-gray-300'>
-                      {user.assigned_branch || '-'}
-                    </td>
-                    <td className='px-6 py-4'>
-                      <select
-                        value={user.estado}
-                        onChange={(e) => handleEstadoChange(user.id, e.target.value)}
-                        disabled={updatingUserId === user.id}
-                        className='px-2 py-1 rounded text-xs font-semibold border border-white/20 bg-black/20 text-white focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 disabled:opacity-50 cursor-pointer'
-                      >
-                        <option value='aprobado'>Aprobado</option>
-                        <option value='pendiente'>Pendiente</option>
-                      </select>
-                    </td>
-                    <td className='px-6 py-4 text-sm text-gray-300'>
-                      {new Date(user.created_at).toLocaleDateString('es-ES')}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <UsersTable
+        users={filteredUsers}
+        onRoleChange={handleRoleChange}
+        onEstadoChange={handleEstadoChange}
+        updatingUserId={updatingUserId}
+      />
     </div>
   );
 }
