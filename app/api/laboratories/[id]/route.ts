@@ -13,6 +13,46 @@ const supabaseAdmin = createClient(
   }
 );
 
+// GET: Obtener un laboratorio por id (evita RLS en cliente)
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
+) {
+  try {
+    const resolvedParams = await Promise.resolve(params);
+    const { id } = resolvedParams;
+
+    const { data, error } = await supabaseAdmin
+      .from('laboratories')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('❌ Error al obtener laboratorio:', error);
+      return NextResponse.json(
+        { error: error.message, details: error },
+        { status: error.code === 'PGRST116' ? 404 : 400 }
+      );
+    }
+
+    if (!data) {
+      return NextResponse.json(
+        { error: 'No se encontró el laboratorio' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ data });
+  } catch (error: any) {
+    console.error('❌ Error inesperado:', error);
+    return NextResponse.json(
+      { error: error.message || 'Error al obtener laboratorio' },
+      { status: 500 }
+    );
+  }
+}
+
 // PATCH: Actualizar laboratorio
 export async function PATCH(
   request: NextRequest,

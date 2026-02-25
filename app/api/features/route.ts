@@ -13,6 +13,41 @@ const supabaseAdmin = createClient(
   }
 );
 
+// GET: Listar features del catálogo (evita RLS en cliente; uso con service_role)
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const activeOnly = searchParams.get('active') !== 'false';
+
+    let query = supabaseAdmin
+      .from('feature_catalog')
+      .select('*')
+      .order('name');
+
+    if (activeOnly) {
+      query = query.eq('is_active', true);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('❌ Error al listar features:', error);
+      return NextResponse.json(
+        { error: error.message, details: error },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({ data: data ?? [] });
+  } catch (error: any) {
+    console.error('❌ Error inesperado:', error);
+    return NextResponse.json(
+      { error: error.message || 'Error al listar features' },
+      { status: 500 }
+    );
+  }
+}
+
 // POST: Crear nueva feature
 export async function POST(request: NextRequest) {
   try {

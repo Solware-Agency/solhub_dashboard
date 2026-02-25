@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import {
   RefreshCw,
   Copy,
@@ -22,21 +21,18 @@ function TypesGeneratorPage() {
     setCopied(false);
 
     try {
-      // Obtener todas las features del catálogo
-      const { data: features, error } = await supabase
-        .from('feature_catalog')
-        .select('key')
-        .eq('is_active', true)
-        .order('name');
-
-      if (error) throw error;
-      if (!features || features.length === 0) {
+      const res = await fetch('/api/features');
+      if (!res.ok) throw new Error('Error al cargar features');
+      const json = await res.json();
+      type FeatureRow = { key: string; is_active?: boolean };
+      const features = (json.data ?? []).filter((f: FeatureRow) => f.is_active !== false) as FeatureRow[];
+      if (!features.length) {
         throw new Error('No se encontraron features en el catálogo');
       }
 
       // Generar interface LaboratoryFeatures
       const featuresInterface = `export interface LaboratoryFeatures {
-${features.map((f) => `  ${f.key}: boolean`).join('\n')}
+${features.map((f: FeatureRow) => `  ${f.key}: boolean`).join('\n')}
 }`;
 
       // Generar interface LaboratoryBranding (ESTRUCTURA FIJA)
@@ -117,15 +113,15 @@ export interface Laboratory {
   };
 
   return (
-    <div>
-      <div className='mb-8'>
+    <div className='min-w-0'>
+      <div className='mb-6 sm:mb-8'>
         <div className='flex items-center gap-3 mb-2'>
-          <FileCode className='w-8 h-8 text-white' />
-          <h1 className='text-3xl font-bold text-white drop-shadow-lg'>
+          <FileCode className='w-7 h-7 sm:w-8 sm:h-8 text-white shrink-0' />
+          <h1 className='text-2xl sm:text-3xl font-bold text-white drop-shadow-lg'>
             Generador de Tipos TypeScript
           </h1>
         </div>
-        <p className='text-gray-200 mt-1 drop-shadow-md'>
+        <p className='text-gray-200 mt-1 text-sm sm:text-base drop-shadow-md'>
           Mantén sincronizados los tipos TypeScript del proyecto principal
         </p>
       </div>
@@ -161,7 +157,7 @@ export interface Laboratory {
         </div>
       </div>
 
-      <div className='flex gap-4 mb-6'>
+      <div className='flex flex-wrap gap-3 sm:gap-4 mb-6'>
         <button
           onClick={generateTypes}
           disabled={loading}
@@ -210,16 +206,16 @@ export interface Laboratory {
       </div>
 
       {types && (
-        <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg overflow-hidden border border-white/10'>
-          <div className='bg-gray-800 px-4 py-3 flex items-center justify-between'>
-            <span className='text-sm font-mono text-green-400'>types.ts</span>
-            <span className='text-xs text-gray-400'>
+        <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg overflow-hidden border border-white/10 max-w-full'>
+          <div className='bg-gray-800 px-4 py-3 flex items-center justify-between min-w-0'>
+            <span className='text-sm font-mono text-green-400 truncate'>types.ts</span>
+            <span className='text-xs text-gray-400 shrink-0'>
               {types.split('\n').length} líneas •{' '}
               {Math.round(types.length / 1024)} KB
             </span>
           </div>
-          <div className='bg-gray-900 p-4 overflow-auto max-h-[600px]'>
-            <pre className='text-sm text-green-400 font-mono'>
+          <div className='bg-gray-900 p-4 overflow-auto max-h-[600px] max-w-full'>
+            <pre className='text-sm text-green-400 font-mono min-w-0 whitespace-pre-wrap break-words'>
               <code>{types}</code>
             </pre>
           </div>

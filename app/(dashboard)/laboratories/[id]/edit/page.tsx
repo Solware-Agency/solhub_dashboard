@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import type {
@@ -71,14 +70,11 @@ export default function EditLaboratoryPage() {
 
   const loadModules = async () => {
     try {
-      const { data, error } = await supabase
-        .from('module_catalog')
-        .select('*')
-        .eq('is_active', true);
-
-      if (!error && data) {
-        setModules(data);
-      }
+      const res = await fetch('/api/modules');
+      if (!res.ok) return;
+      const json = await res.json();
+      const data = json.data ?? [];
+      setModules(data.filter((m: ModuleCatalog) => m.is_active !== false));
     } catch (error) {
       console.error('Error loading modules:', error);
     }
@@ -86,13 +82,22 @@ export default function EditLaboratoryPage() {
 
   const loadLaboratory = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('laboratories')
-      .select('*')
-      .eq('id', params.id)
-      .single();
-
-    if (!error && data) {
+    try {
+      const res = await fetch(`/api/laboratories/${params.id}`);
+      if (!res.ok) {
+        alert('❌ Error al cargar cliente');
+        router.push('/laboratories');
+        setLoading(false);
+        return;
+      }
+      const json = await res.json();
+      const data = json.data;
+      if (!data) {
+        alert('❌ Error al cargar cliente');
+        router.push('/laboratories');
+        setLoading(false);
+        return;
+      }
       setLaboratory(data);
       setFormData({
         name: data.name,
@@ -126,11 +131,9 @@ export default function EditLaboratoryPage() {
           codeMappings: data.config?.codeMappings || {},
         },
       });
-    } else {
-      alert('❌ Error al cargar cliente');
-      router.push('/laboratories');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

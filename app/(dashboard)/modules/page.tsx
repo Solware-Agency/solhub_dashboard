@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import type { ModuleCatalog, FeatureCatalog } from '@/lib/types/database';
 import { Package, Plus, Edit, Trash2, Save, X, CheckCircle2 } from 'lucide-react';
 
@@ -29,15 +28,12 @@ export default function ModulesPage() {
     try {
       setLoading(true);
       const [modulesRes, featuresRes] = await Promise.all([
-        supabase.from('module_catalog').select('*').order('created_at', { ascending: false }),
-        supabase.from('feature_catalog').select('*').eq('is_active', true).order('name'),
+        fetch('/api/modules').then((r) => r.json()),
+        fetch('/api/features').then((r) => r.json()),
       ]);
 
-      if (modulesRes.error) throw modulesRes.error;
-      if (featuresRes.error) throw featuresRes.error;
-
-      setModules(modulesRes.data || []);
-      setFeatures(featuresRes.data || []);
+      setModules(modulesRes.data ?? []);
+      setFeatures((featuresRes.data ?? []).filter((f: FeatureCatalog) => f.is_active !== false));
     } catch (error: any) {
       console.error('Error loading data:', error);
       alert('Error al cargar datos: ' + error.message);
@@ -223,11 +219,11 @@ export default function ModulesPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3">
-          <Package className="w-8 h-8 text-white" />
-          <h1 className="text-3xl font-bold text-white drop-shadow-lg">Catálogo de Módulos</h1>
+    <div className="min-w-0">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+        <div className="flex items-center gap-3 min-w-0">
+          <Package className="w-7 h-7 sm:w-8 sm:h-8 text-white shrink-0" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg truncate">Catálogo de Módulos</h1>
         </div>
         <button
           onClick={() => {
@@ -235,7 +231,7 @@ export default function ModulesPage() {
             setEditingModule(null);
             setShowForm(true);
           }}
-          className="bg-[#4c87ff] text-white px-4 py-2 rounded-lg hover:bg-[#3d6fe6] shadow-lg shadow-[#4c87ff]/30 transition-colors flex items-center gap-2"
+          className="w-full sm:w-auto bg-[#4c87ff] text-white px-4 py-2 rounded-lg hover:bg-[#3d6fe6] shadow-lg shadow-[#4c87ff]/30 transition-colors flex items-center justify-center gap-2 shrink-0"
         >
           <Plus className="w-4 h-4" />
           Crear Nuevo Módulo
@@ -488,8 +484,9 @@ export default function ModulesPage() {
         </div>
       )}
 
-      <div className="bg-black/30 backdrop-blur-md border border-white/10 rounded-lg shadow-lg overflow-hidden">
-        <table className="w-full">
+      <div className="bg-black/30 backdrop-blur-md border border-white/10 rounded-lg shadow-lg overflow-hidden max-w-full">
+        <div className="overflow-x-auto max-w-full">
+          <table className="w-full min-w-[400px]">
           <thead className="bg-black/40 backdrop-blur-sm">
             <tr>
               <th className="px-4 py-3 text-left text-gray-300">Módulo</th>
@@ -543,6 +540,7 @@ export default function ModulesPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

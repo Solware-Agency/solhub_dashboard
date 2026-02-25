@@ -21,31 +21,30 @@ export default function LaboratoriesPage() {
     filterRef.current = filter;
   }, [filter]);
 
-  // Efecto para cargar datos cuando cambia el filtro
+  // Efecto para cargar datos cuando cambia el filtro (vía API para evitar RLS en cliente)
   useEffect(() => {
     const loadLaboratories = async () => {
       setLoading(true);
-      let query = supabase
-        .from('laboratories')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (filter !== 'all') {
-        query = query.eq('status', filter);
+      try {
+        const url = filter === 'all' ? '/api/laboratories' : `/api/laboratories?status=${filter}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Error al cargar clientes');
+        const json = await res.json();
+        const data = json.data ?? [];
+        setLaboratories(data.sort((a: Laboratory, b: Laboratory) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        ));
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
       }
-
-      const { data, error } = await query;
-
-      if (!error && data) {
-        setLaboratories(data);
-      }
-      setLoading(false);
     };
 
     loadLaboratories();
   }, [filter]);
 
-  // Efecto separado para la suscripción de realtime (solo se ejecuta una vez)
+  // Realtime: si RLS en laboratories restringe SELECT, el canal podría no recibir filas; entonces usar solo carga vía API.
   useEffect(() => {
     // Suscripción a cambios en tiempo real
     const channel = supabase
@@ -135,20 +134,20 @@ export default function LaboratoriesPage() {
   }
   
   return (
-    <div>
-      <div className='flex justify-between items-center mb-8'>
-        <div>
+    <div className='min-w-0'>
+      <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8'>
+        <div className='min-w-0'>
           <div className='flex items-center gap-3 mb-2'>
-            <Building2 className='w-8 h-8 text-gray-700' />
-            <h1 className='text-3xl font-bold text-white drop-shadow-lg'>Clientes</h1>
+            <Building2 className='w-7 h-7 sm:w-8 sm:h-8 text-gray-700 shrink-0' />
+            <h1 className='text-2xl sm:text-3xl font-bold text-white drop-shadow-lg truncate'>Clientes</h1>
           </div>
-          <p className='text-gray-200 mt-1 drop-shadow-md'>
+          <p className='text-gray-200 mt-1 text-sm sm:text-base drop-shadow-md'>
             Gestiona todos los clientes del sistema
           </p>
         </div>
         <Link
           href='/laboratories/new'
-          className='px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] transition-colors flex items-center gap-2 shadow-lg shadow-[#4c87ff]/30'
+          className='w-full sm:w-auto px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#4c87ff]/30 shrink-0'
         >
           <Plus className='w-4 h-4' />
           Crear Cliente
@@ -156,7 +155,7 @@ export default function LaboratoriesPage() {
       </div>
 
       {/* Filtros */}
-      <div className='mb-6 flex gap-2'>
+      <div className='mb-4 sm:mb-6 flex flex-wrap gap-2'>
         {(['all', 'active', 'inactive', 'trial'] as const).map((status) => (
           <button
             key={status}
@@ -175,23 +174,24 @@ export default function LaboratoriesPage() {
       </div>
 
       {/* Tabla de Clientes */}
-      <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg overflow-hidden border border-white/10'>
-        <table className='w-full'>
+      <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg overflow-hidden border border-white/10 max-w-full'>
+        <div className='overflow-x-auto max-w-full'>
+          <table className='w-full min-w-[640px]'>
           <thead className='bg-black/40 backdrop-blur-sm'>
             <tr>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
+              <th className='px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
                 Nombre
               </th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
+              <th className='px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
                 Slug
               </th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
+              <th className='px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
                 Estado
               </th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
+              <th className='px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
                 Fecha Creación
               </th>
-              <th className='px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider'>
+              <th className='px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider'>
                 Acciones
               </th>
             </tr>
@@ -249,6 +249,7 @@ export default function LaboratoriesPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       <p className='mt-4 text-sm text-gray-200'>

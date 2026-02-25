@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
+import { useEffect, useMemo, useState, useDeferredValue } from 'react';
 import type { Laboratory, FeatureCatalog } from '@/lib/types/database';
-import { BookOpen, Building2, Flag, Plus, Edit, Trash2, Save, X, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { BookOpen, Building2, Flag, Plus, Edit, Trash2, Save, X, CheckCircle2, AlertTriangle, Search } from 'lucide-react';
 
 type Tab = 'catalog' | 'assign';
 
@@ -26,6 +25,49 @@ export default function FeaturesPage() {
     null,
   );
 
+  // Búsquedas (filtrado en cliente, sin refetch)
+  const [catalogSearch, setCatalogSearch] = useState('');
+  const [assignClientSearch, setAssignClientSearch] = useState('');
+  const [assignFeatureSearch, setAssignFeatureSearch] = useState('');
+
+  const deferredCatalogSearch = useDeferredValue(catalogSearch);
+  const deferredAssignClientSearch = useDeferredValue(assignClientSearch);
+  const deferredAssignFeatureSearch = useDeferredValue(assignFeatureSearch);
+
+  const filteredCatalogFeatures = useMemo(() => {
+    if (!deferredCatalogSearch.trim()) return features;
+    const s = deferredCatalogSearch.toLowerCase();
+    return features.filter(
+      (f) =>
+        f.name?.toLowerCase().includes(s) ||
+        f.key?.toLowerCase().includes(s) ||
+        f.description?.toLowerCase().includes(s) ||
+        f.category?.toLowerCase().includes(s) ||
+        f.required_plan?.toLowerCase().includes(s)
+    );
+  }, [features, deferredCatalogSearch]);
+
+  const filteredAssignClients = useMemo(() => {
+    if (!deferredAssignClientSearch.trim()) return laboratories;
+    const s = deferredAssignClientSearch.toLowerCase();
+    return laboratories.filter(
+      (lab) =>
+        lab.name?.toLowerCase().includes(s) ||
+        lab.slug?.toLowerCase().includes(s)
+    );
+  }, [laboratories, deferredAssignClientSearch]);
+
+  const filteredAssignFeatures = useMemo(() => {
+    if (!deferredAssignFeatureSearch.trim()) return features;
+    const s = deferredAssignFeatureSearch.toLowerCase();
+    return features.filter(
+      (f) =>
+        f.name?.toLowerCase().includes(s) ||
+        f.key?.toLowerCase().includes(s) ||
+        f.description?.toLowerCase().includes(s)
+    );
+  }, [features, deferredAssignFeatureSearch]);
+
   useEffect(() => {
     loadData();
   }, []);
@@ -33,27 +75,33 @@ export default function FeaturesPage() {
   const loadData = async () => {
     try {
       const [labsRes, featuresRes] = await Promise.all([
-        supabase.from('laboratories').select('*').order('name'),
-        supabase
-          .from('feature_catalog')
-          .select('*')
-          .eq('is_active', true)
-          .order('name'),
+        fetch('/api/laboratories'),
+        fetch('/api/features?active=false'), // todas (activas e inactivas) para el catálogo
       ]);
 
-      if (labsRes.data) {
-        setLaboratories(labsRes.data);
-        if (labsRes.data.length > 0) {
-          setSelectedLab(labsRes.data[0]);
-        }
+      const labsJson = await labsRes.json();
+      const featuresJson = await featuresRes.json();
+
+      if (!labsRes.ok) {
+        console.error('Error labs:', labsRes.status, labsJson);
+        throw new Error(labsJson?.error || 'Error al cargar laboratorios');
+      }
+      if (!featuresRes.ok) {
+        console.error('Error features:', featuresRes.status, featuresJson);
+        throw new Error(featuresJson?.error || 'Error al cargar features');
       }
 
-      if (featuresRes.data) {
-        setFeatures(featuresRes.data);
+      const labs = labsJson.data ?? [];
+      if (labs.length > 0) {
+        setLaboratories(labs);
+        setSelectedLab(labs[0]);
       }
+
+      const feat = featuresJson.data ?? [];
+      setFeatures(feat);
     } catch (error) {
       console.error('Error loading data:', error);
-      alert('Error al cargar datos');
+      alert(error instanceof Error ? error.message : 'Error al cargar datos');
     } finally {
       setLoading(false);
     }
@@ -259,8 +307,8 @@ export default function FeaturesPage() {
   }
 
   return (
-    <div>
-      <div className='mb-8'>
+    <div className='min-w-0 max-w-full'>
+      <div className='mb-6 sm:mb-8'>
         <div className='flex items-center gap-3 mb-2'>
           <Flag className='w-8 h-8 text-white' />
           <h1 className='text-3xl font-bold text-white drop-shadow-lg'>
@@ -303,26 +351,38 @@ export default function FeaturesPage() {
       {/* Tab: Catálogo de Features */}
       {activeTab === 'catalog' && (
         <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg border border-white/10'>
-          <div className='px-6 py-4 border-b border-white/10 flex justify-between items-center'>
-            <div>
+          <div className='px-6 py-4 border-b border-white/10 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4'>
+            <div className='flex-1'>
               <h2 className='text-xl font-semibold text-white'>
                 Catálogo de Features
               </h2>
               <p className='text-sm text-gray-300 mt-1'>
-                {features.length} features en el sistema
+                {filteredCatalogFeatures.length} de {features.length} features
               </p>
             </div>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className='px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] transition-colors font-medium flex items-center gap-2 shadow-lg shadow-[#4c87ff]/30'
-            >
-              <Plus className='w-4 h-4' />
-              Nueva Feature
-            </button>
+            <div className='flex gap-4 items-center min-w-0'>
+              <div className='relative flex-1 min-w-[200px] max-w-sm'>
+                <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
+                <input
+                  type='text'
+                  value={catalogSearch}
+                  onChange={(e) => setCatalogSearch(e.target.value)}
+                  placeholder='Buscar por nombre, key, descripción...'
+                  className='w-full pl-10 pr-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
+                />
+              </div>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className='px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] transition-colors font-medium flex items-center gap-2 shadow-lg shadow-[#4c87ff]/30 shrink-0'
+              >
+                <Plus className='w-4 h-4' />
+                Nueva Feature
+              </button>
+            </div>
           </div>
 
-          <div className='p-6'>
-            <table className='w-full'>
+          <div className='p-4 sm:p-6 overflow-x-auto max-w-full'>
+            <table className='w-full min-w-[500px]'>
               <thead>
                 <tr className='border-b border-white/10'>
                   <th className='px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
@@ -343,7 +403,7 @@ export default function FeaturesPage() {
                 </tr>
               </thead>
               <tbody>
-                {features.map((feature) => (
+                {filteredCatalogFeatures.map((feature) => (
                   <tr
                     key={feature.id}
                     className='border-b border-white/10 hover:bg-black/40 transition-colors'
@@ -424,12 +484,22 @@ export default function FeaturesPage() {
               <p className='text-gray-300'>No hay clientes en el sistema</p>
             </div>
           ) : (
-            <div className='grid grid-cols-12 gap-6'>
+            <div className='grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6'>
               {/* Selector de Cliente */}
-              <div className='col-span-3 bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-4 border border-white/10'>
+              <div className='md:col-span-3 bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-4 border border-white/10 min-w-0'>
                 <h2 className='font-semibold text-white mb-4'>Clientes</h2>
+                <div className='relative mb-4'>
+                  <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
+                  <input
+                    type='text'
+                    value={assignClientSearch}
+                    onChange={(e) => setAssignClientSearch(e.target.value)}
+                    placeholder='Buscar cliente...'
+                    className='w-full pl-10 pr-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400 text-sm'
+                  />
+                </div>
                 <div className='space-y-2'>
-                  {laboratories.map((lab) => (
+                  {filteredAssignClients.map((lab) => (
                     <button
                       key={lab.id}
                       onClick={() => setSelectedLab(lab)}
@@ -451,31 +521,44 @@ export default function FeaturesPage() {
               </div>
 
               {/* Features del Lab Seleccionado */}
-              <div className='col-span-9'>
+              <div className='md:col-span-9 min-w-0'>
                 {selectedLab ? (
-                  <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg border border-white/10'>
-                    <div className='px-6 py-4 border-b border-white/10'>
-                      <h2 className='text-xl font-semibold text-white'>
-                        Features de:{' '}
-                        <span className='text-[#4c87ff]'>
-                          {selectedLab.name}
-                        </span>
-                      </h2>
-                      <p className='text-sm text-gray-300 mt-1'>
-                        {
-                          features.filter(
-                            (f) =>
-                              selectedLab.features[
-                                f.key as keyof typeof selectedLab.features
-                              ],
-                          ).length
-                        }{' '}
-                        de {features.length} features habilitadas
-                      </p>
+                  <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg border border-white/10 overflow-hidden max-w-full'>
+                    <div className='px-4 sm:px-6 py-4 border-b border-white/10'>
+                      <div className='flex flex-col sm:flex-row justify-between gap-4'>
+                        <div>
+                          <h2 className='text-xl font-semibold text-white'>
+                            Features de:{' '}
+                            <span className='text-[#4c87ff]'>
+                              {selectedLab.name}
+                            </span>
+                          </h2>
+                          <p className='text-sm text-gray-300 mt-1'>
+                            {
+                              features.filter(
+                                (f) =>
+                                  selectedLab.features[
+                                    f.key as keyof typeof selectedLab.features
+                                  ],
+                              ).length
+                            }{' '}
+                            de {features.length} features habilitadas
+                          </p>
+                        </div>
+                        <div className='relative min-w-[200px] max-w-sm'>
+                          <input
+                            type='text'
+                            value={assignFeatureSearch}
+                            onChange={(e) => setAssignFeatureSearch(e.target.value)}
+                            placeholder='Buscar feature...'
+                            className='w-full pl-3 pr-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400 text-sm'
+                          />
+                        </div>
+                      </div>
                     </div>
 
-                    <div className='p-6'>
-                      <table className='w-full'>
+                    <div className='p-4 sm:p-6 overflow-x-auto max-w-full'>
+                      <table className='w-full min-w-[400px]'>
                         <thead>
                           <tr className='border-b border-gray-200'>
                             <th className='px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
@@ -493,7 +576,7 @@ export default function FeaturesPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {features.map((feature) => {
+                          {filteredAssignFeatures.map((feature) => {
                             const isEnabled =
                               selectedLab.features[
                                 feature.key as keyof typeof selectedLab.features

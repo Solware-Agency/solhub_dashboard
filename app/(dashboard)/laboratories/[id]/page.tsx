@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import type { Laboratory } from '@/lib/types/database';
@@ -19,17 +18,18 @@ export default function LaboratoryDetailsPage() {
     const loadLaboratory = async () => {
       const id = params.id as string;
       if (!id) return;
-      
+
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('laboratories')
-          .select('*')
-          .eq('id', id)
-          .single();
-
-        if (!error && data) {
-          setLaboratory(data);
+        const res = await fetch(`/api/laboratories/${id}`);
+        if (!res.ok) {
+          alert('❌ Error al cargar cliente');
+          router.push('/laboratories');
+          return;
+        }
+        const json = await res.json();
+        if (json.data) {
+          setLaboratory(json.data);
         } else {
           alert('❌ Error al cargar cliente');
           router.push('/laboratories');

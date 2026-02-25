@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import {
   Building2,
   CheckCircle2,
@@ -35,25 +34,14 @@ export default function DashboardPage() {
 
   const loadStats = async () => {
     try {
-      const [labs, activeLabs, users, cases] = await Promise.all([
-        supabase
-          .from('laboratories')
-          .select('*', { count: 'exact', head: true }),
-        supabase
-          .from('laboratories')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'active'),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase
-          .from('medical_records_clean')
-          .select('*', { count: 'exact', head: true }),
-      ]);
-
+      const res = await fetch('/api/dashboard/stats');
+      if (!res.ok) throw new Error('Error al cargar estadísticas');
+      const data = await res.json();
       setStats({
-        totalLabs: labs.count || 0,
-        activeLabs: activeLabs.count || 0,
-        totalUsers: users.count || 0,
-        totalCases: cases.count || 0,
+        totalLabs: data.totalLabs ?? 0,
+        activeLabs: data.activeLabs ?? 0,
+        totalUsers: data.totalUsers ?? 0,
+        totalCases: data.totalCases ?? 0,
       });
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -67,41 +55,37 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className='h-full flex flex-col overflow-visible'>
-      <div className='mb-6 flex-shrink-0 relative overflow-visible'>
-        <div className='flex items-center justify-between'>
-          <div>
-            <h1 className='text-3xl font-bold text-white drop-shadow-lg'>Dashboard</h1>
-            <p className='text-gray-200 mt-2 drop-shadow-md'>
+    <div className='h-full flex flex-col min-w-0 max-w-full'>
+      {/* Sin overflow-x-hidden para que el glow de SOLWY no se recorte en la esquina */}
+      <div className='mb-4 sm:mb-6 flex-shrink-0 relative max-w-full overflow-visible'>
+        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+          <div className='min-w-0'>
+            <h1 className='text-2xl sm:text-3xl font-bold text-white drop-shadow-lg'>Dashboard</h1>
+            <p className='text-gray-200 mt-1 sm:mt-2 text-sm sm:text-base drop-shadow-md'>
               Bienvenido al panel administrativo de Solhub
             </p>
           </div>
-          <div 
-            className='relative flex items-center justify-center'
-            style={{ 
-              width: '150px', 
-              height: '150px',
-              marginRight: '-1rem',
-              marginTop: '-3rem',
-              marginBottom: '-3rem'
+          <div
+            className='relative flex items-center justify-center shrink-0 self-end sm:self-center overflow-visible'
+            style={{
+              width: 'clamp(80px, 20vw, 150px)',
+              height: 'clamp(80px, 20vw, 150px)',
             }}
           >
-            <div 
+            <div
               className='absolute inset-0 bg-gradient-to-r from-[#4c87ff] to-[#41e2b8] rounded-full blur-2xl opacity-40 animate-pulse'
-              style={{ 
-                width: '100%', 
-                height: '100%'
-              }}
-            ></div>
+              aria-hidden="true"
+              role="presentation"
+            />
             <div className='relative z-10'>
-              <SOLWY className='w-24 h-24' />
+              <SOLWY className='w-16 h-16 sm:w-24 sm:h-24' />
             </div>
           </div>
         </div>
       </div>
 
-      <div className='flex-1 flex flex-col gap-6 min-h-0'>
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 flex-shrink-0'>
+      <div className='flex-1 flex flex-col gap-6 min-h-0 min-w-0 overflow-x-hidden'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 flex-shrink-0'>
           <StatCard
             title='Total Clientes'
             value={stats.totalLabs}
@@ -132,7 +116,7 @@ export default function DashboardPage() {
           <h2 className='text-xl font-semibold text-white mb-4'>
             Acciones Rápidas
           </h2>
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
             <QuickActionCard
               title='Crear Cliente'
               description='Agregar un nuevo cliente al sistema'
