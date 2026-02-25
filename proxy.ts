@@ -1,12 +1,69 @@
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 // =====================================================================
-// PROXY CON AUTENTICACIÓN POR CÓDIGO
+// PROXY CON AUTENTICACIÓN DE SUPABASE
 // =====================================================================
 // Protege todas las rutas del dashboard excepto /login y /unauthorized
-// Requiere cookie 'admin_authenticated' para acceder a rutas protegidas
+// Requiere sesión de Supabase para acceder a rutas protegidas
 
 export async function proxy(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        },
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value: '',
+            ...options,
+          });
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          });
+        },
+      },
+    }
+  );
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
   const { pathname } = request.nextUrl;
 
   // Rutas públicas que no requieren autenticación
@@ -17,15 +74,15 @@ export async function proxy(request: NextRequest) {
 
   // Si es ruta pública, permitir acceso sin verificar autenticación
   if (isPublicPath) {
-    return NextResponse.next();
+    // Si está autenticado y trata de acceder al login, redirigir al dashboard
+    if (session && pathname.startsWith('/login')) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    return response;
   }
 
-  // Verificar si tiene cookie de autenticación
-  const authCookie = request.cookies.get('admin_authenticated');
-  const isAuthenticated = authCookie?.value === 'true';
-
   // Si no está autenticado y trata de acceder a rutas protegidas, redirigir a login
-  if (!isAuthenticated) {
+  if (!session) {
     const loginUrl = new URL('/login', request.url);
     // Solo agregar redirect si no es la ruta de login
     if (pathname !== '/login') {
@@ -35,7 +92,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Si está autenticado, permitir acceso
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {

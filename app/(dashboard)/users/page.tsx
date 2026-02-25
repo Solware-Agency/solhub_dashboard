@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { Users, Search } from 'lucide-react'
+import { Users, Search, Trash2 } from 'lucide-react'
 
 interface UserWithLab {
   id: string
@@ -27,6 +27,9 @@ export default function UsersPage() {
     status: 'all',
     search: '',
   });
+  const [searchInput, setSearchInput] = useState('');
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   useEffect(() => {
     loadUsers();
@@ -112,6 +115,54 @@ export default function UsersPage() {
       : 'bg-yellow-100 text-yellow-800';
   };
 
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    setUpdatingUserId(userId);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId)
+        .select('*, laboratory:laboratories(name, slug)')
+        .single();
+
+      if (error) throw error;
+
+      // Actualizar usuario en la lista
+      setUsers(users.map(u => u.id === userId ? data as UserWithLab : u));
+      console.log('✅ Rol actualizado:', newRole);
+    } catch (error: any) {
+      console.error('❌ Error al actualizar rol:', error);
+      alert('Error al actualizar rol: ' + error.message);
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    setDeletingUserId(userId);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      // Eliminar usuario de la lista
+      setUsers(users.filter(u => u.id !== userId));
+      console.log('✅ Usuario eliminado');
+    } catch (error: any) {
+      console.error('❌ Error al eliminar usuario:', error);
+      alert('Error al eliminar usuario: ' + error.message);
+    } finally {
+      setDeletingUserId(null);
+    }
+  };
+
   if (loading) {
     return <div className='text-gray-200'>Cargando usuarios...</div>;
   }
@@ -139,9 +190,14 @@ export default function UsersPage() {
               <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
               <input
                 type='text'
-                value={filter.search}
-                onChange={(e) => setFilter({ ...filter, search: e.target.value })}
-                placeholder='Email, nombre...'
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setFilter({ ...filter, search: searchInput });
+                  }
+                }}
+                placeholder='Email, nombre... (presiona Enter)'
                 className='w-full pl-10 pr-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
               />
             </div>
@@ -252,13 +308,16 @@ export default function UsersPage() {
                 <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                   Fecha Registro
                 </th>
+                <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
+                  Acciones
+                </th>
               </tr>
             </thead>
             <tbody className='divide-y divide-white/10'>
               {users.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className='px-6 py-8 text-center text-gray-300'
                   >
                     No se encontraron usuarios
@@ -281,13 +340,25 @@ export default function UsersPage() {
                       {user.laboratory?.name || 'N/A'}
                     </td>
                     <td className='px-6 py-4'>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-semibold ${getRoleBadge(
-                          user.role,
-                        )}`}
+                      <select
+                        value={user.role}
+                        onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                        disabled={updatingUserId === user.id}
+                        className='px-2 py-1 rounded text-xs font-semibold border border-white/20 bg-black/20 text-white focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 disabled:opacity-50 cursor-pointer'
                       >
-                        {user.role}
-                      </span>
+                        <option value="owner">owner</option>
+                        <option value="employee">employee</option>
+                        <option value="patologo">patologo</option>
+                        <option value="citotecno">citotecno</option>
+                        <option value="residente">residente</option>
+                        <option value="enfermero">enfermero</option>
+                        <option value="medico_tratante">medico_tratante</option>
+                        <option value="call_center">call_center</option>
+                        <option value="imagenologia">imagenologia</option>
+                        <option value="laboratorio">laboratorio</option>
+                        <option value="coordinador">coordinador</option>
+                        <option value="prueba">prueba</option>
+                      </select>
                     </td>
                     <td className='px-6 py-4 text-sm text-gray-300'>
                       {user.assigned_branch || '-'}
@@ -303,6 +374,16 @@ export default function UsersPage() {
                     </td>
                     <td className='px-6 py-4 text-sm text-gray-300'>
                       {new Date(user.created_at).toLocaleDateString('es-ES')}
+                    </td>
+                    <td className='px-6 py-4'>
+                      <button
+                        onClick={() => handleDeleteUser(user.id)}
+                        disabled={deletingUserId === user.id}
+                        className='p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-red-500/30'
+                        title='Eliminar usuario'
+                      >
+                        <Trash2 className='w-4 h-4' />
+                      </button>
                     </td>
                   </tr>
                 ))

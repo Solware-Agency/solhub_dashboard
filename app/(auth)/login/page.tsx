@@ -3,25 +3,26 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { WavyBackground } from '@/app/components/WavyBackground';
+import { supabase } from '@/lib/supabase/client';
 
 function LoginForm() {
-  const [code, setCode] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Verificar si ya está autenticado
-    const isAuthenticated = document.cookie
-      .split('; ')
-      .find((row) => row.startsWith('admin_authenticated='))
-      ?.split('=')[1] === 'true';
-
-    if (isAuthenticated) {
-      const redirect = searchParams.get('redirect') || '/';
-      router.push(redirect);
-    }
+    // Verificar si ya está autenticado con Supabase
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const redirect = searchParams.get('redirect') || '/';
+        router.push(redirect);
+      }
+    };
+    checkAuth();
   }, [router, searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -30,32 +31,54 @@ function LoginForm() {
     setError('');
 
     try {
-      // Llamar a API route para verificar el código
+      console.log('[Login] Iniciando login con:', email);
+      
+      // Llamar a API route para autenticar con email y password
       const response = await fetch('/api/auth/verify-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ email, password }),
       });
 
+      console.log('[Login] Response status:', response.status);
+      
       const data = await response.json();
+      console.log('[Login] Response data:', data);
 
       if (!response.ok) {
-        throw new Error(data.error || 'Código inválido');
+        throw new Error(data.error || 'Credenciales inválidas');
       }
 
-      if (data.success) {
+      if (data.success && data.session) {
+        console.log('[Login] Estableciendo sesión...');
+        
+        // Establecer la sesión en el cliente de Supabase
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+
+        if (sessionError) {
+          console.error('[Login] Error al establecer sesión:', sessionError);
+          throw new Error('Error al establecer la sesión');
+        }
+
+        console.log('[Login] Sesión establecida correctamente');
+        
         // Redirigir a la ruta original o al dashboard
         const redirect = searchParams.get('redirect') || '/';
+        console.log('[Login] Redirigiendo a:', redirect);
+        
         router.push(redirect);
         router.refresh();
       } else {
-        throw new Error('Código inválido');
+        throw new Error('Credenciales inválidas');
       }
     } catch (error: any) {
       console.error('[Login] Error:', error);
-      setError(error.message || 'Error al verificar el código');
+      setError(error.message || 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }
@@ -65,22 +88,42 @@ function LoginForm() {
     <form onSubmit={handleLogin} className='space-y-6'>
       <div>
         <label
-          htmlFor='code'
+          htmlFor='email'
           className='block text-sm font-medium text-gray-300 mb-2'
         >
-          Código de Acceso
+          Email
         </label>
         <input
-          id='code'
-          type='text'
-          value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase())}
-          className='w-full px-3 py-2 bg-gray-800/50 backdrop-blur-sm border border-gray-600/30 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 focus:border-[#4c87ff]/50 text-center text-lg font-mono tracking-wider text-white placeholder-gray-400'
-          placeholder='INGRESA EL CÓDIGO'
+          id='email'
+          type='email'
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className='w-full px-3 py-2 bg-gray-800/50 backdrop-blur-sm border border-gray-600/30 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 focus:border-[#4c87ff]/50 text-white placeholder-gray-400'
+          placeholder='tu@email.com'
           required
           disabled={loading}
           autoFocus
-          autoComplete='off'
+          autoComplete='email'
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor='password'
+          className='block text-sm font-medium text-gray-300 mb-2'
+        >
+          Contraseña
+        </label>
+        <input
+          id='password'
+          type='password'
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className='w-full px-3 py-2 bg-gray-800/50 backdrop-blur-sm border border-gray-600/30 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 focus:border-[#4c87ff]/50 text-white placeholder-gray-400'
+          placeholder='••••••••'
+          required
+          disabled={loading}
+          autoComplete='current-password'
         />
       </div>
 
@@ -92,10 +135,10 @@ function LoginForm() {
 
       <button
         type='submit'
-        disabled={loading || !code.trim()}
+        disabled={loading || !email.trim() || !password.trim()}
         className='w-full bg-[#4c87ff] text-white py-2 px-4 rounded-md hover:bg-[#3d6fe6] focus:outline-none focus:ring-2 focus:ring-[#4c87ff] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg'
       >
-        {loading ? 'Verificando...' : 'Acceder al Dashboard'}
+        {loading ? 'Iniciando sesión...' : 'Acceder al Dashboard'}
       </button>
     </form>
   );

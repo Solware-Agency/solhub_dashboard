@@ -1,38 +1,13 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
-// ⚠️ IMPORTANTE: Configuración de Supabase para el Dashboard Admin
+// ⚠️ IMPORTANTE: Configuración de Supabase para el Dashboard Admin con SSR
 // 
-// Este dashboard usa anon_key para lectura y API Routes para escritura.
-// El service_role_key SOLO se usa en las API Routes (servidor), nunca en el cliente.
-// Esto es seguro y elimina el warning de Vercel.
+// Este cliente usa @supabase/ssr para manejar automáticamente las cookies de sesión.
+// Esto permite que auth.uid() esté disponible en las consultas desde el cliente.
+// Las sesiones se establecen en el login y se mantienen automáticamente.
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// Singleton pattern para evitar múltiples instancias
-let supabaseInstance: SupabaseClient | null = null;
-
-// Cliente Público (solo anon_key) - Para lectura
-// Las operaciones de escritura (UPDATE, INSERT, DELETE) se hacen a través de API Routes
-export const supabase = (() => {
-  if (typeof window === 'undefined') {
-    // Server-side: crear nueva instancia cada vez
-    return createClient(supabaseUrl, anonKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    });
-  }
-
-  // Client-side: usar singleton
-  if (!supabaseInstance) {
-    supabaseInstance = createClient(supabaseUrl, anonKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    });
-  }
-  return supabaseInstance;
-})();
+// Cliente con SSR - Maneja cookies automáticamente
+export const supabase = createBrowserClient(supabaseUrl, anonKey);
