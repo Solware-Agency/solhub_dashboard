@@ -1,8 +1,10 @@
-﻿'use client'
+'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { Users, Search, Trash2 } from 'lucide-react'
+
+const DELETE_COOLDOWN_SEC = 5
 
 interface UserWithLab {
   id: string
@@ -30,10 +32,20 @@ export default function UsersPage() {
   const [searchInput, setSearchInput] = useState('');
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [deleteDialogUser, setDeleteDialogUser] = useState<UserWithLab | null>(null);
+  const [deleteCooldown, setDeleteCooldown] = useState(0);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     loadUsers();
   }, [filter]);
+
+  // Cooldown para el botón Confirmar eliminación
+  useEffect(() => {
+    if (!deleteDialogUser || deleteCooldown <= 0) return;
+    const t = setInterval(() => setDeleteCooldown((s) => (s <= 1 ? 0 : s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [deleteDialogUser, deleteCooldown]);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -138,30 +150,43 @@ export default function UsersPage() {
     }
   };
 
-  const handleDeleteUser = async (userId: string) => {
-    if (!confirm('¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.')) {
-      return;
-    }
+  const openDeleteDialog = useCallback((user: UserWithLab) => {
+    setDeleteDialogUser(user);
+    setDeleteCooldown(DELETE_COOLDOWN_SEC);
+    setDeleteError(null);
+  }, []);
 
-    setDeletingUserId(userId);
+  const closeDeleteDialog = useCallback(() => {
+    setDeleteDialogUser(null);
+    setDeleteCooldown(0);
+    setDeleteError(null);
+  }, []);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteDialogUser || deleteCooldown > 0) return;
+
+    setDeletingUserId(deleteDialogUser.id);
+    setDeleteError(null);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
+      const res = await fetch(`/api/users/${deleteDialogUser.id}`, { method: 'DELETE' });
+      const body = await res.json().catch(() => ({}));
+      const message = body.error ?? body.message ?? (res.ok ? 'Usuario eliminado' : 'Error al eliminar');
 
-      if (error) throw error;
+      if (!res.ok) {
+        setDeleteError(message);
+        return;
+      }
 
-      // Eliminar usuario de la lista
-      setUsers(users.filter(u => u.id !== userId));
-      console.log('✅ Usuario eliminado');
-    } catch (error: any) {
-      console.error('❌ Error al eliminar usuario:', error);
-      alert('Error al eliminar usuario: ' + error.message);
+      setUsers((prev) => prev.filter((u) => u.id !== deleteDialogUser.id));
+      closeDeleteDialog();
+      setDeletingUserId(null);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error de conexión';
+      setDeleteError(msg);
     } finally {
       setDeletingUserId(null);
     }
-  };
+  }, [deleteDialogUser, deleteCooldown, closeDeleteDialog]);
 
   if (loading) {
     return <div className='text-gray-200'>Cargando usuarios...</div>;
@@ -377,10 +402,10 @@ export default function UsersPage() {
                     </td>
                     <td className='px-6 py-4'>
                       <button
-                        onClick={() => handleDeleteUser(user.id)}
+                        onClick={() => openDeleteDialog(user)}
                         disabled={deletingUserId === user.id}
                         className='p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-red-500/30'
-                        title='Eliminar usuario'
+                        title='Eliminar usuario (auth + perfil)'
                       >
                         <Trash2 className='w-4 h-4' />
                       </button>
@@ -392,6 +417,45 @@ export default function UsersPage() {
           </table>
         </div>
       </div>
+
+      {/* Diálogo de confirmación eliminar usuario */}
+      {deleteDialogUser && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm'>
+          <div className='bg-gray-900 border border-white/20 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4'>
+            <h3 className='text-lg font-semibold text-white mb-2'>Eliminar usuario</h3>
+            <p className='text-gray-300 mb-4'>
+              ¿Eliminar a <strong>{deleteDialogUser.display_name || deleteDialogUser.email}</strong> ({deleteDialogUser.email})? Esta acción borra el usuario del sistema de autenticación y su perfil. No se puede deshacer.
+            </p>
+            {deleteError && (
+              <p className='text-red-400 text-sm mb-4' role='alert'>
+                {deleteError}
+              </p>
+            )}
+            <div className='flex gap-3 justify-end'>
+              <button
+                type='button'
+                onClick={closeDeleteDialog}
+                disabled={deletingUserId === deleteDialogUser.id}
+                className='px-4 py-2 rounded-lg border border-white/20 text-gray-200 hover:bg-white/10 disabled:opacity-50'
+              >
+                Cancelar
+              </button>
+              <button
+                type='button'
+                onClick={handleConfirmDelete}
+                disabled={deleteCooldown > 0 || deletingUserId === deleteDialogUser.id}
+                className='px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed'
+              >
+                {deletingUserId === deleteDialogUser.id
+                  ? 'Eliminando…'
+                  : deleteCooldown > 0
+                    ? `Confirmar (${deleteCooldown}s)`
+                    : 'Confirmar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
