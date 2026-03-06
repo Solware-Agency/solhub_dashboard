@@ -19,7 +19,10 @@ import {
   Code,
   Eye,
   DollarSign,
+  Upload,
+  Image as ImageIcon,
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase/client';
 import type { PaymentFrequency, PaymentStatus } from '@/lib/types/database';
 import {
   generateCodePreview,
@@ -34,6 +37,10 @@ export default function EditLaboratoryPage() {
   const [saving, setSaving] = useState(false);
   const [laboratory, setLaboratory] = useState<Laboratory | null>(null);
   const [modules, setModules] = useState<ModuleCatalog[]>([]);
+
+  // Upload states
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
 
   // Form data
   const [formData, setFormData] = useState({
@@ -145,6 +152,122 @@ export default function EditLaboratoryPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Función para subir logo al bucket
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de archivo
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('❌ Solo se permiten imágenes PNG, JPG, SVG o WEBP');
+      return;
+    }
+
+    // Validar tamaño (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('❌ La imagen no puede superar 2MB');
+      return;
+    }
+
+    setUploadingLogo(true);
+    try {
+      // Generar nombre único basado en slug del laboratorio y timestamp
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${formData.slug || 'lab'}_logo_${Date.now()}.${fileExt}`;
+      const filePath = fileName;
+
+      // Subir al bucket 'Logos'
+      const { data, error } = await supabase.storage
+        .from('Logos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (error) throw error;
+
+      // Obtener URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from('Logos')
+        .getPublicUrl(filePath);
+
+      // Actualizar formData con la URL
+      setFormData({
+        ...formData,
+        branding: {
+          ...formData.branding,
+          logo: publicUrl,
+        },
+      });
+
+      console.log('✅ Logo subido:', publicUrl);
+    } catch (error: any) {
+      console.error('❌ Error subiendo logo:', error);
+      alert('Error al subir logo: ' + error.message);
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  // Función para subir favicon al bucket
+  const handleFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de archivo
+    const allowedTypes = ['image/png', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('❌ Solo se permiten imágenes ICO, PNG, JPG o SVG');
+      return;
+    }
+
+    // Validar tamaño (max 500KB para favicons)
+    if (file.size > 500 * 1024) {
+      alert('❌ El favicon no puede superar 500KB');
+      return;
+    }
+
+    setUploadingFavicon(true);
+    try {
+      // Generar nombre único
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${formData.slug || 'lab'}_favicon_${Date.now()}.${fileExt}`;
+      const filePath = fileName;
+
+      // Subir al bucket 'Logos'
+      const { data, error } = await supabase.storage
+        .from('Logos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (error) throw error;
+
+      // Obtener URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from('Logos')
+        .getPublicUrl(filePath);
+
+      // Actualizar formData con la URL
+      setFormData({
+        ...formData,
+        branding: {
+          ...formData.branding,
+          favicon: publicUrl,
+        },
+      });
+
+      console.log('✅ Favicon subido:', publicUrl);
+    } catch (error: any) {
+      console.error('❌ Error subiendo favicon:', error);
+      alert('Error al subir favicon: ' + error.message);
+    } finally {
+      setUploadingFavicon(false);
     }
   };
 
@@ -615,22 +738,59 @@ export default function EditLaboratoryPage() {
               <label className='block text-sm font-medium text-gray-200 mb-2'>
                 Logo URL
               </label>
-              <input
-                type='text'
-                value={formData.branding.logo || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    branding: {
-                      ...formData.branding,
-                      logo: e.target.value || null,
-                    },
-                  })
-                }
-                className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
-                placeholder='/logos/labname.png'
-                disabled={saving}
-              />
+              <div className='space-y-3'>
+                <input
+                  type='text'
+                  value={formData.branding.logo || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      branding: {
+                        ...formData.branding,
+                        logo: e.target.value || null,
+                      },
+                    })
+                  }
+                  className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
+                  placeholder='https://...'
+                  disabled={saving || uploadingLogo}
+                />
+                <div className='flex items-center gap-2'>
+                  <div className='flex-1 border-t border-white/10'></div>
+                  <span className='text-xs text-gray-400'>o</span>
+                  <div className='flex-1 border-t border-white/10'></div>
+                </div>
+                <label className='block'>
+                  <input
+                    type='file'
+                    accept='image/png,image/jpeg,image/jpg,image/svg+xml,image/webp'
+                    onChange={handleLogoUpload}
+                    disabled={saving || uploadingLogo}
+                    className='hidden'
+                  />
+                  <div className='flex items-center justify-center gap-2 px-4 py-2 border border-white/20 rounded-lg bg-black/20 hover:bg-white/10 cursor-pointer transition-colors text-gray-200'>
+                    {uploadingLogo ? (
+                      <>
+                        <div className='w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin'></div>
+                        <span className='text-sm'>Subiendo...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className='w-4 h-4' />
+                        <span className='text-sm'>Subir imagen</span>
+                      </>
+                    )}
+                  </div>
+                </label>
+                {formData.branding.logo && (
+                  <div className='flex items-center gap-2 p-2 border border-white/10 rounded-lg bg-black/20'>
+                    <ImageIcon className='w-4 h-4 text-gray-400' />
+                    <span className='text-xs text-gray-300 truncate flex-1'>
+                      {formData.branding.logo}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
             <div>
               <label className='block text-sm font-medium text-gray-200 mb-2'>
@@ -654,22 +814,59 @@ export default function EditLaboratoryPage() {
               <label className='block text-sm font-medium text-gray-200 mb-2'>
                 Favicon URL
               </label>
-              <input
-                type='text'
-                value={formData.branding.favicon || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    branding: {
-                      ...formData.branding,
-                      favicon: e.target.value || null,
-                    },
-                  })
-                }
-                className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
-                placeholder='/favicon.ico'
-                disabled={saving}
-              />
+              <div className='space-y-3'>
+                <input
+                  type='text'
+                  value={formData.branding.favicon || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      branding: {
+                        ...formData.branding,
+                        favicon: e.target.value || null,
+                      },
+                    })
+                  }
+                  className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
+                  placeholder='https://...'
+                  disabled={saving || uploadingFavicon}
+                />
+                <div className='flex items-center gap-2'>
+                  <div className='flex-1 border-t border-white/10'></div>
+                  <span className='text-xs text-gray-400'>o</span>
+                  <div className='flex-1 border-t border-white/10'></div>
+                </div>
+                <label className='block'>
+                  <input
+                    type='file'
+                    accept='image/png,image/x-icon,image/vnd.microsoft.icon,image/jpeg,image/jpg,image/svg+xml'
+                    onChange={handleFaviconUpload}
+                    disabled={saving || uploadingFavicon}
+                    className='hidden'
+                  />
+                  <div className='flex items-center justify-center gap-2 px-4 py-2 border border-white/20 rounded-lg bg-black/20 hover:bg-white/10 cursor-pointer transition-colors text-gray-200'>
+                    {uploadingFavicon ? (
+                      <>
+                        <div className='w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin'></div>
+                        <span className='text-sm'>Subiendo...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className='w-4 h-4' />
+                        <span className='text-sm'>Subir favicon</span>
+                      </>
+                    )}
+                  </div>
+                </label>
+                {formData.branding.favicon && (
+                  <div className='flex items-center gap-2 p-2 border border-white/10 rounded-lg bg-black/20'>
+                    <ImageIcon className='w-4 h-4 text-gray-400' />
+                    <span className='text-xs text-gray-300 truncate flex-1'>
+                      {formData.branding.favicon}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
             <div>
               <label className='block text-sm font-medium text-gray-200 mb-2'>
