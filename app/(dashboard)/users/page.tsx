@@ -12,6 +12,7 @@ interface UserWithLab {
   estado: string
   assigned_branch: string | null
   created_at: string
+  is_dashboard_admin: boolean
   laboratory: {
     id: string
     name: string
@@ -215,6 +216,28 @@ export default function UsersPage() {
     } catch (error: any) {
       console.error('❌ Error al actualizar laboratorio:', error);
       alert('Error al actualizar laboratorio: ' + error.message);
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const handleDashboardAdminChange = async (userId: string, newValue: boolean) => {
+    setUpdatingUserId(userId);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_dashboard_admin: newValue })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, is_dashboard_admin: newValue } : u)),
+      );
+      console.log('✅ Dashboard admin actualizado');
+    } catch (error: any) {
+      console.error('❌ Error al actualizar dashboard admin:', error);
+      alert('Error al actualizar dashboard admin: ' + error.message);
     } finally {
       setUpdatingUserId(null);
     }
@@ -452,6 +475,9 @@ export default function UsersPage() {
                   Estado
                 </th>
                 <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
+                  Dashboard Admin
+                </th>
+                <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
                   Fecha Registro
                 </th>
                 <th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase'>
@@ -463,7 +489,7 @@ export default function UsersPage() {
               {users.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className='px-6 py-8 text-center text-gray-300'
                   >
                     No se encontraron usuarios
@@ -534,6 +560,21 @@ export default function UsersPage() {
                       >
                         <option value="aprobado">aprobado</option>
                         <option value="pendiente">pendiente</option>
+                      </select>
+                    </td>
+                    <td className='px-6 py-4'>
+                      <select
+                        value={user.is_dashboard_admin ? 'true' : 'false'}
+                        onChange={(e) => handleDashboardAdminChange(user.id, e.target.value === 'true')}
+                        disabled={updatingUserId === user.id}
+                        className={`px-2 py-1 rounded text-xs font-semibold border focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 disabled:opacity-50 cursor-pointer ${
+                          user.is_dashboard_admin
+                            ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                            : 'bg-gray-500/20 text-gray-400 border-gray-500/30'
+                        }`}
+                      >
+                        <option value="true">TRUE</option>
+                        <option value="false">FALSE</option>
                       </select>
                     </td>
                     <td className='px-6 py-4 text-sm text-gray-300'>
