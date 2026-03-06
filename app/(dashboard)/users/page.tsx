@@ -1,10 +1,8 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { Users, Search, Trash2 } from 'lucide-react'
-
-const DELETE_COOLDOWN_SEC = 5
+import { Users, Search, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface UserWithLab {
   id: string
@@ -32,27 +30,82 @@ export default function UsersPage() {
   const [searchInput, setSearchInput] = useState('');
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  
+  // Delete dialog state
   const [deleteDialogUser, setDeleteDialogUser] = useState<UserWithLab | null>(null);
   const [deleteCooldown, setDeleteCooldown] = useState(0);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const DELETE_COOLDOWN_SEC = 3;
+  
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [stats, setStats] = useState({ aprobados: 0, pendientes: 0 });
+  const [allLabs, setAllLabs] = useState<{ name: string; slug: string }[]>([]);
+  const [allRoles, setAllRoles] = useState<string[]>([]);
+  const usersPerPage = 10;
+  const totalPages = Math.ceil(totalUsers / usersPerPage) || 1;
 
   useEffect(() => {
+    loadMetadata(); // Cargar labs y roles al inicio
+  }, []);
+
+  useEffect(() => {
+    setCurrentPage(1); // Resetear a página 1 cuando cambian filtros
     loadUsers();
   }, [filter]);
 
-  // Cooldown para el botón Confirmar eliminación
   useEffect(() => {
-    if (!deleteDialogUser || deleteCooldown <= 0) return;
-    const t = setInterval(() => setDeleteCooldown((s) => (s <= 1 ? 0 : s - 1)), 1000);
-    return () => clearInterval(t);
-  }, [deleteDialogUser, deleteCooldown]);
+    loadUsers();
+  }, [currentPage]);
+
+  // Cooldown timer for delete confirmation
+  useEffect(() => {
+    if (deleteCooldown > 0) {
+      const timer = setTimeout(() => setDeleteCooldown(deleteCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [deleteCooldown]);
+
+  const loadMetadata = async () => {
+    try {
+      // Cargar todos los laboratorios únicos
+      const { data: labsData } = await supabase
+        .from('profiles')
+        .select('laboratory:laboratories(name, slug)')
+        .not('laboratory', 'is', null);
+
+      if (labsData) {
+        const uniqueLabsMap = new Map();
+        labsData.forEach((item: any) => {
+          if (item.laboratory) {
+            uniqueLabsMap.set(item.laboratory.slug, item.laboratory);
+          }
+        });
+        setAllLabs(Array.from(uniqueLabsMap.values()));
+      }
+
+      // Cargar todos los roles únicos
+      const { data: rolesData } = await supabase
+        .from('profiles')
+        .select('role');
+
+      if (rolesData) {
+        const uniqueRolesSet = new Set(rolesData.map((r: any) => r.role));
+        setAllRoles(Array.from(uniqueRolesSet).sort());
+      }
+    } catch (error) {
+      console.error('Error loading metadata:', error);
+    }
+  };
 
   const loadUsers = async () => {
     setLoading(true);
     try {
+      // Query base con filtros
       let query = supabase
         .from('profiles')
-        .select('*, laboratory:laboratories(name, slug)')
+        .select('*, laboratory:laboratories(name, slug)', { count: 'exact' })
         .order('created_at', { ascending: false });
 
       if (filter.laboratory !== 'all') {
@@ -67,64 +120,52 @@ export default function UsersPage() {
         query = query.eq('estado', filter.status);
       }
 
-      const { data, error } = await query;
+      // Búsqueda por texto (se hace en servidor si es posible)
+      if (filter.search) {
+        const searchLower = filter.search.toLowerCase();
+        query = query.or(`email.ilike.%${searchLower}%,display_name.ilike.%${searchLower}%`);
+      }
 
-      console.log('🔍 Query result:', { data, error, count: data?.length });
+      // Aplicar paginación
+      const from = (currentPage - 1) * usersPerPage;
+      const to = from + usersPerPage - 1;
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
+
+      console.log('🔍 Query result:', { data, error, count, page: currentPage });
 
       if (error) {
         console.error('❌ Error en query:', error);
         throw error;
       }
 
-      let filteredData = data || [];
+      setUsers((data || []) as UserWithLab[]);
+      setTotalUsers(count || 0);
 
-      // Filtro de búsqueda en el cliente
-      if (filter.search) {
-        const searchLower = filter.search.toLowerCase();
-        filteredData = filteredData.filter(
-          (user) =>
-            user.email?.toLowerCase().includes(searchLower) ||
-            user.display_name?.toLowerCase().includes(searchLower) ||
-            (user.laboratory as any)?.name?.toLowerCase().includes(searchLower),
-        );
+      // Cargar estadísticas de estados (aprobados/pendientes) globales
+      if (currentPage === 1) {
+        const { count: aprobadosCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('estado', 'aprobado');
+
+        const { count: pendientesCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('estado', 'pendiente');
+
+        setStats({
+          aprobados: aprobadosCount || 0,
+          pendientes: pendientesCount || 0,
+        });
       }
-
-      setUsers(filteredData as UserWithLab[]);
     } catch (error) {
       console.error('Error loading users:', error);
       alert('Error al cargar usuarios: ' + (error as any).message);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Obtener clientes únicos para el filtro
-  const uniqueLabs = Array.from(
-    new Set(users.map((u) => JSON.stringify(u.laboratory))),
-  )
-    .map((l) => JSON.parse(l))
-    .filter((l) => l);
-
-  // Obtener roles únicos
-  const uniqueRoles = Array.from(new Set(users.map((u) => u.role)));
-
-  const getRoleBadge = (role: string) => {
-    const styles: Record<string, string> = {
-      owner: 'bg-purple-100 text-purple-800',
-      admin: 'bg-[#4c87ff]/20 text-[#4c87ff] border border-[#4c87ff]/30',
-      employee: 'bg-gray-100 text-gray-800',
-      patologo: 'bg-green-100 text-green-800',
-      residente: 'bg-yellow-100 text-yellow-800',
-      citotecno: 'bg-orange-100 text-orange-800',
-      medicowner: 'bg-indigo-100 text-indigo-800',
-    };
-    return styles[role] || 'bg-gray-100 text-gray-800';
-  };
-
-  const getStatusBadge = (status: string) => {
-    return status === 'aprobado'
-      ? 'bg-green-100 text-green-800'
-      : 'bg-yellow-100 text-yellow-800';
   };
 
   const handleRoleChange = async (userId: string, newRole: string) => {
@@ -149,7 +190,40 @@ export default function UsersPage() {
       setUpdatingUserId(null);
     }
   };
+  const handleEstadoChange = useCallback(
+    async (userId: string, newEstado: string) => {
+      setUpdatingUserId(userId);
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ estado: newEstado })
+          .eq('id', userId);
 
+        if (error) throw error;
+
+        setUsers((prev) =>
+          prev.map((u) => (u.id === userId ? { ...u, estado: newEstado } : u)),
+        );
+
+        // Re-fetch stats if estado changed
+        const { data: statsData, error: statsError } = await supabase
+          .from('profiles')
+          .select('estado', { count: 'exact', head: false });
+
+        if (!statsError && statsData) {
+          const aprobados = statsData.filter((p) => p.estado === 'aprobado').length;
+          const pendientes = statsData.filter((p) => p.estado === 'pendiente').length;
+          setStats({ aprobados, pendientes });
+        }
+      } catch (err: unknown) {
+        console.error('Error updating estado:', err);
+        alert('Error al actualizar el estado');
+      } finally {
+        setUpdatingUserId(null);
+      }
+    },
+    [supabase],
+  );
   const openDeleteDialog = useCallback((user: UserWithLab) => {
     setDeleteDialogUser(user);
     setDeleteCooldown(DELETE_COOLDOWN_SEC);
@@ -168,16 +242,33 @@ export default function UsersPage() {
     setDeletingUserId(deleteDialogUser.id);
     setDeleteError(null);
     try {
-      const res = await fetch(`/api/users/${deleteDialogUser.id}`, { method: 'DELETE' });
-      const body = await res.json().catch(() => ({}));
-      const message = body.error ?? body.message ?? (res.ok ? 'Usuario eliminado' : 'Error al eliminar');
+      // Llamar RPC directamente (usa RLS interno, no API)
+      const { data, error } = await supabase.rpc('delete_user_from_auth', {
+        p_user_id: deleteDialogUser.id,
+      });
 
-      if (!res.ok) {
-        setDeleteError(message);
+      if (error) {
+        setDeleteError(error.message);
+        return;
+      }
+
+      const result = data as { success?: boolean; error?: string; message?: string } | null;
+      if (!result || result.success === false) {
+        setDeleteError(result?.error || 'Error al eliminar usuario');
         return;
       }
 
       setUsers((prev) => prev.filter((u) => u.id !== deleteDialogUser.id));
+      setTotalUsers((prev) => prev - 1);
+
+      // If we deleted the last user on the page and we're not on page 1, go back one page
+      if (users.length === 1 && currentPage > 1) {
+        setCurrentPage((prev) => prev - 1);
+      } else {
+        // Otherwise, re-fetch current page to maintain correct count
+        await loadUsers();
+      }
+
       closeDeleteDialog();
       setDeletingUserId(null);
     } catch (err: unknown) {
@@ -186,7 +277,7 @@ export default function UsersPage() {
     } finally {
       setDeletingUserId(null);
     }
-  }, [deleteDialogUser, deleteCooldown, closeDeleteDialog]);
+  }, [deleteDialogUser, deleteCooldown, closeDeleteDialog, users.length, currentPage, loadUsers]);
 
   if (loading) {
     return <div className='text-gray-200'>Cargando usuarios...</div>;
@@ -238,7 +329,7 @@ export default function UsersPage() {
               className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white'
             >
               <option value='all'>Todos</option>
-              {uniqueRoles.map((role) => (
+              {allRoles.map((role) => (
                 <option key={role} value={role}>
                   {role}
                 </option>
@@ -273,7 +364,7 @@ export default function UsersPage() {
               className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white'
             >
               <option value='all'>Todos</option>
-              {uniqueLabs.map((lab) => (
+              {allLabs.map((lab) => (
                 <option key={lab.slug} value={lab.slug}>
                   {lab.name}
                 </option>
@@ -287,24 +378,24 @@ export default function UsersPage() {
       <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
         <div className='bg-black/30 backdrop-blur-md p-4 rounded-lg shadow-lg border border-white/10 hover:border-purple-500/50 hover:shadow-xl transition-all duration-200 cursor-pointer'>
           <p className='text-sm text-gray-300'>Total Usuarios</p>
-          <p className='text-2xl font-bold text-white'>{users.length}</p>
+          <p className='text-2xl font-bold text-white'>{totalUsers}</p>
         </div>
         <div className='bg-black/30 backdrop-blur-md p-4 rounded-lg shadow-lg border border-white/10 hover:border-green-500/50 hover:shadow-xl transition-all duration-200 cursor-pointer'>
           <p className='text-sm text-gray-300'>Aprobados</p>
           <p className='text-2xl font-bold text-green-400'>
-            {users.filter((u) => u.estado === 'aprobado').length}
+            {stats.aprobados}
           </p>
         </div>
         <div className='bg-black/30 backdrop-blur-md p-4 rounded-lg shadow-lg border border-white/10 hover:border-orange-500/50 hover:shadow-xl transition-all duration-200 cursor-pointer'>
           <p className='text-sm text-gray-300'>Pendientes</p>
           <p className='text-2xl font-bold text-yellow-600'>
-            {users.filter((u) => u.estado === 'pendiente').length}
+            {stats.pendientes}
           </p>
         </div>
         <div className='bg-black/30 backdrop-blur-md p-4 rounded-lg shadow-lg border border-white/10 hover:border-[#4c87ff]/50 hover:shadow-xl transition-all duration-200 cursor-pointer'>
           <p className='text-sm text-gray-300'>Clientes</p>
           <p className='text-2xl font-bold text-[#4c87ff]'>
-            {uniqueLabs.length}
+            {allLabs.length}
           </p>
         </div>
       </div>
@@ -389,13 +480,19 @@ export default function UsersPage() {
                       {user.assigned_branch || '-'}
                     </td>
                     <td className='px-6 py-4'>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-semibold ${getStatusBadge(
-                          user.estado,
-                        )}`}
+                      <select
+                        value={user.estado}
+                        onChange={(e) => handleEstadoChange(user.id, e.target.value)}
+                        disabled={updatingUserId === user.id}
+                        className={`px-2 py-1 rounded text-xs font-semibold border focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 disabled:opacity-50 cursor-pointer ${
+                          user.estado === 'aprobado'
+                            ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                            : 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30'
+                        }`}
                       >
-                        {user.estado}
-                      </span>
+                        <option value="aprobado">aprobado</option>
+                        <option value="pendiente">pendiente</option>
+                      </select>
                     </td>
                     <td className='px-6 py-4 text-sm text-gray-300'>
                       {new Date(user.created_at).toLocaleDateString('es-ES')}
@@ -415,6 +512,35 @@ export default function UsersPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Paginación */}
+        <div className='flex items-center justify-between px-6 py-4 border-t border-white/10 bg-black/20'>
+          <div className='text-sm text-gray-300'>
+            Mostrando {users.length === 0 ? 0 : (currentPage - 1) * usersPerPage + 1} a{' '}
+            {Math.min(currentPage * usersPerPage, totalUsers)} de {totalUsers} usuarios
+          </div>
+          <div className='flex items-center gap-2'>
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className='p-2 rounded-lg border border-white/20 text-gray-300 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+              title='Página anterior'
+            >
+              <ChevronLeft className='w-4 h-4' />
+            </button>
+            <span className='text-sm text-gray-300 min-w-[100px] text-center'>
+              Página {currentPage} de {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className='p-2 rounded-lg border border-white/20 text-gray-300 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+              title='Página siguiente'
+            >
+              <ChevronRight className='w-4 h-4' />
+            </button>
+          </div>
         </div>
       </div>
 
