@@ -576,8 +576,10 @@ export default function EditLaboratoryPage() {
                 disabled={saving}
               >
                 <option value='monthly' className='bg-black text-white'>Mensual</option>
+                {/* Temporalmente solo mensual
                 <option value='weekly' className='bg-black text-white'>Semanal</option>
                 <option value='yearly' className='bg-black text-white'>Anual</option>
+                */}
               </select>
             </div>
             <div>
