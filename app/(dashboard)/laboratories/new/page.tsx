@@ -11,6 +11,7 @@ export default function NewLaboratoryPage() {
     name: '',
     slug: '',
     status: 'active' as 'active' | 'inactive' | 'trial',
+    renewal_day_of_month: 10 as number, // Opción B: obligatorio 1-31
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -18,6 +19,11 @@ export default function NewLaboratoryPage() {
     setLoading(true);
 
     try {
+      if (formData.renewal_day_of_month < 1 || formData.renewal_day_of_month > 31) {
+        alert('El día de renovación debe estar entre 1 y 31');
+        setLoading(false);
+        return;
+      }
       // Validar slug (solo minúsculas, números y guiones)
       let slug = formData.name;
 
@@ -39,6 +45,7 @@ export default function NewLaboratoryPage() {
           name: formData.name,
           slug: slug,
           status: 'trial',
+          renewal_day_of_month: formData.renewal_day_of_month,
         }),
       });
 
@@ -90,6 +97,34 @@ export default function NewLaboratoryPage() {
             />
             <p className='text-sm text-gray-300 mt-1'>
               Nombre completo del cliente
+            </p>
+          </div>
+
+          <div>
+            <label
+              htmlFor='renewal_day'
+              className='block text-sm font-medium text-gray-200 mb-2'
+            >
+              Día de renovación (pago) <span className='text-red-500'>*</span>
+            </label>
+            <input
+              id='renewal_day'
+              type='number'
+              min={1}
+              max={31}
+              value={formData.renewal_day_of_month}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  renewal_day_of_month: Math.min(31, Math.max(1, parseInt(e.target.value, 10) || 1)),
+                })
+              }
+              className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
+              required
+              disabled={loading}
+            />
+            <p className='text-sm text-gray-300 mt-1'>
+              Día del mes (1-31) para vencimiento de pago. Obligatorio.
             </p>
           </div>
 

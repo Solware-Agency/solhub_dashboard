@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
 import type { Laboratory } from '@/lib/types/database';
-import { Building2, Plus, Eye, Edit } from 'lucide-react';
+import { Building2, Plus, Eye, Edit, DollarSign } from 'lucide-react';
 
 export default function LaboratoriesPage() {
   const [laboratories, setLaboratories] = useState<Laboratory[]>([]);
@@ -12,6 +12,8 @@ export default function LaboratoriesPage() {
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'trial'>(
     'all',
   );
+  const [paymentFilter, setPaymentFilter] = useState<'all' | 'current' | 'overdue'>('all');
+  const [markingId, setMarkingId] = useState<string | null>(null);
   
   // Ref para mantener el filtro actual en el callback de realtime
   const filterRef = useRef(filter);
@@ -129,6 +131,42 @@ export default function LaboratoriesPage() {
     return styles[status as keyof typeof styles] || styles.inactive;
   };
 
+  const getPaymentStatusBadge = (status: string | null | undefined) => {
+    if (!status) return null;
+    const styles = {
+      current: 'bg-green-100 text-green-800',
+      overdue: 'bg-red-100 text-red-800',
+    };
+    const s = styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-800';
+    const label = status === 'current' ? 'Al día' : status === 'overdue' ? 'Vencido' : status;
+    return <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${s}`}>{label}</span>;
+  };
+
+  const filteredByPayment = paymentFilter === 'all'
+    ? laboratories
+    : laboratories.filter((lab) => (lab.payment_status ?? 'current') === paymentFilter);
+
+  const handleMarkPaid = async (lab: Laboratory) => {
+    setMarkingId(lab.id);
+    try {
+      const res = await fetch(`/api/laboratories/${lab.id}/mark-paid`, { method: 'POST' });
+      const json = await res.json();
+      if (!res.ok) {
+        alert(json.error ?? 'Error al marcar como pagado');
+        return;
+      }
+      const updated = json.data as Laboratory;
+      setLaboratories((prev) =>
+        prev.map((l) => (l.id === updated.id ? updated : l))
+      );
+    } catch (e) {
+      console.error(e);
+      alert('Error al marcar como pagado');
+    } finally {
+      setMarkingId(null);
+    }
+  };
+
   if (loading) {
     return <div className='text-gray-600'>Cargando clientes...</div>;
   }
@@ -154,8 +192,8 @@ export default function LaboratoriesPage() {
         </Link>
       </div>
 
-      {/* Filtros */}
-      <div className='mb-4 sm:mb-6 flex flex-wrap gap-2'>
+      {/* Filtros por estado */}
+      <div className='mb-3 flex flex-wrap gap-2'>
         {(['all', 'active', 'inactive', 'trial'] as const).map((status) => (
           <button
             key={status}
@@ -172,49 +210,77 @@ export default function LaboratoriesPage() {
           </button>
         ))}
       </div>
+      {/* Filtros por pago */}
+      <div className='mb-4 sm:mb-6 flex flex-wrap gap-2'>
+        <span className='text-sm text-gray-400 self-center mr-1'>Pago:</span>
+        {(['all', 'current', 'overdue'] as const).map((p) => (
+          <button
+            key={p}
+            onClick={() => setPaymentFilter(p)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              paymentFilter === p
+                ? 'bg-[#41e2b8] text-gray-900 shadow-md'
+                : 'bg-black/30 backdrop-blur-md text-gray-200 hover:bg-black/40 border border-white/10'
+            }`}
+          >
+            {p === 'all' ? 'Todos' : p === 'current' ? 'Al día' : 'Vencidos'}
+          </button>
+        ))}
+      </div>
 
       {/* Tabla de Clientes */}
       <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg overflow-hidden border border-white/10 max-w-full'>
         <div className='overflow-x-auto max-w-full'>
-          <table className='w-full min-w-[640px]'>
+          <table className='w-full min-w-[900px]'>
           <thead className='bg-black/40 backdrop-blur-sm'>
             <tr>
-              <th className='px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
+              <th className='px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
                 Nombre
               </th>
-              <th className='px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
+              <th className='px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
                 Slug
               </th>
-              <th className='px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
+              <th className='px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
                 Estado
               </th>
-              <th className='px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
-                Fecha Creación
+              <th className='px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
+                Próx. pago
               </th>
-              <th className='px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider'>
+              <th className='px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
+                Monto (USD)
+              </th>
+              <th className='px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
+                Estado pago
+              </th>
+              <th className='px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
+                Día renov.
+              </th>
+              <th className='px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider'>
                 Acciones
               </th>
             </tr>
           </thead>
           <tbody className='bg-transparent divide-y divide-white/10'>
-            {laboratories.length === 0 ? (
+            {filteredByPayment.length === 0 ? (
               <tr>
-                <td colSpan={5} className='px-6 py-8 text-center text-gray-300'>
-                  No hay clientes {filter !== 'all' && `con estado "${filter}"`}
+                <td colSpan={8} className='px-6 py-8 text-center text-gray-300'>
+                  No hay clientes
+                  {filter !== 'all' && ` con estado "${filter}"`}
+                  {paymentFilter !== 'all' && ` con pago "${paymentFilter === 'current' ? 'Al día' : 'Vencidos'}"`}
                 </td>
               </tr>
             ) : (
-              laboratories.map((lab) => (
+              filteredByPayment.map((lab) => (
                 <tr key={lab.id} className='hover:bg-black/40'>
-                  <td className='px-6 py-4 whitespace-nowrap'>
+                  <td className='px-4 py-3 whitespace-nowrap'>
                     <div className='text-sm font-medium text-white'>
                       {lab.name}
                     </div>
                   </td>
-                  <td className='px-6 py-4 whitespace-nowrap'>
+                  <td className='px-4 py-3 whitespace-nowrap'>
                     <div className='text-sm text-gray-300'>{lab.slug}</div>
                   </td>
-                  <td className='px-6 py-4 whitespace-nowrap'>
+                  <td className='px-4 py-3 whitespace-nowrap'>
                     <span
                       className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(
                         lab.status,
@@ -223,11 +289,35 @@ export default function LaboratoriesPage() {
                       {lab.status}
                     </span>
                   </td>
-                  <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                    {new Date(lab.created_at).toLocaleDateString('es-ES')}
+                  <td className='px-4 py-3 whitespace-nowrap text-sm text-gray-300'>
+                    {lab.next_payment_date
+                      ? new Date(lab.next_payment_date).toLocaleDateString('es-ES')
+                      : '—'}
                   </td>
-                  <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
-                    <div className='flex items-center justify-end gap-2'>
+                  <td className='px-4 py-3 whitespace-nowrap text-sm text-gray-300'>
+                    {lab.billing_amount != null
+                      ? `$${Number(lab.billing_amount).toFixed(2)}`
+                      : '—'}
+                  </td>
+                  <td className='px-4 py-3 whitespace-nowrap'>
+                    {getPaymentStatusBadge(lab.payment_status)}
+                    {!lab.payment_status && <span className='text-gray-500 text-xs'>—</span>}
+                  </td>
+                  <td className='px-4 py-3 whitespace-nowrap text-sm text-gray-300'>
+                    {lab.renewal_day_of_month != null ? lab.renewal_day_of_month : '—'}
+                  </td>
+                  <td className='px-4 py-3 whitespace-nowrap text-right text-sm font-medium'>
+                    <div className='flex items-center justify-end gap-2 flex-wrap'>
+                      <button
+                        type='button'
+                        onClick={() => handleMarkPaid(lab)}
+                        disabled={markingId !== null || lab.renewal_day_of_month == null}
+                        title={lab.renewal_day_of_month == null ? 'Configure día de renovación en Editar' : 'Marcar como pagado'}
+                        className='bg-[#10b981] text-white px-2 py-1 rounded-lg hover:bg-[#059669] transition-colors flex items-center gap-1 shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-xs'
+                      >
+                        <DollarSign className='w-3 h-3' />
+                        {markingId === lab.id ? '...' : 'Pagado'}
+                      </button>
                       <Link
                         href={`/laboratories/${lab.id}`}
                         className='bg-[#4c87ff] text-white px-3 py-1 rounded-lg hover:bg-[#3d6fe6] transition-colors flex items-center gap-1 shadow-md shadow-[#4c87ff]/30'
@@ -253,9 +343,10 @@ export default function LaboratoriesPage() {
       </div>
 
       <p className='mt-4 text-sm text-gray-200'>
-        Total: <span className='font-semibold text-white'>{laboratories.length}</span>{' '}
+        Total: <span className='font-semibold text-white'>{filteredByPayment.length}</span>{' '}
         cliente
-        {laboratories.length !== 1 && 's'}
+        {filteredByPayment.length !== 1 && 's'}
+        {paymentFilter !== 'all' && ` (filtro pago: ${paymentFilter === 'current' ? 'Al día' : 'Vencidos'})`}
       </p>
     </div>
   );

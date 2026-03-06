@@ -53,6 +53,12 @@ export interface LaboratoryConfig {
   };
 }
 
+/** Estado de pago del laboratorio: current = al día, overdue = vencido */
+export type PaymentStatus = 'current' | 'overdue';
+
+/** Frecuencia de cobro del laboratorio */
+export type PaymentFrequency = 'monthly' | 'weekly' | 'yearly';
+
 export interface Laboratory {
   id: string;
   slug: string;
@@ -63,6 +69,13 @@ export interface Laboratory {
   config: LaboratoryConfig;
   created_at: string;
   updated_at: string;
+  // Pagos / facturación (Opción B: renewal_day_of_month obligatorio en creación/edición)
+  next_payment_date?: string | null;
+  payment_frequency?: PaymentFrequency | null;
+  billing_amount?: number | null;
+  payment_status?: PaymentStatus | null;
+  /** Día del mes de renovación (1-31). Si es mayor al último día del mes, se usa el último día. */
+  renewal_day_of_month?: number | null;
 }
 
 export interface FeatureCatalog {

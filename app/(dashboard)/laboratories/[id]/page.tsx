@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import type { Laboratory } from '@/lib/types/database';
-import { Edit, ClipboardList, Flag, Trash2 } from 'lucide-react';
+import { Edit, ClipboardList, Flag, Trash2, DollarSign } from 'lucide-react';
 
 export default function LaboratoryDetailsPage() {
   const router = useRouter();
@@ -13,6 +13,7 @@ export default function LaboratoryDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [markingPaid, setMarkingPaid] = useState(false);
 
   useEffect(() => {
     const loadLaboratory = async () => {
@@ -79,6 +80,29 @@ export default function LaboratoryDetailsPage() {
     return styles[status as keyof typeof styles] || styles.inactive;
   };
 
+  const handleMarkPaid = async () => {
+    if (!laboratory) return;
+    if (laboratory.renewal_day_of_month == null) {
+      alert('Configure el día de renovación en Editar para poder marcar como pagado.');
+      return;
+    }
+    setMarkingPaid(true);
+    try {
+      const res = await fetch(`/api/laboratories/${laboratory.id}/mark-paid`, { method: 'POST' });
+      const json = await res.json();
+      if (!res.ok) {
+        alert(json.error ?? 'Error al marcar como pagado');
+        return;
+      }
+      if (json.data) setLaboratory(json.data as Laboratory);
+    } catch (e) {
+      console.error(e);
+      alert('Error al marcar como pagado');
+    } finally {
+      setMarkingPaid(false);
+    }
+  };
+
   if (loading) {
     return <div className='text-gray-200'>Cargando detalles...</div>;
   }
@@ -120,7 +144,17 @@ export default function LaboratoryDetailsPage() {
               </span>
             </div>
           </div>
-          <div className='flex gap-3'>
+          <div className='flex gap-3 flex-wrap'>
+            <button
+              type='button'
+              onClick={handleMarkPaid}
+              disabled={markingPaid || laboratory.renewal_day_of_month == null}
+              title={laboratory.renewal_day_of_month == null ? 'Configure día de renovación en Editar' : 'Marcar como pagado'}
+              className='px-4 py-2 bg-[#10b981] text-white rounded-lg hover:bg-[#059669] transition-colors flex items-center gap-1 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed'
+            >
+              <DollarSign className='w-4 h-4' />
+              {markingPaid ? '...' : 'Marcar como pagado'}
+            </button>
             <Link
               href={`/laboratories/${laboratory.id}/edit`}
               className='px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] transition-colors flex items-center gap-1 shadow-lg shadow-[#4c87ff]/30'
@@ -172,6 +206,54 @@ export default function LaboratoryDetailsPage() {
               </label>
               <p className='text-sm mt-1 capitalize text-white'>
                 {laboratory.status}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Pagos / Facturación */}
+        <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-6 border border-white/10'>
+          <h2 className='text-lg font-semibold text-white mb-4 flex items-center gap-2'>
+            <DollarSign className='w-5 h-5' />
+            Pagos / Facturación
+          </h2>
+          <div className='space-y-3'>
+            <div>
+              <label className='text-sm font-medium text-gray-200'>Próxima fecha de pago</label>
+              <p className='text-sm mt-1 text-white'>
+                {laboratory.next_payment_date
+                  ? new Date(laboratory.next_payment_date).toLocaleDateString('es-ES')
+                  : '—'}
+              </p>
+            </div>
+            <div>
+              <label className='text-sm font-medium text-gray-200'>Monto (USD)</label>
+              <p className='text-sm mt-1 text-white'>
+                {laboratory.billing_amount != null
+                  ? `$${Number(laboratory.billing_amount).toFixed(2)}`
+                  : '—'}
+              </p>
+            </div>
+            <div>
+              <label className='text-sm font-medium text-gray-200'>Estado de pago</label>
+              <p className='text-sm mt-1'>
+                <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                  laboratory.payment_status === 'overdue' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                }`}>
+                  {laboratory.payment_status === 'overdue' ? 'Vencido' : laboratory.payment_status === 'current' ? 'Al día' : '—'}
+                </span>
+              </p>
+            </div>
+            <div>
+              <label className='text-sm font-medium text-gray-200'>Día de renovación</label>
+              <p className='text-sm mt-1 text-white'>
+                {laboratory.renewal_day_of_month != null ? laboratory.renewal_day_of_month : '—'}
+              </p>
+            </div>
+            <div>
+              <label className='text-sm font-medium text-gray-200'>Frecuencia</label>
+              <p className='text-sm mt-1 text-white capitalize'>
+                {laboratory.payment_frequency || '—'}
               </p>
             </div>
           </div>

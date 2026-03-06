@@ -18,7 +18,9 @@ import {
   Plus,
   Code,
   Eye,
+  DollarSign,
 } from 'lucide-react';
+import type { PaymentFrequency, PaymentStatus } from '@/lib/types/database';
 import {
   generateCodePreview,
   validateCodeTemplate,
@@ -38,6 +40,11 @@ export default function EditLaboratoryPage() {
     name: '',
     slug: '',
     status: 'active' as 'active' | 'inactive' | 'trial',
+    next_payment_date: '' as string,
+    payment_frequency: 'monthly' as PaymentFrequency,
+    billing_amount: '' as number | '',
+    payment_status: 'current' as PaymentStatus,
+    renewal_day_of_month: '' as number | '', // Opción B: obligatorio 1-31
     branding: {
       logo: '' as string | null,
       icon: '',
@@ -103,6 +110,11 @@ export default function EditLaboratoryPage() {
         name: data.name,
         slug: data.slug,
         status: data.status,
+        next_payment_date: data.next_payment_date ? String(data.next_payment_date).slice(0, 10) : '',
+        payment_frequency: data.payment_frequency || 'monthly',
+        billing_amount: data.billing_amount != null ? data.billing_amount : '',
+        payment_status: data.payment_status || 'current',
+        renewal_day_of_month: data.renewal_day_of_month != null ? data.renewal_day_of_month : '',
         branding: {
           logo: data.branding?.logo || null,
           icon: data.branding?.icon || 'solhub',
@@ -153,6 +165,13 @@ export default function EditLaboratoryPage() {
       if (formData.config.paymentMethods.length === 0) {
         errors.push('Debe haber al menos 1 método de pago');
       }
+      // Opción B: día de renovación obligatorio (1-31)
+      const renewalDay = formData.renewal_day_of_month;
+      if (renewalDay === '' || renewalDay == null) {
+        errors.push('El día de renovación (1-31) es obligatorio');
+      } else if (Number(renewalDay) < 1 || Number(renewalDay) > 31) {
+        errors.push('El día de renovación debe estar entre 1 y 31');
+      }
 
       // Validar duplicados
       if (
@@ -184,6 +203,11 @@ export default function EditLaboratoryPage() {
       const updateData: any = {
         name: formData.name,
         status: formData.status,
+        next_payment_date: formData.next_payment_date || null,
+        payment_frequency: formData.payment_frequency,
+        billing_amount: formData.billing_amount === '' ? null : Number(formData.billing_amount),
+        payment_status: formData.payment_status,
+        renewal_day_of_month: formData.renewal_day_of_month === '' ? null : Number(formData.renewal_day_of_month),
         branding: {
           logo: formData.branding.logo || null,
           icon: formData.branding.icon,
@@ -455,6 +479,125 @@ export default function EditLaboratoryPage() {
                 <option value='trial' className='bg-black text-white'>
                   Prueba
                 </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Pagos / Facturación (Opción B: día de renovación obligatorio) */}
+        <div className='bg-black/30 backdrop-blur-md p-6 rounded-lg shadow-lg border border-white/10'>
+          <h2 className='text-lg font-semibold text-white mb-4 flex items-center gap-2'>
+            <DollarSign className='w-5 h-5' />
+            Pagos / Facturación
+          </h2>
+          <p className='text-sm text-gray-400 mb-4'>
+            Día de renovación obligatorio (1-31). Si el día es mayor al último del mes, se usará el último día de ese mes al calcular la próxima fecha.
+          </p>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+            <div>
+              <label className='block text-sm font-medium text-gray-200 mb-2'>
+                Próxima fecha de pago <span className='text-gray-400'>(opcional)</span>
+              </label>
+              <input
+                type='date'
+                value={formData.next_payment_date}
+                onChange={(e) =>
+                  setFormData({ ...formData, next_payment_date: e.target.value })
+                }
+                className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
+                disabled={saving}
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-200 mb-2'>
+                Monto (USD) <span className='text-gray-400'>(opcional)</span>
+              </label>
+              <input
+                type='number'
+                step='0.01'
+                min='0'
+                value={formData.billing_amount === '' ? '' : formData.billing_amount}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setFormData({
+                    ...formData,
+                    billing_amount: v === '' ? '' : parseFloat(v) || 0,
+                  });
+                }}
+                className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
+                placeholder='0.00'
+                disabled={saving}
+              />
+              {laboratory?.config?.defaultExchangeRate != null && formData.billing_amount !== '' && Number(formData.billing_amount) > 0 && (
+                <p className='text-xs text-gray-400 mt-1'>
+                  ≈ {(Number(formData.billing_amount) * (laboratory.config.defaultExchangeRate || 1)).toFixed(2)} Bs
+                </p>
+              )}
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-200 mb-2'>
+                Día de renovación <span className='text-red-500'>*</span>
+              </label>
+              <input
+                type='number'
+                min={1}
+                max={31}
+                value={formData.renewal_day_of_month === '' ? '' : formData.renewal_day_of_month}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setFormData({
+                    ...formData,
+                    renewal_day_of_month: v === '' ? '' : Math.min(31, Math.max(1, parseInt(v, 10) || 1)),
+                  });
+                }}
+                className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white placeholder-gray-400'
+                placeholder='Ej: 10'
+                disabled={saving}
+                required
+              />
+              <p className='text-xs text-gray-400 mt-1'>
+                Día del mes (1-31). Usado al marcar como pagado.
+              </p>
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-200 mb-2'>
+                Frecuencia de pago
+              </label>
+              <select
+                value={formData.payment_frequency}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    payment_frequency: e.target.value as PaymentFrequency,
+                  })
+                }
+                className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white'
+                style={{ colorScheme: 'dark' }}
+                disabled={saving}
+              >
+                <option value='monthly' className='bg-black text-white'>Mensual</option>
+                <option value='weekly' className='bg-black text-white'>Semanal</option>
+                <option value='yearly' className='bg-black text-white'>Anual</option>
+              </select>
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-200 mb-2'>
+                Estado de pago
+              </label>
+              <select
+                value={formData.payment_status}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    payment_status: e.target.value as PaymentStatus,
+                  })
+                }
+                className='w-full px-3 py-2 border border-white/20 rounded-lg bg-black/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 text-white'
+                style={{ colorScheme: 'dark' }}
+                disabled={saving}
+              >
+                <option value='current' className='bg-black text-white'>Al día</option>
+                <option value='overdue' className='bg-black text-white'>Vencido</option>
               </select>
             </div>
           </div>
