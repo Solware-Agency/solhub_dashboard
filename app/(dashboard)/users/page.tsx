@@ -41,7 +41,7 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
   const [stats, setStats] = useState({ aprobados: 0, pendientes: 0 });
-  const [allLabs, setAllLabs] = useState<{ name: string; slug: string }[]>([]);
+  const [allLabs, setAllLabs] = useState<{ id: string; name: string; slug: string }[]>([]);
   const [allRoles, setAllRoles] = useState<string[]>([]);
   const usersPerPage = 10;
   const totalPages = Math.ceil(totalUsers / usersPerPage) || 1;
@@ -72,7 +72,7 @@ export default function UsersPage() {
       // Cargar todos los laboratorios únicos
       const { data: labsData } = await supabase
         .from('profiles')
-        .select('laboratory:laboratories(name, slug)')
+        .select('laboratory:laboratories(id, name, slug)')
         .not('laboratory', 'is', null);
 
       if (labsData) {
@@ -109,7 +109,11 @@ export default function UsersPage() {
         .order('created_at', { ascending: false });
 
       if (filter.laboratory !== 'all') {
-        query = query.eq('laboratory_id', filter.laboratory);
+        // Buscar el ID del laboratorio por slug
+        const selectedLab = allLabs.find(lab => lab.slug === filter.laboratory);
+        if (selectedLab) {
+          query = query.eq('laboratory_id', selectedLab.id);
+        }
       }
 
       if (filter.role !== 'all') {
