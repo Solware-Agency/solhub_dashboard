@@ -13,9 +13,11 @@ interface UserWithLab {
   assigned_branch: string | null
   created_at: string
   laboratory: {
+    id: string
     name: string
     slug: string
-  }
+  } | null
+  laboratory_id: string | null
 }
 
 export default function UsersPage() {
@@ -105,7 +107,7 @@ export default function UsersPage() {
       // Query base con filtros
       let query = supabase
         .from('profiles')
-        .select('*, laboratory:laboratories(name, slug)', { count: 'exact' })
+        .select('*, laboratory:laboratories(id, name, slug)', { count: 'exact' })
         .order('created_at', { ascending: false });
 
       if (filter.laboratory !== 'all') {
@@ -179,7 +181,7 @@ export default function UsersPage() {
         .from('profiles')
         .update({ role: newRole })
         .eq('id', userId)
-        .select('*, laboratory:laboratories(name, slug)')
+        .select('*, laboratory:laboratories(id, name, slug)')
         .single();
 
       if (error) throw error;
@@ -194,6 +196,30 @@ export default function UsersPage() {
       setUpdatingUserId(null);
     }
   };
+
+  const handleLabChange = async (userId: string, newLabId: string) => {
+    setUpdatingUserId(userId);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ laboratory_id: newLabId })
+        .eq('id', userId)
+        .select('*, laboratory:laboratories(id, name, slug)')
+        .single();
+
+      if (error) throw error;
+
+      // Actualizar usuario en la lista
+      setUsers(users.map(u => u.id === userId ? data as UserWithLab : u));
+      console.log('✅ Laboratorio actualizado');
+    } catch (error: any) {
+      console.error('❌ Error al actualizar laboratorio:', error);
+      alert('Error al actualizar laboratorio: ' + error.message);
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
   const handleEstadoChange = useCallback(
     async (userId: string, newEstado: string) => {
       setUpdatingUserId(userId);
@@ -456,8 +482,20 @@ export default function UsersPage() {
                         </div>
                       </div>
                     </td>
-                    <td className='px-6 py-4 text-sm text-white'>
-                      {user.laboratory?.name || 'N/A'}
+                    <td className='px-6 py-4'>
+                      <select
+                        value={user.laboratory_id || ''}
+                        onChange={(e) => handleLabChange(user.id, e.target.value)}
+                        disabled={updatingUserId === user.id}
+                        className='px-2 py-1 rounded text-xs font-semibold border border-white/20 bg-black/20 text-white focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 disabled:opacity-50 cursor-pointer'
+                      >
+                        <option value=''>Sin laboratorio</option>
+                        {allLabs.map((lab) => (
+                          <option key={lab.id} value={lab.id}>
+                            {lab.name}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td className='px-6 py-4'>
                       <select
