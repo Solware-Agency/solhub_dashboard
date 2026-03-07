@@ -311,8 +311,8 @@ export default function LaboratoriesPage() {
                       <button
                         type='button'
                         onClick={() => handleMarkPaid(lab)}
-                        disabled={markingId !== null || lab.renewal_day_of_month == null}
-                        title={lab.renewal_day_of_month == null ? 'Configure día de renovación en Editar' : 'Marcar como pagado'}
+                        disabled={markingId !== null || (lab.status !== 'inactive' && lab.renewal_day_of_month == null)}
+                        title={lab.status === 'inactive' ? 'Marcar como pagado (reactivará; día de renovación = hoy)' : lab.renewal_day_of_month == null ? 'Configure día de renovación en Editar' : 'Marcar como pagado'}
                         className='bg-[#10b981] text-white px-2 py-1 rounded-lg hover:bg-[#059669] transition-colors flex items-center gap-1 shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-xs'
                       >
                         <DollarSign className='w-3 h-3' />

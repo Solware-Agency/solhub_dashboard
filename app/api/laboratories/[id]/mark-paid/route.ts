@@ -14,9 +14,10 @@ const supabaseAdmin = createClient(
 
 /**
  * POST: Marcar laboratorio como pagado.
- * Calcula next_payment_date con get_next_payment_date(renewal_day_of_month, today).
- * Opción B: renewal_day_of_month debe estar configurado (1-31); si es mayor al último día del mes,
- * la función SQL ya devuelve el último día de ese mes.
+ * Usa get_next_payment_date_on_mark_paid(lab_id):
+ * - Lab inactivo: próximo vencimiento = hoy + 1 período (monthly/weekly/yearly), renewal_day = día de hoy.
+ * - Lab activo: próximo día fijo de renovación; no se cambia renewal_day_of_month.
+ * Actualiza: status, payment_status, next_payment_date, renewal_day_of_month (COALESCE con el nuevo si pagó tarde).
  */
 export async function POST(
   _request: NextRequest,
@@ -28,7 +29,7 @@ export async function POST(
 
     const { data: lab, error: fetchError } = await supabaseAdmin
       .from('laboratories')
-      .select('id, renewal_day_of_month, status')
+      .select('id, renewal_day_of_month')
       .eq('id', id)
       .single();
 
@@ -39,57 +40,53 @@ export async function POST(
       );
     }
 
-    const renewalDay = lab.renewal_day_of_month;
-    if (
-      renewalDay == null ||
-      typeof renewalDay !== 'number' ||
-      renewalDay < 1 ||
-      renewalDay > 31
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            'Configure el día de renovación (1-31) en la edición del cliente para poder marcar como pagado.',
-        },
-        { status: 400 }
-      );
-    }
-
-    const today = new Date().toISOString().slice(0, 10);
-    const { data: nextDateResult, error: rpcError } = await supabaseAdmin.rpc(
-      'get_next_payment_date',
-      {
-        p_renewal_day_of_month: renewalDay,
-        p_from_date: today,
-      }
+    const { data: rpcRows, error: rpcError } = await supabaseAdmin.rpc(
+      'get_next_payment_date_on_mark_paid',
+      { p_lab_id: id }
     );
 
     if (rpcError) {
-      console.error('❌ Error get_next_payment_date:', rpcError);
+      console.error('❌ Error get_next_payment_date_on_mark_paid:', rpcError);
       return NextResponse.json(
         { error: 'Error al calcular próxima fecha de pago' },
         { status: 500 }
       );
     }
 
-    const nextPaymentDate =
-      typeof nextDateResult === 'string'
-        ? nextDateResult.slice(0, 10)
-        : nextDateResult;
-    if (!nextPaymentDate) {
+    const row = Array.isArray(rpcRows) ? rpcRows[0] : rpcRows;
+    const nextPaymentDate = row?.next_payment_date;
+    const renewalDayNew = row?.renewal_day_of_month_new;
+
+    if (nextPaymentDate == null) {
       return NextResponse.json(
-        { error: 'No se pudo calcular la próxima fecha de pago' },
-        { status: 500 }
+        {
+          error:
+            'No se pudo calcular la próxima fecha. Si el laboratorio está activo, configure el día de renovación (1-31) en la edición del cliente.',
+        },
+        { status: 400 }
       );
+    }
+
+    const nextDateStr =
+      typeof nextPaymentDate === 'string'
+        ? nextPaymentDate.slice(0, 10)
+        : nextPaymentDate;
+
+    const renewalToSet =
+      renewalDayNew != null ? renewalDayNew : lab.renewal_day_of_month;
+
+    const updatePayload: Record<string, unknown> = {
+      status: 'active',
+      payment_status: 'current',
+      next_payment_date: nextDateStr,
+    };
+    if (renewalToSet != null) {
+      updatePayload.renewal_day_of_month = renewalToSet;
     }
 
     const { data: updated, error: updateError } = await supabaseAdmin
       .from('laboratories')
-      .update({
-        status: 'active',
-        payment_status: 'current',
-        next_payment_date: nextPaymentDate,
-      })
+      .update(updatePayload)
       .eq('id', id)
       .select('*')
       .single();

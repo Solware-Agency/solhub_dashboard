@@ -82,8 +82,8 @@ export default function LaboratoryDetailsPage() {
 
   const handleMarkPaid = async () => {
     if (!laboratory) return;
-    if (laboratory.renewal_day_of_month == null) {
-      alert('Configure el día de renovación en Editar para poder marcar como pagado.');
+    if (laboratory.status !== 'inactive' && laboratory.renewal_day_of_month == null) {
+      alert('Configure el día de renovación en Editar para poder marcar como pagado (laboratorio activo).');
       return;
     }
     setMarkingPaid(true);
@@ -148,8 +148,8 @@ export default function LaboratoryDetailsPage() {
             <button
               type='button'
               onClick={handleMarkPaid}
-              disabled={markingPaid || laboratory.renewal_day_of_month == null}
-              title={laboratory.renewal_day_of_month == null ? 'Configure día de renovación en Editar' : 'Marcar como pagado'}
+              disabled={markingPaid || (laboratory.status !== 'inactive' && laboratory.renewal_day_of_month == null)}
+              title={laboratory.status === 'inactive' ? 'Marcar como pagado (reactivará; día de renovación = hoy)' : laboratory.renewal_day_of_month == null ? 'Configure día de renovación en Editar' : 'Marcar como pagado'}
               className='px-4 py-2 bg-[#10b981] text-white rounded-lg hover:bg-[#059669] transition-colors flex items-center gap-1 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed'
             >
               <DollarSign className='w-4 h-4' />
