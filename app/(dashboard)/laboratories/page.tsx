@@ -291,7 +291,7 @@ export default function LaboratoriesPage() {
                   </td>
                   <td className='px-4 py-3 whitespace-nowrap text-sm text-gray-300'>
                     {lab.next_payment_date
-                      ? new Date(lab.next_payment_date).toLocaleDateString('es-ES')
+                      ? new Date(lab.next_payment_date).toLocaleDateString('en-US', {timeZone: 'UTC'})
                       : '—'}
                   </td>
                   <td className='px-4 py-3 whitespace-nowrap text-sm text-gray-300'>
