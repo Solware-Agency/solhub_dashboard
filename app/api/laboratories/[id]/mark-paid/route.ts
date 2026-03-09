@@ -14,10 +14,9 @@ const supabaseAdmin = createClient(
 
 /**
  * POST: Marcar laboratorio como pagado.
- * Usa get_next_payment_date_on_mark_paid(lab_id):
- * - Lab inactivo: próximo vencimiento = hoy + 1 período (monthly/weekly/yearly), renewal_day = día de hoy.
- * - Lab activo: próximo día fijo de renovación; no se cambia renewal_day_of_month.
- * Actualiza: status, payment_status, next_payment_date, renewal_day_of_month (COALESCE con el nuevo si pagó tarde).
+ * Usa get_next_payment_date_on_mark_paid(lab_id): siempre devuelve el próximo día fijo de renovación
+ * (según renewal_day_of_month del lab). renewal_day_of_month no se modifica al marcar como pagado.
+ * Actualiza solo: status, payment_status, next_payment_date, updated_at.
  */
 export async function POST(
   _request: NextRequest,
@@ -29,7 +28,7 @@ export async function POST(
 
     const { data: lab, error: fetchError } = await supabaseAdmin
       .from('laboratories')
-      .select('id, renewal_day_of_month')
+      .select('id')
       .eq('id', id)
       .single();
 
@@ -55,7 +54,6 @@ export async function POST(
 
     const row = Array.isArray(rpcRows) ? rpcRows[0] : rpcRows;
     const nextPaymentDate = row?.next_payment_date;
-    const renewalDayNew = row?.renewal_day_of_month_new;
 
     if (nextPaymentDate == null) {
       return NextResponse.json(
@@ -72,21 +70,14 @@ export async function POST(
         ? nextPaymentDate.slice(0, 10)
         : nextPaymentDate;
 
-    const renewalToSet =
-      renewalDayNew != null ? renewalDayNew : lab.renewal_day_of_month;
-
-    const updatePayload: Record<string, unknown> = {
-      status: 'active',
-      payment_status: 'current',
-      next_payment_date: nextDateStr,
-    };
-    if (renewalToSet != null) {
-      updatePayload.renewal_day_of_month = renewalToSet;
-    }
-
     const { data: updated, error: updateError } = await supabaseAdmin
       .from('laboratories')
-      .update(updatePayload)
+      .update({
+        status: 'active',
+        payment_status: 'current',
+        next_payment_date: nextDateStr,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', id)
       .select('*')
       .single();

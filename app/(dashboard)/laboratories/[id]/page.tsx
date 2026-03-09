@@ -14,6 +14,10 @@ export default function LaboratoryDetailsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [markingPaid, setMarkingPaid] = useState(false);
+  const [showMarkPaidModal, setShowMarkPaidModal] = useState(false);
+  const [markPaidNextDate, setMarkPaidNextDate] = useState<string | null>(null);
+  const [markPaidError, setMarkPaidError] = useState<string | null>(null);
+  const [loadingNextDate, setLoadingNextDate] = useState(false);
 
   useEffect(() => {
     const loadLaboratory = async () => {
@@ -64,8 +68,12 @@ export default function LaboratoryDetailsPage() {
       alert('✅ Cliente eliminado exitosamente');
       router.push('/laboratories');
       router.refresh();
-    } catch (error: any) {
-      alert('❌ Error: ' + error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        alert('❌ Error: ' + error.message);
+      } else {
+        alert('❌ Error desconocido');
+      }
     } finally {
       setDeleting(false);
     }
@@ -80,12 +88,41 @@ export default function LaboratoryDetailsPage() {
     return styles[status as keyof typeof styles] || styles.inactive;
   };
 
-  const handleMarkPaid = async () => {
+  const openMarkPaidModal = async () => {
     if (!laboratory) return;
     if (laboratory.status !== 'inactive' && laboratory.renewal_day_of_month == null) {
       alert('Configure el día de renovación en Editar para poder marcar como pagado (laboratorio activo).');
       return;
     }
+    setLoadingNextDate(true);
+    setShowMarkPaidModal(true);
+    setMarkPaidNextDate(null);
+    setMarkPaidError(null);
+    try {
+      const res = await fetch(`/api/laboratories/${laboratory.id}/next-payment-date`);
+      const json = await res.json();
+      if (!res.ok) {
+        setMarkPaidNextDate(null);
+        setMarkPaidError(json.error ?? 'Error al obtener próxima fecha');
+        return;
+      }
+      setMarkPaidNextDate(json.next_payment_date ?? null);
+      setMarkPaidError(null);
+    } catch (e) {
+      console.error(e);
+      setShowMarkPaidModal(false);
+      setMarkPaidError(null);
+      alert('Error al obtener próxima fecha');
+    } finally {
+      setLoadingNextDate(false);
+    }
+  };
+
+  const confirmMarkPaid = async () => {
+    if (!laboratory) return;
+    setShowMarkPaidModal(false);
+    setMarkPaidNextDate(null);
+    setMarkPaidError(null);
     setMarkingPaid(true);
     try {
       const res = await fetch(`/api/laboratories/${laboratory.id}/mark-paid`, { method: 'POST' });
@@ -147,13 +184,13 @@ export default function LaboratoryDetailsPage() {
           <div className='flex gap-3 flex-wrap'>
             <button
               type='button'
-              onClick={handleMarkPaid}
-              disabled={markingPaid || (laboratory.status !== 'inactive' && laboratory.renewal_day_of_month == null)}
-              title={laboratory.status === 'inactive' ? 'Marcar como pagado (reactivará; día de renovación = hoy)' : laboratory.renewal_day_of_month == null ? 'Configure día de renovación en Editar' : 'Marcar como pagado'}
+              onClick={openMarkPaidModal}
+              disabled={markingPaid || loadingNextDate || (laboratory.status !== 'inactive' && laboratory.renewal_day_of_month == null)}
+              title={laboratory.renewal_day_of_month == null ? 'Configure día de renovación en Editar' : 'Marcar como pagado. Cada vez que marques se avanzará un período; si marcas otra vez, se suma otro.'}
               className='px-4 py-2 bg-[#10b981] text-white rounded-lg hover:bg-[#059669] transition-colors flex items-center gap-1 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed'
             >
               <DollarSign className='w-4 h-4' />
-              {markingPaid ? '...' : 'Marcar como pagado'}
+              {markingPaid ? '...' : loadingNextDate ? '...' : 'Marcar como pagado'}
             </button>
             <Link
               href={`/laboratories/${laboratory.id}/edit`}
@@ -418,6 +455,67 @@ export default function LaboratoryDetailsPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal: Confirmar pago */}
+      {showMarkPaidModal && (
+        <div className='fixed inset-0 bg-black/40 flex items-center justify-center z-50'>
+          <div className='bg-black/30 backdrop-blur-md rounded-lg shadow-lg p-6 max-w-md w-full mx-4 border border-white/10'>
+            <h3 className='text-lg font-semibold text-white mb-4'>
+              ¿Confirmar pago?
+            </h3>
+            {loadingNextDate ? (
+              <p className='text-gray-200 mb-4'>Calculando próxima fecha...</p>
+            ) : markPaidNextDate ? (
+              <>
+                <p className='text-gray-200 mb-2'>
+                  La próxima fecha de vencimiento será{' '}
+                  <strong className='text-white'>
+                    {new Date(markPaidNextDate + 'T12:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}
+                  </strong>
+                  .
+                </p>
+                <p className='text-sm text-gray-400 mb-6'>
+                  Ten en cuenta que cada vez que marques como pagado se avanzará un período. Si marcas otra vez, se suma otro.
+                </p>
+                <div className='flex gap-3'>
+                  <button
+                    onClick={confirmMarkPaid}
+                    disabled={markingPaid}
+                    className='flex-1 px-4 py-2 bg-[#10b981] text-white rounded-lg hover:bg-[#059669] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer'
+                  >
+                    {markingPaid ? '...' : 'Confirmar'}
+                  </button>
+                  <button
+                    onClick={() => { setShowMarkPaidModal(false); setMarkPaidNextDate(null); }}
+                    disabled={markingPaid}
+                    className='flex-1 px-4 py-2 border border-white/20 text-white rounded-lg hover:bg-black/40 transition-colors disabled:opacity-50 bg-black/20 backdrop-blur-sm cursor-pointer'
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className='text-gray-200 mb-4'>
+                  {markPaidError ?? 'No se pudo obtener la próxima fecha.'}
+                </p>
+                <Link
+                  href={`/laboratories/${laboratory.id}/edit`}
+                  className='inline-block mb-3 px-4 py-2 bg-[#4c87ff] text-white rounded-lg hover:bg-[#3d6fe6] transition-colors font-medium'
+                >
+                  Ir a Editar (configurar día de renovación)
+                </Link>
+                <button
+                  onClick={() => { setShowMarkPaidModal(false); setMarkPaidNextDate(null); setMarkPaidError(null); }}
+                  className='block w-full px-4 py-2 border border-white/20 text-white rounded-lg hover:bg-black/40 transition-colors bg-black/20 backdrop-blur-sm cursor-pointer'
+                >
+                  Cerrar
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Modal: Confirmar Eliminación */}
       {showDeleteModal && (
