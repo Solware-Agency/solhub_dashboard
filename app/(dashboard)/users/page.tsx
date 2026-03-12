@@ -17,6 +17,9 @@ interface UserWithLab {
     id: string
     name: string
     slug: string
+    config?: {
+      branches?: string[]
+    }
   } | null
   laboratory_id: string | null
 }
@@ -108,7 +111,7 @@ export default function UsersPage() {
       // Query base con filtros
       let query = supabase
         .from('profiles')
-        .select('*, laboratory:laboratories(id, name, slug)', { count: 'exact' })
+        .select('*, laboratory:laboratories(id, name, slug, config)', { count: 'exact' })
         .order('created_at', { ascending: false });
 
       if (filter.laboratory !== 'all') {
@@ -238,6 +241,28 @@ export default function UsersPage() {
     } catch (error: any) {
       console.error('❌ Error al actualizar dashboard admin:', error);
       alert('Error al actualizar dashboard admin: ' + error.message);
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const handleBranchChange = async (userId: string, newBranch: string) => {
+    setUpdatingUserId(userId);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ assigned_branch: newBranch || null })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, assigned_branch: newBranch || null } : u)),
+      );
+      console.log('✅ Sucursal actualizada');
+    } catch (error: any) {
+      console.error('❌ Error al actualizar sucursal:', error);
+      alert('Error al actualizar sucursal: ' + error.message);
     } finally {
       setUpdatingUserId(null);
     }
@@ -544,8 +569,20 @@ export default function UsersPage() {
                         <option value="prueba">prueba</option>
                       </select>
                     </td>
-                    <td className='px-6 py-4 text-sm text-gray-300'>
-                      {user.assigned_branch || '-'}
+                    <td className='px-6 py-4'>
+                      <select
+                        value={user.assigned_branch || ''}
+                        onChange={(e) => handleBranchChange(user.id, e.target.value)}
+                        disabled={updatingUserId === user.id || !user.laboratory}
+                        className='px-2 py-1 rounded text-xs font-semibold border border-white/20 bg-black/20 text-white focus:outline-none focus:ring-2 focus:ring-[#4c87ff]/50 disabled:opacity-50 cursor-pointer'
+                      >
+                        <option value=''>Sin sucursal</option>
+                        {user.laboratory?.config?.branches?.map((branch) => (
+                          <option key={branch} value={branch}>
+                            {branch}
+                          </option>
+                        )) || null}
+                      </select>
                     </td>
                     <td className='px-6 py-4'>
                       <select
