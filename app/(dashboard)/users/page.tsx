@@ -185,7 +185,7 @@ export default function UsersPage() {
         .from('profiles')
         .update({ role: newRole })
         .eq('id', userId)
-        .select('*, laboratory:laboratories(id, name, slug)')
+        .select('*, laboratory:laboratories(id, name, slug, config)')
         .single();
 
       if (error) throw error;
@@ -208,7 +208,7 @@ export default function UsersPage() {
         .from('profiles')
         .update({ laboratory_id: newLabId })
         .eq('id', userId)
-        .select('*, laboratory:laboratories(id, name, slug)')
+        .select('*, laboratory:laboratories(id, name, slug, config)')
         .single();
 
       if (error) throw error;
